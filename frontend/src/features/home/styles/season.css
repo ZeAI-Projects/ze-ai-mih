@@ -1,0 +1,143 @@
+﻿:root { --anchor-gap: 110px; }
+#home,#replay,#challenges,#rewards,#about,#gallery,#register { scroll-margin-top: var(--anchor-gap); }
+.site-header { position: sticky; top: 0; z-index: 100; }
+.header-inner { gap: 20px; }
+.season-brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.zeai-crop,.india-crop { position: relative; display: inline-block; overflow: hidden; flex-shrink: 0; }
+.zeai-crop { width: 64px; height: 28px; }
+.zeai-crop img { position: absolute; width: 215px; max-width: none; height: auto; left: -8px; top: -22px; }
+.india-crop { width: 126px; height: 27px; }
+.india-crop img { position: absolute; width: 217px; max-width: none; height: auto; left: -79px; top: -24px; }
+.brand-divider { width: 1px; height: 22px; background: var(--line); }
+.labx-wordmark { font-size: 23px; font-weight: 800; color: #555; letter-spacing: -1px; }
+.labx-wordmark span { color: #009ac4; }
+.zeai-hash { color: var(--purple); font-size: 19px; }
+.primary-nav { gap: 20px; }
+.primary-nav a { font-size: 13px; }
+.season-eyebrow { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; font-weight: 700; color: var(--purple-deep); }
+/* The stage clips the departing digit before it can reach the headline. */
+.hero-brand-row { flex-wrap: nowrap; gap: 18px; height: 42px; }
+.hero-brand-row > * { flex-shrink: 0; }
+.hero-brand-row .zeai-crop { width: 96px; height: 42px; }
+.hero-brand-row .zeai-crop img { width: 322.5px; left: -12px; top: -33px; }
+.hero-brand-row .india-crop { width: 201px; height: 40.5px; }
+.hero-brand-row .india-crop img { width: 325.5px; left: -118.5px; top: -36px; }
+.hero-year { display: block; width: 4em; height: 1.75em; overflow: hidden; font-size: 42px; font-weight: 800; line-height: 1.167; color: #7037b1; }
+.hero-year-digits { display: flex; width: max-content; padding-top: .2917em; }
+.hero-year-digits > span { display: block; width: .64em; text-align: center; }
+.hero-year-slot { position: relative; perspective: 180px; }
+.hero-year-slot > span { position: absolute; inset: 0; }
+.hero-year-seven { opacity: 0; transform: translateX(2em) rotate(18deg); }
+.hero-year-impact { opacity: 0; color: #ae77ed; pointer-events: none; }
+.hero-year--started .hero-year-six { animation: hero-six-kicked 2400ms linear both; }
+.hero-year--started .hero-year-seven { animation: hero-seven-kick 2400ms linear both; }
+.hero-year--started .hero-year-impact { animation: hero-year-spark 2400ms linear both; }
+.hero-year--started .hero-year-digits { animation: hero-year-glow 2400ms linear both; }
+@keyframes hero-seven-kick {
+  0%, 21% { opacity: 0; transform: translateX(2em) rotate(18deg); }
+  22% { opacity: 1; transform: translateX(2em) rotate(18deg); animation-timing-function: cubic-bezier(.6,0,.9,.5); }
+  40% { opacity: 1; transform: translateX(.63em) rotate(-12deg) scale(1.06,.94); }
+  44% { opacity: 1; transform: translateX(.68em) rotate(6deg) scale(.94,1.06); animation-timing-function: cubic-bezier(.15,.7,.3,1); }
+  55% { opacity: 1; transform: translateX(-.09em) rotate(-5deg) scale(1.08,.92); }
+  64% { opacity: 1; transform: translateX(.045em) rotate(2deg); }
+  73%, 100% { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+}
+@keyframes hero-six-kicked {
+  0%, 44% { opacity: 1; transform: translate(0,0) rotate(0); }
+  48% { opacity: 1; transform: translate(-.08em,.08em) rotate(-16deg) scale(.9,1.08); }
+  57% { opacity: 1; transform: translate(-.28em,.48em) rotate(-48deg); }
+  69%, 100% { opacity: 0; transform: translate(-.55em,1.8em) rotate(-115deg); }
+}
+@keyframes hero-year-spark {
+  0%, 43% { opacity: 0; transform: translate(.35em,0) scale(.2); }
+  46% { opacity: 1; transform: translate(.35em,-.15em) scale(.8); }
+  54%, 72% { opacity: 0; transform: translate(.45em,-.3em) scale(1.2); }
+  77% { opacity: .8; transform: translate(.6em,-.22em) scale(.65); }
+  94%, 100% { opacity: 0; transform: translate(.7em,-.35em) scale(.2); }
+}
+@keyframes hero-year-glow {
+  0%, 73%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  80% { filter: drop-shadow(0 0 5px #b278ed); }
+}
+.hero-year--reduced .hero-year-digits,
+.hero-year--reduced .hero-year-slot > span { animation: none; }
+.hero-year--reduced .hero-year-six,
+.hero-year--reduced .hero-year-impact { display: none; }
+.hero-year--reduced .hero-year-seven { opacity: 1; transform: none; }
+@media (max-width: 1100px) {
+  .hero-brand-row { gap: 10px; height: 30px; }
+  .hero-brand-row .zeai-crop { width: 64px; height: 29.5px; }
+  .hero-brand-row .zeai-crop img { width: 215px; left: -7.7px; top: -21.8px; }
+  .hero-brand-row .india-crop { width: 133px; height: 29.5px; }
+  .hero-brand-row .india-crop img { width: 215px; left: -78px; top: -23px; }
+  .hero-year { font-size: 30px; }
+}
+@media (max-width: 380px) {
+  .hero-brand-row { gap: 5px; }
+  .hero-year { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-year .hero-year-digits, .hero-year .hero-year-slot > span { animation: none; }
+  .hero-year-six, .hero-year-impact { display: none; }
+  .hero-year .hero-year-seven { opacity: 1; transform: none; }
+}
+.season-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 24px; margin-top: 32px; align-items: stretch; }
+.season-card { border: 1px solid var(--line); border-radius: 24px; padding: clamp(20px,3vw,36px); min-width: 0; }
+.season-past { background: #faf9fc; }
+.season-next { background: var(--lavender); border-color: #d2b9ff; }
+.season-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--purple-deep); padding: 6px 10px; background: #ece2ff; border-radius: 6px; }
+.season-card h3 { font-size: clamp(22px,2.5vw,30px); line-height: 1.2; margin: 24px 0 16px; }
+.season-prize { display: block; font-size: clamp(30px,3.4vw,46px); letter-spacing: -.04em; color: var(--purple-deep); }
+.season-card > p { margin: 8px 0 24px; font-size: 14px; }
+.boarding-pass { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-top: 35px; position: relative; overflow: hidden; }
+.boarding-pass > span,.boarding-pass small { font-size: 10px; display: block; letter-spacing: .08em; }
+.boarding-pass h4 { font-size: 25px; margin: 22px 0 4px; }
+.boarding-pass p { font-size: 12px; }
+.ticket-route { display: flex; gap: 12px; align-items: center; border-block: 1px dashed #ccc; padding: 20px 0; font-size: 14px; }
+.ticket-stamp { display: block; color: var(--purple-deep); border: 3px double var(--purple-deep); transform: rotate(-7deg); font-size: 20px; line-height: 1.2; text-align: center; padding: 12px; margin: 20px 0; }
+.flight-slot { min-height: 360px; }
+.flight-scene { display: block; width: 100%; height: auto; overflow: hidden; }
+.flight-jet { transform-origin: 0 0; }
+.flight-flying .flight-banner { animation: flag-flutter .45s ease-in-out infinite alternate; transform-origin: -84px 0; }
+@keyframes flag-flutter { from { transform: skewY(-3deg) scaleY(.94); } to { transform: skewY(3deg) scaleY(1); } }
+.flight-flying .flight-route { animation: route-reveal 5.2s linear both; }
+@keyframes route-reveal { from { opacity: .2; } to { opacity: 1; } }
+.flight-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.flight-controls .button { min-height: 42px; padding: 10px 16px; font-size: 12px; }
+.flight-swipe { position: relative; flex: 1; min-width: 190px; padding: 10px; border: 1px solid #cdb7f5; border-radius: 10px; touch-action: pan-y; user-select: none; cursor: grab; overflow: hidden; font-size: 12px; text-align: center; }
+.flight-swipe > span:not(.flight-swipe-fill),.flight-swipe small { position: relative; display: block; }
+.flight-swipe small { font-size: 10px; }
+.flight-swipe-fill { position: absolute; inset: 0; background: #d8c2ff; transform-origin: left; }
+.flight-feedback { min-height: 3em; font-size: 12px; }
+.track-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0; }
+.track-controls button { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: white; color: var(--ink); }
+.track-controls strong,.track-controls span { display: block; }
+.track-controls strong { font-size: 20px; }
+.track-controls span { font-size: 13px; margin-top: 4px; }
+.track-controls [aria-pressed=true] { background: var(--purple-deep); color: white; border-color: var(--purple-deep); }
+.challenge-domains { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.challenge-domains button,.challenge-pagination button { border: 1px solid var(--line); border-radius: 8px; background: white; padding: 10px 14px; font-size: 13px; }
+.challenge-domains [aria-pressed=true] { border-color: var(--purple); color: var(--purple-deep); box-shadow: inset 0 0 0 1px var(--purple); }
+.challenge-grid,.rewards-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; margin: 28px 0; }
+.challenge-card,.reward-card { padding: 26px; border: 1px solid var(--line); background: white; border-radius: 16px; overflow-wrap: anywhere; }
+.challenge-card p { white-space: pre-wrap; }
+.challenge-card h3,.reward-card h3 { font-size: 20px; margin: 14px 0 8px; }
+.challenge-card p,.reward-card p { font-size: 14px; }
+.challenge-card summary { cursor: pointer; color: var(--purple-deep); margin-top: 16px; }
+.challenge-empty { padding: 36px; margin: 22px 0; border: 1px dashed #cdb7f5; border-radius: 16px; }
+.challenge-pagination { display: flex; gap: 16px; align-items: center; margin-bottom: 24px; }
+.season-rewards { background: #fcfaff; }
+.reward-card > svg { color: var(--purple); width: 28px; height: 28px; }
+.reward-terms { font-size: 13px; max-width: 800px; margin-bottom: 26px; }
+#register .page-title { font-size: clamp(30px,5vw,56px); }
+#register .page-hero { padding-bottom: 10px; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 1100px) { .season-brand { gap: 7px; } .primary-nav { gap: 12px; } .zeai-hash { font-size: 16px; } }
+@media (max-width: 767px) { :root { --anchor-gap: 85px; } .season-grid,.track-controls { grid-template-columns: 1fr; } .challenge-grid,.rewards-grid { grid-template-columns: 1fr 1fr; } .season-brand { gap: 6px; } .season-brand .zeai-crop { width: 45px; height: 22px; } .season-brand .zeai-crop img { width: 150px; left: -6px; top: -15px; } .labx-wordmark { font-size: 18px; } .zeai-hash { font-size: 13px; } .season-brand .india-crop { width: 91px; height: 20px; } .season-brand .india-crop img { width: 157px; left: -57px; top: -17px; } .brand-divider { height: 18px; } .flight-slot { min-height: 310px; } .reward-card,.challenge-card { padding: 18px; } }
+@media (max-width: 420px) { .header-inner { gap: 8px; } .season-brand { gap: 4px; } .challenge-grid,.rewards-grid { grid-template-columns: 1fr; } .season-card { padding: 18px; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .year-six { display: none; } .year-seven { animation: none; } .flight-banner,.flight-route { animation: none !important; } }
+.flight-flying .flight-route-reveal { transform-origin: 0 0; animation: route-draw 5.2s linear both; }
+@keyframes route-draw { from { transform: scaleX(.13); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .flight-route-reveal { animation: none !important; } }
+.india-crop { width: 134px; }
+@media (max-width: 767px) { .season-brand .india-crop { width: 97px; } }

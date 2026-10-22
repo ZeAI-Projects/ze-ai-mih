@@ -1,0 +1,229 @@
+﻿.gallery-preview {
+  background: #f2efe8;
+}
+.gallery-preview-grid {
+  display: grid;
+  grid-template-columns: 0.78fr 1.22fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+}
+.gallery-preview-copy h2 {
+  font-size: clamp(44px, 5.6vw, 76px);
+  line-height: 1.05;
+  letter-spacing: -3px;
+  font-weight: 800;
+}
+.gallery-preview-copy h2 span {
+  color: #6040b1;
+  background: linear-gradient(transparent 76%, #daed96 76%, #daed96 94%, transparent 94%);
+}
+.gallery-preview-copy > p:not(.eyebrow) {
+  margin-top: 24px;
+  max-width: 380px;
+  color: #615b69;
+}
+.gallery-preview-copy .button {
+  margin-top: 28px;
+}
+.memory-navigation {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 36px;
+}
+.memory-navigation button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #c8c0d3;
+  border-radius: 50%;
+  background: transparent;
+  color: #38234f;
+  cursor: pointer;
+  transition:
+    background 180ms,
+    transform 180ms;
+}
+.memory-navigation button:first-child .icon {
+  transform: rotate(180deg);
+}
+.memory-navigation button:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}
+.memory-navigation > span {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.memory-navigation > span > span {
+  color: #756b81;
+  font-weight: 500;
+}
+main .gallery-preview-copy .memory-hint {
+  font-size: 13px;
+  margin-top: 12px;
+}
+.memory-book {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #ddd6ca;
+  border-radius: 24px;
+  background: #fffdf8;
+  box-shadow: 0 16px 36px #3e294510;
+}
+.memory-feature {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #29232e;
+  aspect-ratio: 1.3;
+  isolation: isolate;
+}
+.memory-feature > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: memory-appear 240ms ease both;
+}
+.memory-feature::after {
+  content: '';
+  position: absolute;
+  inset: 35% 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(transparent, #14111de8);
+}
+.memory-location {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  border: 1px solid #ffffff7a;
+  background: #1b142e9c;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 30px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.memory-feature figcaption {
+  position: absolute;
+  z-index: 1;
+  bottom: 28px;
+  left: 28px;
+  right: 28px;
+  color: #fff;
+  display: grid;
+  gap: 9px;
+}
+.memory-feature figcaption strong {
+  font-size: clamp(24px, 2.5vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+}
+.memory-feature figcaption > span {
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 420px;
+}
+.memory-filmstrip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 12px;
+}
+.memory-filmstrip button {
+  position: relative;
+  padding: 0;
+  min-height: 44px;
+  border: 3px solid transparent;
+  border-radius: 9px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #e6e1d7;
+  transition:
+    border-color 180ms,
+    transform 180ms;
+}
+.memory-filmstrip button[aria-pressed='true'] {
+  border-color: #7150ca;
+}
+.memory-filmstrip button:hover {
+  transform: translateY(-3px);
+}
+.memory-filmstrip img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.35;
+  object-fit: cover;
+}
+.memory-filmstrip button > span {
+  position: absolute;
+  bottom: 3px;
+  left: 5px;
+  font-size: 10px;
+  line-height: 1.5;
+  padding: 0 4px;
+  background: #231731bc;
+  color: #fff;
+  border-radius: 3px;
+}
+@keyframes memory-appear {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 760px) {
+  .gallery-preview-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .gallery-preview-copy h2 {
+    font-size: clamp(44px, 9vw, 65px);
+  }
+  .memory-navigation {
+    margin-top: 24px;
+  }
+  .memory-feature {
+    aspect-ratio: 1.1;
+  }
+  .memory-feature figcaption {
+    bottom: 20px;
+    left: 18px;
+    right: 18px;
+  }
+  .memory-feature figcaption > span {
+    font-size: 14px;
+  }
+  .memory-feature figcaption strong {
+    font-size: 24px;
+  }
+  .memory-book {
+    padding: 8px;
+    border-radius: 20px;
+  }
+  .memory-filmstrip {
+    gap: 5px;
+    padding-top: 8px;
+  }
+  .memory-location {
+    top: 15px;
+    left: 15px;
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-feature > img {
+    animation: none;
+  }
+  .memory-navigation button,
+  .memory-filmstrip button {
+    transition: none;
+  }
+}

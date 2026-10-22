@@ -1,0 +1,78 @@
+/* Scoped to the existing flight component. The surrounding site keeps its own styles. */
+.cinematic-flight.layout-two { min-width: 0; color: #452d60; }
+.cinematic-flight.layout-two .destination-scene { display: block; min-height: 0; padding: 0; overflow: hidden; border-radius: 24px; background: #f5f0fc; }
+.cinematic-flight .flight-viewport {
+  --scene-height: clamp(440px, 72svh, 760px);
+  --destination-edge: 0%;
+  position: relative; inset: auto; width: 100%; height: var(--scene-height);
+  overflow: hidden; isolation: isolate; border-radius: inherit;
+  background: linear-gradient(150deg, #fff 5%, #f6f1fc 65%, #eee5f8);
+}
+.cinematic-flight .flight-viewport > canvas { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; pointer-events: none; }
+.cinematic-flight .destination-copy { position: absolute; z-index: 3; top: 0; left: 0; max-width: none; padding: 28px; }
+.cinematic-flight .destination-copy h3 { margin: 18px 0; font-size: clamp(27px, 2.7vw, 38px); line-height: 1.16; }
+.cinematic-flight .season-tag { color: #704c99; font-size: 11px; font-weight: 750; letter-spacing: .12em; }
+.cinematic-flight .destination-awards { display: grid; gap: 8px; color: #56317c; }
+.cinematic-flight .destination-awards strong { font-size: clamp(26px, 3vw, 36px); letter-spacing: -.04em; }
+.cinematic-flight .destination-awards small { display: inline-block; margin-left: 6px; font-size: 12px; letter-spacing: 0; font-weight: 500; }
+.cinematic-flight .destination-awards > span { font-size: 13px; font-weight: 650; }
+.cinematic-flight .destination-copy p { max-width: none; margin: 12px 0 0; font-size: 12px; }
+.cinematic-flight .flight-cinema-heading { position: absolute; top: 25px; left: 28px; max-width: calc(100% - 160px); z-index: 3; pointer-events: none; }
+.cinematic-flight .flight-cinema-heading h3 { margin: 10px 0 0; font-size: clamp(22px, 3vw, 36px); line-height: 1.2; letter-spacing: -.04em; }
+.cinematic-flight .flight-stop { position: absolute; top: 20px; right: 20px; z-index: 4; min-height: 44px; padding: 10px 16px; font-size: 12px; }
+/* The complete 16:9 photograph fits below 62% of the frame, including both spires.
+   Its position and scale never depend on flight progress. */
+.cinematic-flight .flight-city {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  width: min(100%, calc(var(--scene-height) * .6755555556)); height: auto; aspect-ratio: 16 / 9;
+  margin: 0 auto; overflow: hidden; border-radius: 12px 12px 0 0;
+  opacity: 1; transform: none; transition: none; animation: none;
+  clip-path: inset(0 calc(100% - var(--destination-edge)) 0 0);
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 max(0px, calc(var(--destination-edge) - 12px)), transparent var(--destination-edge));
+  mask-image: linear-gradient(to right, #000 0, #000 max(0px, calc(var(--destination-edge) - 12px)), transparent var(--destination-edge));
+}
+.cinematic-flight .flight-city img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.cinematic-flight .flight-city::after { content: ''; position: absolute; inset: 60% 0 0; background: linear-gradient(transparent, #28143b94); pointer-events: none; }
+.cinematic-flight .flight-city figcaption { position: absolute; bottom: 18px; right: 18px; z-index: 1; color: white; font-size: 10px; font-weight: 750; letter-spacing: .13em; }
+.cinematic-flight.flight-arrived .flight-city { clip-path: none; -webkit-mask-image: none; mask-image: none; }
+.cinematic-flight .flight-image-fallback { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: #ede3f8; color: #56317c; font-weight: 750; letter-spacing: .08em; }
+.cinematic-flight .flight-image-fallback small { font-size: 12px; letter-spacing: 0; font-weight: 400; }
+.cinematic-flight .image-unavailable img { visibility: hidden; }
+.cinematic-flight .flight-controls { display: grid; gap: 14px; padding: 20px; }
+.cinematic-flight .launch-route-labels { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .15em; font-weight: 800; color: #613d82; }
+.cinematic-flight.layout-two .flight-swipe { position: relative; display: grid; place-items: center; height: 76px; min-width: 0; padding: 0; overflow: hidden; border: 1px solid #bb91ed; border-radius: 40px; background: #fff; box-shadow: inset 0 1px 4px #6335970b; touch-action: pan-y; user-select: none; }
+.cinematic-flight .flight-swipe .swipe-fill { position: absolute; inset: 0; background: linear-gradient(90deg, #ede1ff, #b7a0ee); transform: scaleX(var(--launch-progress)); transform-origin: left; transition: transform .2s ease; }
+.cinematic-flight .flight-swipe .launch-handle { position: absolute; left: calc(8px + (100% - 72px) * var(--launch-progress)); top: 8px; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: white; font-size: 28px; background: linear-gradient(140deg, #b28aef, #6532bb); transition: left .2s ease; transform: rotate(-14deg); }
+.cinematic-flight .is-dragging .launch-handle, .cinematic-flight .is-dragging .swipe-fill { transition: none; }
+.cinematic-flight .launch-track-copy { position: relative; margin-left: 42px; font-size: 10px; font-weight: 800; letter-spacing: .07em; pointer-events: none; }
+.cinematic-flight .launch-markers { position: absolute; display: flex; justify-content: space-between; width: 50%; left: 30%; bottom: 10px; }
+.cinematic-flight .launch-markers i { width: 4px; height: 4px; border-radius: 50%; background: #dccbec; }
+.cinematic-flight .launch-markers i.active { background: #7535c7; box-shadow: none; }
+.cinematic-flight .flight-swipe progress { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.cinematic-flight .launch-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cinematic-flight .launch-actions > span { font-size: 10px; color: #6a507d; }
+.cinematic-flight .launch-actions .button { min-height: 44px; white-space: nowrap; }
+.cinematic-flight .flight-status { font-size: 12px; line-height: 1.5; margin: 0; color: #665079; }
+.cinematic-flight.layout-two .prize-unlocked { display: grid; justify-items: center; gap: 12px; position: relative; padding: 30px 16px; text-align: center; animation: flight-quiet-reward .3s ease both; background: linear-gradient(#f3ebff, #fff); border-radius: 20px; }
+.cinematic-flight.layout-two .prize-unlocked > * { animation: none; transform: none; }
+.cinematic-flight.layout-two .prize-unlocked > strong { font-size: clamp(38px, 4.5vw, 60px); line-height: 1.1; letter-spacing: -.04em; }
+.cinematic-flight .prize-unlocked > p { margin: 0; font-weight: 700; }
+.cinematic-flight .prize-unlocked > small { font-size: 11px; }
+.cinematic-flight .prize-unlocked > .button { margin-top: 8px; font-size: 12px; min-height: 44px; }
+.cinematic-flight .text-link { min-height: 44px; padding: 8px 14px; border: 0; background: transparent; font: inherit; color: #6532bb; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.cinematic-flight :is(button, a, [tabindex]):focus-visible { outline: 3px solid #8053c4; outline-offset: 4px; }
+@keyframes flight-quiet-reward { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 767px) {
+  .cinematic-flight.layout-two .destination-scene { border-radius: 20px; }
+  .cinematic-flight .destination-copy { padding: 24px 20px; }
+  .cinematic-flight .flight-cinema-heading { top: 22px; left: 18px; max-width: calc(100% - 120px); }
+  .cinematic-flight .flight-cinema-heading h3 { font-size: 23px; }
+  .cinematic-flight .flight-cinema-heading .season-tag { font-size: 9px; }
+  .cinematic-flight .flight-stop { top: 14px; right: 12px; padding: 8px 10px; font-size: 11px; }
+  .cinematic-flight .flight-city figcaption { bottom: 16px; right: 14px; font-size: 9px; }
+  .cinematic-flight .flight-controls { padding-inline: 16px; }
+  .cinematic-flight .launch-actions > span { max-width: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-flight.layout-two *, .cinematic-flight.layout-two *::before, .cinematic-flight.layout-two *::after { animation: none !important; transition: none !important; }
+}

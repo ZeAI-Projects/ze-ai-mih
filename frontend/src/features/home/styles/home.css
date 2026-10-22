@@ -1,0 +1,129 @@
+.domain-section {
+  background: #291f38;
+  color: #fff;
+}
+
+.domain-section .eyebrow {
+  color: #d5baff;
+}
+
+.domain-section .section-copy {
+  color: #d4c9df;
+}
+
+.domain-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+}
+
+.domain-list li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 78px;
+  padding: 19px;
+  border: 1px solid #ffffff24;
+  border-radius: 12px;
+  background: #ffffff06;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.domain-list li > span {
+  color: #cce18f;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.past-edition-card {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 55px;
+  padding: 45px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.past-edition-card .section-heading {
+  margin: 20px 0;
+}
+
+.past-edition-status {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 50px;
+  background: #eaf1df;
+  color: #415d23;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.past-edition-details {
+  margin-top: 10px;
+}
+
+.past-edition-details > div {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.past-edition-details > div:first-child {
+  padding-top: 0;
+}
+.past-edition-details dt {
+  margin-bottom: 5px;
+  color: var(--purple-dark);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.past-edition-details dd {
+  color: var(--body);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.past-edition-note {
+  margin-top: 20px;
+  color: var(--body);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.past-edition-note strong {
+  color: #392c4b;
+}
+
+@media (max-width: 1000px) {
+  .domain-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .past-edition-card {
+    gap: 32px;
+    padding: 35px;
+  }
+}
+
+@media (max-width: 700px) {
+  .domain-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .domain-list li {
+    padding: 15px 12px;
+    gap: 9px;
+    font-size: 12px;
+  }
+  .past-edition-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 25px;
+    gap: 25px;
+  }
+}

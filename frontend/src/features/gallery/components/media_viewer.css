@@ -1,0 +1,105 @@
+.media-viewer {
+  border: 1px solid #ffffff22;
+  padding: 0;
+  border-radius: 16px;
+  width: min(1060px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  color: #fff;
+  background: #21192d;
+  overflow: auto;
+}
+.media-viewer::backdrop {
+  background: #100a1cda;
+  backdrop-filter: blur(6px);
+}
+.media-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #d3c3e9;
+}
+.media-close,
+.photo-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #ffffff33;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+}
+.media-close:hover,
+.photo-controls button:hover {
+  background: #ffffff20;
+}
+.media-viewer :focus-visible {
+  outline-color: #dbc1ff;
+}
+.media-viewer-photo {
+  width: 100%;
+  height: min(58dvh, 600px);
+  object-fit: contain;
+  background: #100c16;
+}
+.media-viewer-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+}
+.media-viewer-caption h2 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.media-viewer-caption p {
+  color: #d3c3e9;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.media-viewer-caption a {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #dfc8ff;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.media-viewer-caption a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.media-viewer-caption a .icon {
+  width: 13px;
+  height: 13px;
+}
+.photo-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.photo-controls button:first-child .icon {
+  transform: rotate(180deg);
+}
+@media (max-width: 600px) {
+  .media-viewer-caption {
+    align-items: start;
+    flex-direction: column;
+    padding: 20px;
+    gap: 18px;
+  }
+  .media-viewer-caption h2 {
+    font-size: 20px;
+  }
+  .media-viewer-photo {
+    height: auto;
+    max-height: 52dvh;
+  }
+}

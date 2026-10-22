@@ -1,0 +1,677 @@
+@startuml ZeAI_MIIH_Lead_Template_Matched_ER_v4
+title ZeAI #MadeInIndia Hackathon - Lead Template ER v4 (24 Base + 4 RBAC/CMS) (For Approval)
+' Based on LabX_Complete_ER_Lead_Template_Matched_v1.3.puml styling
+' Proposal only. Team registrations, configurable 4 members by default, Razorpay-link proof upload, approval + Excel exports.
+hide methods
+hide stereotypes
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+top to bottom direction
+
+
+' =========================================================
+' 01 EVENT & DOMAINS
+' =========================================================
+
+' ---------------------------------------------------------
+' HACKATHON_EDITIONS
+' ---------------------------------------------------------
+entity hackathon_editions {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_code : VARCHAR(40) UNIQUE NOT NULL
+    title : VARCHAR(200) NOT NULL
+    tagline : TEXT NULLABLE
+    description : TEXT NULLABLE
+    year : SMALLINT NOT NULL
+    status : VARCHAR(30) NOT NULL [DRAFT/OPEN/CLOSED/COMPLETED]
+    starts_at : TIMESTAMPTZ NULLABLE
+    ends_at : TIMESTAMPTZ NULLABLE
+    registration_opens_at : TIMESTAMPTZ NULLABLE
+    registration_closes_at : TIMESTAMPTZ NULLABLE
+    venue : TEXT NULLABLE
+    location : VARCHAR(200) NULLABLE
+    event_mode : VARCHAR(30) NULLABLE
+    eligibility_text : TEXT NULLABLE
+    guidelines_text : TEXT NULLABLE
+    min_team_size : INT NOT NULL DEFAULT 4
+    max_team_size : INT NOT NULL DEFAULT 4
+    default_team_size : INT NOT NULL DEFAULT 4
+    is_published : BOOLEAN NOT NULL DEFAULT FALSE
+    published_at : TIMESTAMPTZ NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' EDITION_CONTENT_BLOCKS
+' ---------------------------------------------------------
+entity edition_content_blocks {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    block_key : VARCHAR(100) NOT NULL
+    block_type : VARCHAR(30) [ANNOUNCEMENT/FAQ/DETAIL/INSTRUCTION]
+    title : VARCHAR(255) NULLABLE
+    body : TEXT NULLABLE
+    content_json : JSONB NULLABLE
+    asset_file_id : UUID <<FK>> NULLABLE
+    display_order : INT NOT NULL
+    is_visible : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' EDITION_HIGHLIGHTS
+' ---------------------------------------------------------
+entity edition_highlights {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    title : VARCHAR(255) NOT NULL
+    description : TEXT NULLABLE
+    highlight_date : DATE NULLABLE
+    media_file_id : UUID <<FK>> NULLABLE
+    metrics_json : JSONB NULLABLE [ONLY VERIFIED DATA]
+    display_order : INT NOT NULL
+    is_visible : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' DOMAINS
+' ---------------------------------------------------------
+entity domains {
+    id : UUID <<PK>> NOT NULL
+    --
+    domain_code : VARCHAR(70) UNIQUE NOT NULL
+    domain_name : VARCHAR(180) UNIQUE NOT NULL
+    description : TEXT NULLABLE
+    display_order : INT NOT NULL
+    is_active : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' EDITION_DOMAINS
+' ---------------------------------------------------------
+entity edition_domains {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    domain_id : UUID <<FK>> NOT NULL
+    is_enabled : BOOLEAN NOT NULL
+    display_order : INT NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+
+' =========================================================
+' 02 CONFIGURABLE FORMS
+' =========================================================
+
+' ---------------------------------------------------------
+' FORM_VERSIONS
+' ---------------------------------------------------------
+entity form_versions {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    version_number : INT NOT NULL
+    status : VARCHAR(20) NOT NULL [DRAFT/PUBLISHED/ARCHIVED]
+    name : VARCHAR(150) NOT NULL
+    published_at : TIMESTAMPTZ NULLABLE
+    published_by : UUID <<FK>> NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' FORM_SECTIONS
+' ---------------------------------------------------------
+entity form_sections {
+    id : UUID <<PK>> NOT NULL
+    --
+    form_version_id : UUID <<FK>> NOT NULL
+    section_key : VARCHAR(80) NOT NULL
+    title : VARCHAR(200) NOT NULL
+    description : TEXT NULLABLE
+    display_order : INT NOT NULL
+    is_active : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' FORM_QUESTIONS
+' ---------------------------------------------------------
+entity form_questions {
+    id : UUID <<PK>> NOT NULL
+    --
+    section_id : UUID <<FK>> NOT NULL
+    field_key : VARCHAR(90) NOT NULL [STABLE PER VERSION]
+    legacy_question_number : INT NULLABLE [1..32]
+    question_label : TEXT NOT NULL
+    description : TEXT NULLABLE
+    placeholder : TEXT NULLABLE
+    input_type : VARCHAR(30) NOT NULL
+    answer_scope : VARCHAR(20) NOT NULL [TEAM/MEMBER/LEADER/PITCH]
+    storage_binding : VARCHAR(140) NULLABLE
+    is_required : BOOLEAN NOT NULL
+    is_active : BOOLEAN NOT NULL
+    display_order : INT NOT NULL
+    validation_rules : JSONB NULLABLE
+    visibility_rules : JSONB NULLABLE
+    default_value : JSONB NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' FORM_QUESTION_OPTIONS
+' ---------------------------------------------------------
+entity form_question_options {
+    id : UUID <<PK>> NOT NULL
+    --
+    question_id : UUID <<FK>> NOT NULL
+    option_value : VARCHAR(150) NOT NULL
+    option_label : VARCHAR(255) NOT NULL
+    display_order : INT NOT NULL
+    is_active : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+
+' =========================================================
+' 03 TEAMS & ANSWERS
+' =========================================================
+
+' ---------------------------------------------------------
+' TEAM_REGISTRATIONS
+' ---------------------------------------------------------
+entity team_registrations {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    form_version_id : UUID <<FK>> NOT NULL
+    domain_id : UUID <<FK>> NULLABLE [ADMIN-CONTROLLED REQUIRED]
+    payment_setting_id : UUID <<FK>> NULLABLE
+    registration_code : VARCHAR(30) UNIQUE NOT NULL
+    source_team_id : VARCHAR(100) NULLABLE [Q15]
+    team_name : VARCHAR(200) NULLABLE [Q16; ADMIN-REQUIRED CONFIG]
+    participant_category : VARCHAR(60) NULLABLE [Q1]
+    investor_pitch_interest : BOOLEAN NULLABLE [Q25; YES/NO]
+    status : VARCHAR(30) NOT NULL [DRAFT/SUBMITTED/REVIEW/APPROVED/REJECTED]
+    team_size_rules_snapshot : JSONB NOT NULL
+    submitted_at : TIMESTAMPTZ NULLABLE
+    leader_edit_token_hash : TEXT NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' TEAM_MEMBERS
+' ---------------------------------------------------------
+entity team_members {
+    id : UUID <<PK>> NOT NULL
+    --
+    registration_id : UUID <<FK>> NOT NULL
+    full_name : VARCHAR(200) NULLABLE [Q2; ADMIN-REQUIRED CONFIG]
+    email : VARCHAR(254) NULLABLE [Q3; ADMIN-REQUIRED CONFIG]
+    mobile : VARCHAR(30) NULLABLE [Q4; ADMIN-REQUIRED CONFIG]
+    role : VARCHAR(20) NOT NULL [LEADER/MEMBER]
+    member_order : INT NOT NULL
+    photo_file_id : UUID <<FK>> NULLABLE [Q7]
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' FORM_ANSWERS
+' ---------------------------------------------------------
+entity form_answers {
+    id : UUID <<PK>> NOT NULL
+    --
+    registration_id : UUID <<FK>> NOT NULL
+    team_member_id : UUID <<FK>> NULLABLE
+    question_id : UUID <<FK>> NOT NULL
+    answer_json : JSONB NULLABLE
+    uploaded_file_id : UUID <<FK>> NULLABLE
+    answered_at : TIMESTAMPTZ NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' PITCH_APPLICATIONS
+' ---------------------------------------------------------
+entity pitch_applications {
+    id : UUID <<PK>> NOT NULL
+    --
+    registration_id : UUID <<FK>> UNIQUE NOT NULL
+    project_name : VARCHAR(255) NULLABLE [Q20]
+    founder_team_name : VARCHAR(255) NULLABLE [Q21]
+    pitch_type : VARCHAR(80) NULLABLE [Q22]
+    project_description : TEXT NULLABLE [Q23]
+    current_stage : VARCHAR(80) NULLABLE [Q24]
+    project_link : TEXT NULLABLE [Q26]
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' PARTICIPANT_CONSENTS
+' ---------------------------------------------------------
+entity participant_consents {
+    id : UUID <<PK>> NOT NULL
+    --
+    member_id : UUID <<FK>> NOT NULL
+    question_id : UUID <<FK>> NOT NULL
+    consent_type : VARCHAR(30) [TERMS/MEDIA/COMMUNICATION]
+    response : BOOLEAN NOT NULL [YES/NO]
+    policy_version : VARCHAR(80) NOT NULL
+    recorded_at : TIMESTAMPTZ NOT NULL
+    entry_method : VARCHAR(35) [LEADER_SUBMISSION]
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' REGISTRATION_STATUS_HISTORY
+' ---------------------------------------------------------
+entity registration_status_history {
+    id : UUID <<PK>> NOT NULL
+    --
+    registration_id : UUID <<FK>> NOT NULL
+    old_status : VARCHAR(30) NULLABLE
+    new_status : VARCHAR(30) NOT NULL
+    reason : TEXT NULLABLE
+    changed_by_admin_id : UUID <<FK>> NULLABLE
+    changed_at : TIMESTAMPTZ NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+
+' =========================================================
+' 04 UPLOADS & PAYMENTS
+' =========================================================
+
+' ---------------------------------------------------------
+' FILE_ASSETS
+' ---------------------------------------------------------
+entity file_assets {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NULLABLE
+    registration_id : UUID <<FK>> NULLABLE
+    storage_bucket : VARCHAR(100) NOT NULL
+    storage_path : TEXT NOT NULL UNIQUE
+    file_url : TEXT NULLABLE [PERMANENT URL OR DERIVED]
+    original_filename : TEXT NOT NULL
+    mime_type : VARCHAR(150) NOT NULL
+    size_bytes : BIGINT NOT NULL
+    sha256_hash : VARCHAR(64) NULLABLE
+    is_private : BOOLEAN NOT NULL DEFAULT TRUE
+    uploaded_by_admin_id : UUID <<FK>> NULLABLE
+    uploaded_at : TIMESTAMPTZ NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' PAYMENT_SETTINGS
+' ---------------------------------------------------------
+entity payment_settings {
+    id : UUID <<PK>> NOT NULL
+    --
+    edition_id : UUID <<FK>> NOT NULL
+    config_version : INT NOT NULL
+    razorpay_payment_url : TEXT NULLABLE [REQUIRED IF PAYMENT ACTIVE]
+    button_label : VARCHAR(100) NOT NULL
+    instructions : TEXT NULLABLE
+    fee_amount : NUMERIC(12,2) NOT NULL
+    currency : CHAR(3) NOT NULL DEFAULT INR
+    payment_required : BOOLEAN NOT NULL
+    proof_required : BOOLEAN NOT NULL
+    is_active : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' PAYMENT_SUBMISSIONS
+' ---------------------------------------------------------
+entity payment_submissions {
+    id : UUID <<PK>> NOT NULL
+    --
+    registration_id : UUID <<FK>> NOT NULL
+    payment_setting_id : UUID <<FK>> NOT NULL
+    transaction_id : VARCHAR(150) NULLABLE [REQUIRED WHEN CONFIGURED]
+    proof_file_id : UUID <<FK>> NULLABLE [REQUIRED WHEN CONFIGURED]
+    claimed_amount : NUMERIC(12,2) NOT NULL
+    currency : CHAR(3) NOT NULL DEFAULT INR
+    status : VARCHAR(30) NOT NULL [PENDING/VERIFIED/REJECTED]
+    submitted_at : TIMESTAMPTZ NOT NULL
+    verified_at : TIMESTAMPTZ NULLABLE
+    verified_by : UUID <<FK>> NULLABLE
+    rejection_reason : TEXT NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' PAYMENT_REFUNDS
+' ---------------------------------------------------------
+entity payment_refunds {
+    id : UUID <<PK>> NOT NULL
+    --
+    payment_submission_id : UUID <<FK>> NOT NULL
+    amount : NUMERIC(12,2) NOT NULL
+    refund_reference : VARCHAR(150) NOT NULL
+    refunded_at : TIMESTAMPTZ NOT NULL
+    recorded_by_admin_id : UUID <<FK>> NOT NULL
+    reason : TEXT NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+
+' =========================================================
+' 05 ADMIN & REPORTING
+' =========================================================
+
+' ---------------------------------------------------------
+' ADMIN_USERS
+' ---------------------------------------------------------
+entity admin_users {
+    id : UUID <<PK>> NOT NULL
+    --
+    auth_user_id : UUID UNIQUE NOT NULL [SUPABASE auth.users]
+    full_name : VARCHAR(200) NOT NULL
+    email : VARCHAR(254) UNIQUE NOT NULL
+    role : VARCHAR(30) NOT NULL [SUPER_ADMIN/ADMIN]
+    approval_status : VARCHAR(30) NOT NULL [PENDING/APPROVED/REJECTED/SUSPENDED]
+    requested_at : TIMESTAMPTZ NOT NULL
+    approved_by : UUID <<FK>> NULLABLE
+    approved_at : TIMESTAMPTZ NULLABLE
+    last_login_at : TIMESTAMPTZ NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' ADMIN_APPROVAL_HISTORY
+' ---------------------------------------------------------
+entity admin_approval_history {
+    id : UUID <<PK>> NOT NULL
+    --
+    admin_id : UUID <<FK>> NOT NULL
+    old_status : VARCHAR(30) NULLABLE
+    new_status : VARCHAR(30) NOT NULL
+    reviewed_by : UUID <<FK>> NULLABLE
+    reviewed_at : TIMESTAMPTZ NOT NULL
+    reason : TEXT NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' ADMIN_AUDIT_LOGS
+' ---------------------------------------------------------
+entity admin_audit_logs {
+    id : UUID <<PK>> NOT NULL
+    --
+    admin_id : UUID <<FK>> NOT NULL
+    action : VARCHAR(100) NOT NULL
+    entity_table : VARCHAR(100) NOT NULL
+    entity_id : UUID NULLABLE
+    before_value : JSONB NULLABLE
+    after_value : JSONB NULLABLE
+    activity_at : TIMESTAMPTZ NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' EXPORT_PRESETS
+' ---------------------------------------------------------
+entity export_presets {
+    id : UUID <<PK>> NOT NULL
+    --
+    created_by_admin_id : UUID <<FK>> NOT NULL
+    preset_name : VARCHAR(150) NOT NULL
+    dataset : VARCHAR(40) [TEAMS/MEMBERS/PAYMENTS/ANSWERS]
+    filter_definition : JSONB NOT NULL
+    column_definition : JSONB NOT NULL
+    default_format : VARCHAR(8) [XLSX/CSV]
+    header_hex : CHAR(7) NOT NULL DEFAULT #8C52FF
+    sheet_options : JSONB NOT NULL [AUTOFILTER/WIDTH/FREEZE]
+    is_shared : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+' ---------------------------------------------------------
+' EXPORT_RUNS
+' ---------------------------------------------------------
+entity export_runs {
+    id : UUID <<PK>> NOT NULL
+    --
+    requested_by_admin_id : UUID <<FK>> NOT NULL
+    preset_id : UUID <<FK>> NULLABLE
+    edition_id : UUID <<FK>> NULLABLE
+    dataset : VARCHAR(40) NOT NULL
+    file_format : VARCHAR(8) NOT NULL [XLSX/CSV]
+    applied_filters : JSONB NOT NULL
+    selected_columns : JSONB NOT NULL
+    row_count : INT NOT NULL
+    output_file_id : UUID <<FK>> NULLABLE
+    status : VARCHAR(20) NOT NULL [QUEUED/DONE/FAILED]
+    requested_at : TIMESTAMPTZ NOT NULL
+    completed_at : TIMESTAMPTZ NULLABLE
+    created_at : TIMESTAMPTZ
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+
+
+' =========================================================
+' 07 GRANULAR ADMIN PERMISSIONS & WEBSITE CMS / PREVIEW
+' =========================================================
+
+entity admin_permission_catalog {
+    permission_key : VARCHAR(80) <<PK>> NOT NULL
+    --
+    module_key : VARCHAR(40) NOT NULL
+    display_name : VARCHAR(120) NOT NULL
+    description : TEXT NULLABLE
+    assignable_to_admin : BOOLEAN NOT NULL
+    sort_order : INT NOT NULL
+    is_active : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ NOT NULL
+}
+
+entity admin_permission_assignments {
+    id : UUID <<PK>> NOT NULL
+    --
+    admin_id : UUID <<FK>> NOT NULL
+    permission_key : VARCHAR(80) <<FK>> NOT NULL
+    is_granted : BOOLEAN NOT NULL
+    granted_by_super_admin_id : UUID <<FK>> NOT NULL
+    granted_at : TIMESTAMPTZ NOT NULL
+    modified_at : TIMESTAMPTZ NOT NULL
+}
+
+entity site_content_slots {
+    id : UUID <<PK>> NOT NULL
+    --
+    page_key : VARCHAR(25) NOT NULL
+    section_key : VARCHAR(90) NOT NULL
+    slot_key : VARCHAR(130) NOT NULL
+    slot_type : VARCHAR(25) NOT NULL
+    editor_label : VARCHAR(200) NOT NULL
+    editor_help : TEXT NULLABLE
+    is_editable : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ NOT NULL
+    created_by : UUID <<FK>> NULLABLE
+    modified_at : TIMESTAMPTZ NOT NULL
+    modified_by : UUID <<FK>> NULLABLE
+}
+
+entity site_content_revisions {
+    id : UUID <<PK>> NOT NULL
+    --
+    slot_id : UUID <<FK>> NOT NULL
+    revision_number : INT NOT NULL
+    status : VARCHAR(20) NOT NULL [DRAFT/IN_REVIEW/PUBLISHED/ARCHIVED/REJECTED]
+    text_value : TEXT NULLABLE
+    link_url : TEXT NULLABLE
+    asset_file_id : UUID <<FK>> NULLABLE
+    poster_file_id : UUID <<FK>> NULLABLE
+    alt_text : TEXT NULLABLE
+    content_json : JSONB NOT NULL
+    display_order : INT NOT NULL
+    is_visible : BOOLEAN NOT NULL
+    created_at : TIMESTAMPTZ NOT NULL
+    created_by_admin_id : UUID <<FK>> NOT NULL
+    modified_at : TIMESTAMPTZ NOT NULL
+    published_at : TIMESTAMPTZ NULLABLE
+    published_by_admin_id : UUID <<FK>> NULLABLE
+}
+
+' =========================================================
+' RELATIONSHIPS (CROW'S FOOT)
+' =========================================================
+
+hackathon_editions ||--o{ edition_content_blocks : contains
+hackathon_editions ||--o{ edition_highlights : records
+hackathon_editions ||--o{ edition_domains : offers
+domains ||--o{ edition_domains : selected for
+hackathon_editions ||--o{ form_versions : forms
+form_versions ||--o{ form_sections : sections
+form_sections ||--o{ form_questions : questions
+form_questions ||--o{ form_question_options : options
+hackathon_editions ||--o{ team_registrations : receives
+domains ||--o{ team_registrations : chosen
+form_versions ||--o{ team_registrations : frozen version
+team_registrations ||--o{ team_members : includes
+team_registrations ||--o{ form_answers : answers
+team_members ||--o{ form_answers : member scope
+form_questions ||--o{ form_answers : answered
+team_registrations ||--o{ pitch_applications : pitch if YES
+team_members ||--o{ participant_consents : choices
+form_questions ||--o{ participant_consents : source
+team_registrations ||--o{ registration_status_history : status trail
+hackathon_editions ||--o{ payment_settings : payment config
+payment_settings ||--o{ team_registrations : snapshot
+team_registrations ||--o{ payment_submissions : proof attempts
+payment_settings ||--o{ payment_submissions : configured link
+file_assets ||--o{ payment_submissions : proof image
+payment_submissions ||--o{ payment_refunds : refunds
+file_assets ||--o{ team_members : photo
+file_assets ||--o{ form_answers : file answer
+file_assets ||--o{ edition_content_blocks : media
+file_assets ||--o{ edition_highlights : photo
+file_assets ||--o{ export_runs : generated file
+hackathon_editions ||--o{ file_assets : file scope
+team_registrations ||--o{ file_assets : upload scope
+admin_users ||--o{ admin_approval_history : signup reviews
+admin_users ||--o{ admin_audit_logs : actions
+admin_users ||--o{ export_presets : saved presets
+admin_users ||--o{ export_runs : exports
+export_presets ||--o{ export_runs : used in
+hackathon_editions ||--o{ export_runs : edition
+admin_users ||--o{ payment_submissions : verifies
+admin_users ||--o{ payment_refunds : records
+admin_users ||--o{ registration_status_history : updates
+
+
+admin_permission_catalog ||--o{ admin_permission_assignments : grants
+admin_users ||--o{ admin_permission_assignments : receives/authorizes
+site_content_slots ||--o{ site_content_revisions : versions
+admin_users ||--o{ site_content_slots : manages
+admin_users ||--o{ site_content_revisions : drafts/publishes
+file_assets ||--o{ site_content_revisions : media/poster
+
+' DESIGN RULES / REQUIRED CONSTRAINTS (proposal, implement after approval)
+' 1) One team registration per edition/team code. Exactly ONE LEADER per team (partial unique index on team_members when role=LEADER).
+' 2) Team capacity configured per hackathon_editions; INITIAL min=4, max=4, default=4 INCLUDING LEADER. Admin may change per edition.
+' 3) One edition/domain mapping per pair; only enabled domains accepted. Initial seed has exactly the 12 user-provided domains.
+' 4) One published form version per edition. Changes create a NEW form version; already submitted teams retain original version and answers.
+' 5) Admin can edit ALL questions incl required: wording, choices, order, help, input, validation, conditional visibility. Core fields nullable in DB if made optional.
+' 6) Q25 IS BOOLEAN investor_pitch_interest; YES/NO. Q20-Q24 and Q26 are only relevant when YES. Do not require hidden/inapplicable questions.
+' 7) Q18 count derived from team_members; Q19 names derived from other team_members; Q17 leader/member from role; do not maintain redundant strings.
+' 8) Canonical team/member identity columns support lookup; answers provide a form-version-specific history of displayed questions, including derived/bound values as snapshots.
+' 9) Initial payment form requires transaction_id AND proof screenshot when payment enabled; admin config controls required flags. Submit != paid; claims start PENDING.
+' 10) Enforce one VERIFIED non-refunded payment per team; allow another attempt after REJECTED proof. Verify transaction uniqueness where provider permits.
+' 11) Revenue = SUM(verified claimed_amount) - SUM(recorded refunds), not unverified claims; full refunds flagged in reporting.
+' 12) Images/documents stored in Supabase Storage; database stores metadata + stable paths and optional URL. Sensitive images in private buckets (short-lived signed URLs).
+' 13) Supabase Auth owns admin passwords/sessions; admin_users.auth_user_id references auth.users.id. Only APPROVED admins login. Only SUPER_ADMIN can approve.
+' 14) Q30 terms acceptance must be TRUE; Q31/Q32 require an explicit answer but FALSE is allowed. Consent decisions attributed per team member and policy version.
+' 15) Client disables SUBMIT until configured required fields validate; backend repeats validation atomically (published form, capacity, configured payment fields, duplicates).
+' 16) Admin dashboard filters apply to data retrieval AND exports; XLSX header purple #8C52FF, frozen first row, Autofilter, tailored widths, wraps, typed columns.
+' 17) SUPER_ADMIN has full access; ADMIN is restricted to individually assigned permissions. Payment/finance/admin security remain SUPER_ADMIN only.
+' 18) RLS/private storage, restricted exports, immutable audit trails, signed file access, server-side validation and payment-verification permissions required.
+' 19) Core 24 tables created by migrations 01-05; four new permission/CMS tables are PROPOSED in migration 07 (not applied remotely).
+
+' 20) CMS slot revisions enable Draft -> Private Preview -> Review -> SUPER_ADMIN Publish, without changing public theme/layout.
+' 21) Media files remain in Supabase Storage; public website never references private registration/payment assets.
+@enduml

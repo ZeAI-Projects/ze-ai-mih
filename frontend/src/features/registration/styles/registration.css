@@ -1,0 +1,33 @@
+.participation-faqs {
+  border-top: 1px solid var(--line);
+}
+
+.participation-faqs details {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.participation-faqs summary {
+  color: #362644;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.participation-faqs summary::marker {
+  color: var(--purple-dark);
+}
+.participation-faqs summary:focus-visible {
+  outline: 2px solid var(--purple-dark);
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+
+.participation-faqs p {
+  max-width: 800px;
+  margin-top: 13px;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.9;
+}

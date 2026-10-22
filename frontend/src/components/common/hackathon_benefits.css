@@ -1,0 +1,81 @@
+.hackathon-benefits {
+  background: #fcfaf6;
+}
+
+.hackathon-benefits .section-heading span {
+  color: var(--purple-dark);
+}
+
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.benefit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 25px 22px;
+  border: 1px solid #eae3ee;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.benefit-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eee6fc;
+  color: var(--purple-dark);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.benefit-card:nth-child(3n + 2) .benefit-number {
+  background: #edf2d4;
+  color: #506222;
+}
+
+.benefit-card:nth-child(3n) .benefit-number {
+  background: #fff0df;
+  color: #9c5317;
+}
+
+.benefit-card h3 {
+  margin: 5px 0 9px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.benefit-card p {
+  color: var(--body);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.hackathon-benefits--compact .benefit-card {
+  align-items: center;
+}
+
+.hackathon-benefits--compact .benefit-card h3 {
+  margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .benefit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .benefit-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .benefit-card {
+    padding: 22px;
+  }
+}

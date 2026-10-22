@@ -1,0 +1,2679 @@
+openapi: 3.1.0
+info:
+  title: 'ZeAI #MadeInIndia Hackathon API'
+  version: 1.0.0
+paths:
+  /api/v1/admin/me:
+    get:
+      tags:
+      - Admin Authentication
+      summary: Get Admin Profile
+      operationId: get_admin_profile_api_v1_admin_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/permissions:
+    get:
+      tags:
+      - Admin Authentication
+      summary: Get Admin Permissions
+      operationId: get_admin_permissions_api_v1_admin_permissions_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/apply:
+    post:
+      tags:
+      - Admin Applications & Permissions
+      summary: Apply Admin
+      operationId: apply_admin_api_v1_admin_apply_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyForAdmin'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/application-status:
+    get:
+      tags:
+      - Admin Applications & Permissions
+      summary: Get Application Status
+      operationId: get_application_status_api_v1_admin_application_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/applications/pending:
+    get:
+      tags:
+      - Admin Applications & Permissions
+      summary: Pending Applications
+      operationId: pending_applications_api_v1_admin_applications_pending_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/applications/{admin_id}:
+    patch:
+      tags:
+      - Admin Applications & Permissions
+      summary: Review Admin Application
+      operationId: review_admin_application_api_v1_admin_applications__admin_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: admin_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Admin Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewAdmin'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/{admin_id}/permissions/{permission_key}:
+    put:
+      tags:
+      - Admin Applications & Permissions
+      summary: Update Admin Permission
+      operationId: update_admin_permission_api_v1_admin__admin_id__permissions__permission_key__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: admin_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Admin Id
+      - name: permission_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Permission Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPermission'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions:
+    get:
+      tags:
+      - Admin Operations
+      summary: Editions
+      operationId: editions_api_v1_admin_editions_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/editions/{edition_id}:
+    patch:
+      tags:
+      - Admin Operations
+      summary: Edit Edition
+      operationId: edit_edition_api_v1_admin_editions__edition_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions/{edition_id}/publish:
+    post:
+      tags:
+      - Admin Operations
+      summary: Publish Edition
+      operationId: publish_edition_api_v1_admin_editions__edition_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      - name: open_registration
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Open Registration
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions/{edition_id}/domains:
+    get:
+      tags:
+      - Admin Operations
+      summary: Edition Domains
+      operationId: edition_domains_api_v1_admin_editions__edition_id__domains_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions/{edition_id}/domains/{domain_id}:
+    patch:
+      tags:
+      - Admin Operations
+      summary: Domain Toggle
+      operationId: domain_toggle_api_v1_admin_editions__edition_id__domains__domain_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Domain Id
+      - name: enabled
+        in: query
+        required: true
+        schema:
+          type: boolean
+          title: Enabled
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions/{edition_id}/payments/config:
+    get:
+      tags:
+      - Admin Operations
+      summary: Get Payment
+      operationId: get_payment_api_v1_admin_editions__edition_id__payments_config_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Admin Operations
+      summary: Set Payment
+      operationId: set_payment_api_v1_admin_editions__edition_id__payments_config_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentSettingsUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/cms/slots:
+    get:
+      tags:
+      - Admin Operations
+      summary: Content Slots
+      operationId: content_slots_api_v1_admin_cms_slots_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/cms/preview/{page_key}:
+    get:
+      tags:
+      - Admin Operations
+      summary: Cms Preview
+      operationId: cms_preview_api_v1_admin_cms_preview__page_key__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Page Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/cms/slots/{slot_id}/revisions:
+    post:
+      tags:
+      - Admin Operations
+      summary: New Revision
+      operationId: new_revision_api_v1_admin_cms_slots__slot_id__revisions_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: slot_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Slot Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentRevision'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/cms/revisions/{revision_id}/publish:
+    post:
+      tags:
+      - Admin Operations
+      summary: Publish Revision
+      operationId: publish_revision_api_v1_admin_cms_revisions__revision_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: revision_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Revision Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/cms/upload:
+    post:
+      tags:
+      - Admin Operations
+      summary: Cms Upload
+      operationId: cms_upload_api_v1_admin_cms_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_cms_upload_api_v1_admin_cms_upload_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/forms/editions/{edition_id}/versions:
+    get:
+      tags:
+      - Admin Operations
+      summary: Forms
+      operationId: forms_api_v1_admin_forms_editions__edition_id__versions_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/versions/{version_id}:
+    get:
+      tags:
+      - Admin Operations
+      summary: Form Detail
+      operationId: form_detail_api_v1_admin_forms_versions__version_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Version Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/editions/{edition_id}/clone:
+    post:
+      tags:
+      - Admin Operations
+      summary: Clone Form
+      operationId: clone_form_api_v1_admin_forms_editions__edition_id__clone_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/questions/{question_id}:
+    patch:
+      tags:
+      - Admin Operations
+      summary: Edit Question
+      operationId: edit_question_api_v1_admin_forms_questions__question_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: question_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Question Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/sections/{section_id}/questions:
+    post:
+      tags:
+      - Admin Operations
+      summary: Add Question
+      operationId: add_question_api_v1_admin_forms_sections__section_id__questions_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: section_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Section Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewQuestion'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/questions/{question_id}/options:
+    put:
+      tags:
+      - Admin Operations
+      summary: Set Option
+      operationId: set_option_api_v1_admin_forms_questions__question_id__options_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: question_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Question Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/forms/versions/{version_id}/publish:
+    post:
+      tags:
+      - Admin Operations
+      summary: Publish Form
+      operationId: publish_form_api_v1_admin_forms_versions__version_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Version Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/dashboard:
+    get:
+      tags:
+      - Admin Operations
+      summary: Overview
+      operationId: overview_api_v1_admin_dashboard_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/teams:
+    get:
+      tags:
+      - Admin Operations
+      summary: Teams
+      operationId: teams_api_v1_admin_teams_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      - name: domain_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Domain Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/participants:
+    get:
+      tags:
+      - Admin Operations
+      summary: Participants
+      operationId: participants_api_v1_admin_participants_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/teams/{registration_id}/review:
+    patch:
+      tags:
+      - Admin Operations
+      summary: Review Team
+      operationId: review_team_api_v1_admin_teams__registration_id__review_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamReview'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/revenue:
+    get:
+      tags:
+      - Admin Operations
+      summary: Revenue
+      operationId: revenue_api_v1_admin_revenue_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/revenue/payments/{payment_id}:
+    patch:
+      tags:
+      - Admin Operations
+      summary: Payment Review
+      operationId: payment_review_api_v1_admin_revenue_payments__payment_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Payment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentReview'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/statistics:
+    get:
+      tags:
+      - Admin Operations
+      summary: Statistics
+      operationId: statistics_api_v1_admin_statistics_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/history:
+    get:
+      tags:
+      - Admin Operations
+      summary: History
+      operationId: history_api_v1_admin_history_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/audit-logs:
+    get:
+      tags:
+      - Admin Operations
+      summary: Audit
+      operationId: audit_api_v1_admin_audit_logs_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/exports:
+    post:
+      tags:
+      - Admin Operations
+      summary: Exports
+      operationId: exports_api_v1_admin_exports_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/exports/history:
+    get:
+      tags:
+      - Admin Operations
+      summary: Export History
+      operationId: export_history_api_v1_admin_exports_history_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/files/{asset_id}/signed-url:
+    get:
+      tags:
+      - Admin Operations
+      summary: File Access
+      operationId: file_access_api_v1_admin_files__asset_id__signed_url_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Asset Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/permission-catalog:
+    get:
+      tags:
+      - Admin Operations
+      summary: Permission Catalog
+      operationId: permission_catalog_api_v1_admin_permission_catalog_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/admins:
+    get:
+      tags:
+      - Admin Operations
+      summary: Admin List
+      operationId: admin_list_api_v1_admin_admins_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/admins/{admin_id}/grants:
+    get:
+      tags:
+      - Admin Operations
+      summary: Grants
+      operationId: grants_api_v1_admin_admins__admin_id__grants_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: admin_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Admin Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/export-presets:
+    get:
+      tags:
+      - Admin Operations
+      summary: Presets
+      operationId: presets_api_v1_admin_export_presets_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - Admin Operations
+      summary: Create Preset
+      operationId: create_preset_api_v1_admin_export_presets_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preset'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/editions/{edition_id}/blocks:
+    get:
+      tags:
+      - Admin Operations
+      summary: Event Blocks
+      operationId: event_blocks_api_v1_admin_editions__edition_id__blocks_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Admin Operations
+      summary: Save Event Block
+      operationId: save_event_block_api_v1_admin_editions__edition_id__blocks_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventBlock'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/editions/{edition_id}/highlights:
+    get:
+      tags:
+      - Admin Operations
+      summary: Get Highlights
+      operationId: get_highlights_api_v1_admin_editions__edition_id__highlights_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Admin Operations
+      summary: New Highlight
+      operationId: new_highlight_api_v1_admin_editions__edition_id__highlights_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: edition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Edition Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditionHighlight'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/teams/{registration_id}:
+    get:
+      tags:
+      - Admin Operations
+      summary: Team Info
+      operationId: team_info_api_v1_admin_teams__registration_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/participants/{member_id}:
+    get:
+      tags:
+      - Admin Operations
+      summary: Participant Info
+      operationId: participant_info_api_v1_admin_participants__member_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: member_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Member Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/public/editions:
+    get:
+      tags:
+      - Public Content
+      summary: Editions
+      operationId: editions_api_v1_public_editions_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/public/editions/{code}/registration-config:
+    get:
+      tags:
+      - Public Content
+      summary: Configuration
+      operationId: configuration_api_v1_public_editions__code__registration_config_get
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Code
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/public/site-content/{page_key}:
+    get:
+      tags:
+      - Public Content
+      summary: Published Content
+      operationId: published_content_api_v1_public_site_content__page_key__get
+      parameters:
+      - name: page_key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Page Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{edition_code}/start:
+    post:
+      tags:
+      - Team Registration
+      summary: Start
+      operationId: start_api_v1_registrations__edition_code__start_post
+      parameters:
+      - name: edition_code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Edition Code
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}:
+    get:
+      tags:
+      - Team Registration
+      summary: Get Draft
+      operationId: get_draft_api_v1_registrations__registration_id__get
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/team:
+    put:
+      tags:
+      - Team Registration
+      summary: Team
+      operationId: team_api_v1_registrations__registration_id__team_put
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/answers:
+    put:
+      tags:
+      - Team Registration
+      summary: Answers
+      operationId: answers_api_v1_registrations__registration_id__answers_put
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswersUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/upload:
+    post:
+      tags:
+      - Team Registration
+      summary: Upload Registration File
+      operationId: upload_registration_file_api_v1_registrations__registration_id__upload_post
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_registration_file_api_v1_registrations__registration_id__upload_post'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/payment-evidence:
+    post:
+      tags:
+      - Team Registration
+      summary: Payment
+      operationId: payment_api_v1_registrations__registration_id__payment_evidence_post
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentEvidence'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/validation:
+    get:
+      tags:
+      - Team Registration
+      summary: Validation
+      operationId: validation_api_v1_registrations__registration_id__validation_get
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/registrations/{registration_id}/submit:
+    post:
+      tags:
+      - Team Registration
+      summary: Submit
+      operationId: submit_api_v1_registrations__registration_id__submit_post
+      parameters:
+      - name: registration_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Registration Id
+      - name: x-registration-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Registration-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/signup:
+    post:
+      tags:
+      - Admin Login & Signup
+      summary: Signup
+      operationId: signup_api_v1_auth_signup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Admin Login & Signup
+      summary: Login
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/admin/profile:
+    patch:
+      tags:
+      - Admin Login & Signup
+      summary: Profile Update
+      operationId: profile_update_api_v1_auth_admin_profile_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Admin Login & Signup
+      summary: Refresh Session
+      operationId: refresh_session_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    Account:
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          minLength: 6
+          title: Email
+        password:
+          type: string
+          maxLength: 256
+          minLength: 8
+          title: Password
+      additionalProperties: false
+      type: object
+      required:
+      - email
+      - password
+      title: Account
+    Answer:
+      properties:
+        question_id:
+          type: string
+          format: uuid
+          title: Question Id
+        member_order:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Member Order
+        value:
+          anyOf:
+          - {}
+          - type: 'null'
+          title: Value
+        file_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: File Id
+      additionalProperties: false
+      type: object
+      required:
+      - question_id
+      title: Answer
+    AnswersUpdate:
+      properties:
+        answers:
+          items:
+            $ref: '#/components/schemas/Answer'
+          type: array
+          maxItems: 250
+          minItems: 1
+          title: Answers
+      additionalProperties: false
+      type: object
+      required:
+      - answers
+      title: AnswersUpdate
+    ApplyForAdmin:
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Full Name
+      additionalProperties: false
+      type: object
+      required:
+      - full_name
+      title: ApplyForAdmin
+    ApprovalDecision:
+      type: string
+      enum:
+      - APPROVED
+      - REJECTED
+      - SUSPENDED
+      title: ApprovalDecision
+    Body_cms_upload_api_v1_admin_cms_upload_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+      type: object
+      required:
+      - file
+      title: Body_cms_upload_api_v1_admin_cms_upload_post
+    Body_upload_registration_file_api_v1_registrations__registration_id__upload_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+      type: object
+      required:
+      - file
+      title: Body_upload_registration_file_api_v1_registrations__registration_id__upload_post
+    ContentRevision:
+      properties:
+        text_value:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text Value
+        link_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Link Url
+        alt_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Alt Text
+        asset_file_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Asset File Id
+        poster_file_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Poster File Id
+        content_json:
+          additionalProperties: true
+          type: object
+          title: Content Json
+        display_order:
+          type: integer
+          title: Display Order
+          default: 0
+        is_visible:
+          type: boolean
+          title: Is Visible
+          default: true
+      additionalProperties: false
+      type: object
+      title: ContentRevision
+    EditionHighlight:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        highlight_date:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Highlight Date
+        media_file_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Media File Id
+        metrics_json:
+          additionalProperties: true
+          type: object
+          title: Metrics Json
+        display_order:
+          type: integer
+          title: Display Order
+          default: 0
+        is_visible:
+          type: boolean
+          title: Is Visible
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - title
+      title: EditionHighlight
+    EditionUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        tagline:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tagline
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        starts_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Starts At
+        ends_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Ends At
+        registration_opens_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Registration Opens At
+        registration_closes_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Registration Closes At
+        venue:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Venue
+        location:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location
+        event_mode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Mode
+        eligibility_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Eligibility Text
+        guidelines_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Guidelines Text
+        min_team_size:
+          anyOf:
+          - type: integer
+            maximum: 20.0
+            minimum: 1.0
+          - type: 'null'
+          title: Min Team Size
+        max_team_size:
+          anyOf:
+          - type: integer
+            maximum: 20.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Team Size
+        default_team_size:
+          anyOf:
+          - type: integer
+            maximum: 20.0
+            minimum: 1.0
+          - type: 'null'
+          title: Default Team Size
+      additionalProperties: false
+      type: object
+      title: EditionUpdate
+    EventBlock:
+      properties:
+        block_key:
+          type: string
+          pattern: ^[a-zA-Z][a-zA-Z0-9_-]{0,99}$
+          title: Block Key
+        block_type:
+          type: string
+          pattern: ^(ANNOUNCEMENT|FAQ|DETAIL|INSTRUCTION)$
+          title: Block Type
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        body:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Body
+        content_json:
+          additionalProperties: true
+          type: object
+          title: Content Json
+        asset_file_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Asset File Id
+        display_order:
+          type: integer
+          title: Display Order
+          default: 0
+        is_visible:
+          type: boolean
+          title: Is Visible
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - block_key
+      - block_type
+      title: EventBlock
+    ExportRequest:
+      properties:
+        dataset:
+          type: string
+          pattern: ^(TEAMS|MEMBERS|PAYMENTS|ANSWERS)$
+          title: Dataset
+        file_format:
+          type: string
+          pattern: ^(CSV|XLSX)$
+          title: File Format
+          default: XLSX
+        edition_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Edition Id
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        domain_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Domain Id
+        date_from:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Date From
+        date_to:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Date To
+        columns:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Columns
+      additionalProperties: false
+      type: object
+      required:
+      - dataset
+      title: ExportRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Member:
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Full Name
+        email:
+          type: string
+          maxLength: 254
+          minLength: 5
+          title: Email
+        mobile:
+          type: string
+          maxLength: 30
+          minLength: 7
+          title: Mobile
+      additionalProperties: false
+      type: object
+      required:
+      - full_name
+      - email
+      - mobile
+      title: Member
+    NewQuestion:
+      properties:
+        field_key:
+          type: string
+          pattern: ^[a-z][a-z0-9_]{1,88}$
+          title: Field Key
+        question_label:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Question Label
+        input_type:
+          type: string
+          title: Input Type
+        answer_scope:
+          type: string
+          title: Answer Scope
+        is_required:
+          type: boolean
+          title: Is Required
+          default: true
+        display_order:
+          type: integer
+          title: Display Order
+          default: 0
+      additionalProperties: false
+      type: object
+      required:
+      - field_key
+      - question_label
+      - input_type
+      - answer_scope
+      title: NewQuestion
+    OptionUpdate:
+      properties:
+        option_value:
+          type: string
+          maxLength: 150
+          minLength: 1
+          title: Option Value
+        option_label:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Option Label
+        display_order:
+          type: integer
+          title: Display Order
+          default: 0
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - option_value
+      - option_label
+      title: OptionUpdate
+    PaymentEvidence:
+      properties:
+        transaction_id:
+          type: string
+          maxLength: 150
+          minLength: 4
+          title: Transaction Id
+        proof_file_id:
+          type: string
+          format: uuid
+          title: Proof File Id
+      additionalProperties: false
+      type: object
+      required:
+      - transaction_id
+      - proof_file_id
+      title: PaymentEvidence
+    PaymentReview:
+      properties:
+        status:
+          type: string
+          pattern: ^(VERIFIED|REJECTED)$
+          title: Status
+        rejection_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rejection Reason
+      additionalProperties: false
+      type: object
+      required:
+      - status
+      title: PaymentReview
+    PaymentSettingsUpdate:
+      properties:
+        button_label:
+          type: string
+          maxLength: 100
+          minLength: 2
+          title: Button Label
+        razorpay_payment_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Razorpay Payment Url
+        fee_amount:
+          type: number
+          minimum: 0.0
+          title: Fee Amount
+          default: 0
+        payment_required:
+          type: boolean
+          title: Payment Required
+          default: false
+        proof_required:
+          type: boolean
+          title: Proof Required
+          default: false
+        activate:
+          type: boolean
+          title: Activate
+          default: false
+        instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions
+      additionalProperties: false
+      type: object
+      required:
+      - button_label
+      title: PaymentSettingsUpdate
+    Preset:
+      properties:
+        name:
+          type: string
+          maxLength: 150
+          minLength: 2
+          title: Name
+        dataset:
+          type: string
+          pattern: ^(TEAMS|MEMBERS|PAYMENTS|ANSWERS)$
+          title: Dataset
+        file_format:
+          type: string
+          pattern: ^(XLSX|CSV)$
+          title: File Format
+          default: XLSX
+        filters:
+          additionalProperties: true
+          type: object
+          title: Filters
+        columns:
+          items:
+            type: string
+          type: array
+          title: Columns
+        is_shared:
+          type: boolean
+          title: Is Shared
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - dataset
+      title: Preset
+    ProfileUpdate:
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Full Name
+      additionalProperties: false
+      type: object
+      required:
+      - full_name
+      title: ProfileUpdate
+    QuestionUpdate:
+      properties:
+        question_label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question Label
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        placeholder:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Placeholder
+        is_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Required
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        display_order:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Display Order
+        validation_rules:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Validation Rules
+        visibility_rules:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Visibility Rules
+      additionalProperties: false
+      type: object
+      title: QuestionUpdate
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          minLength: 12
+          title: Refresh Token
+      additionalProperties: false
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    ReviewAdmin:
+      properties:
+        decision:
+          $ref: '#/components/schemas/ApprovalDecision'
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - decision
+      title: ReviewAdmin
+    SetPermission:
+      properties:
+        is_granted:
+          type: boolean
+          title: Is Granted
+      additionalProperties: false
+      type: object
+      required:
+      - is_granted
+      title: SetPermission
+    TeamReview:
+      properties:
+        status:
+          type: string
+          pattern: ^(APPROVED|REJECTED|REVIEW)$
+          title: Status
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - status
+      title: TeamReview
+    TeamUpdate:
+      properties:
+        team_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Team Name
+        source_team_id:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Source Team Id
+        participant_category:
+          anyOf:
+          - type: string
+            maxLength: 60
+          - type: 'null'
+          title: Participant Category
+        domain_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Domain Id
+        investor_pitch_interest:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Investor Pitch Interest
+        members:
+          items:
+            $ref: '#/components/schemas/Member'
+          type: array
+          maxItems: 20
+          minItems: 1
+          title: Members
+      additionalProperties: false
+      type: object
+      required:
+      - team_name
+      - members
+      title: TeamUpdate
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

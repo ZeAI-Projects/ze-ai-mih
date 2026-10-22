@@ -1,0 +1,135 @@
+.gallery-spotlight {
+  margin: 62px 0 0;
+}
+.gallery-spotlight > button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #ddd1ea;
+  border-radius: 25px;
+  background: #30243d;
+  color: #fff;
+  text-align: left;
+}
+.gallery-spotlight > button:focus-visible {
+  outline-offset: 5px;
+}
+.spotlight-image {
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.spotlight-image > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  object-position: center 45%;
+  transition: transform 500ms ease;
+}
+.spotlight-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 30px;
+  background: #e3f3a0;
+  color: #30243d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+.spotlight-label .icon {
+  width: 18px;
+  height: 18px;
+}
+.spotlight-expand {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  color: #653697;
+  transition: transform 220ms ease;
+}
+.spotlight-caption {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 32px;
+}
+.spotlight-caption strong {
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1.16;
+  letter-spacing: -1.2px;
+  color: #fff;
+}
+.spotlight-caption > span {
+  font-size: 17px;
+  line-height: 1.65;
+  color: #e5ddeb;
+}
+.spotlight-caption > .spotlight-label {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #30243d;
+}
+.gallery-panel--afterparty .gallery-spotlight {
+  margin: 0 0 32px;
+}
+.gallery-panel--afterparty .gallery-spotlight > button {
+  border-color: #725689;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .gallery-spotlight > button:hover img {
+    transform: scale(1.025);
+  }
+  .gallery-spotlight > button:hover .spotlight-expand {
+    transform: rotate(-8deg);
+  }
+}
+@media (max-width: 600px) {
+  .gallery-spotlight {
+    margin-top: 38px;
+  }
+  .gallery-spotlight > button {
+    border-radius: 18px;
+  }
+  .spotlight-image > img {
+    aspect-ratio: 3 / 2;
+  }
+  .spotlight-caption > .spotlight-label {
+    padding: 8px 10px;
+    font-size: 10px;
+    letter-spacing: 0.7px;
+  }
+  .spotlight-expand {
+    right: 12px;
+    bottom: 12px;
+    width: 40px;
+    height: 40px;
+  }
+  .spotlight-caption {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 22px;
+  }
+  .spotlight-caption > span {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-image > img,
+  .spotlight-expand {
+    transition: none;
+  }
+}
