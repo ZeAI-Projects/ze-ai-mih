@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useReducedMotion } from '@/hooks/use_reduced_motion';
 import type { FlightController, FlightPhase } from './flight3d';
 import './flight_experience.css';
 
-const SKYLINE = '/media/flight/kuala-lumpur-skyline.png';
+import { useFlightEnvironment } from './flightEnvironment';
 const labels: Record<FlightPhase, string> = {
   entry: 'Your journey to Malaysia has begun.',
-  flyover: 'Revealing Kuala Lumpur in your wake.',
+  turn: 'Banking left and climbing toward Kuala Lumpur.',
+  flyover: 'Flying above Kuala Lumpur.',
   exit: 'Arriving in Malaysia.',
 };
 
 export default function FlightExperience() {
   const reduced = useReducedMotion();
+  const { environment, prepare } = useFlightEnvironment();
   const [state, setState] = useState<'ready' | 'flying' | 'arrived'>('ready');
   const [phase, setPhase] = useState<FlightPhase | 'loading'>('loading');
   const [progress, setProgress] = useState(0);
@@ -34,19 +37,23 @@ export default function FlightExperience() {
   const finish = useCallback((text = 'Journey complete. Malaysia unlocked!') => {
     generation.current += 1;
     flight.current?.dispose(); flight.current = null;
-    viewport.current?.style.setProperty('--destination-edge', '100%');
     locked.current = false;
     setMessage(text); setState('arrived');
   }, []);
 
-  const launch = () => {
+  const launch = async () => {
     if (locked.current) return;
-    locked.current = true; generation.current += 1;
+    locked.current = true; const token = ++generation.current;
     flight.current?.dispose(); flight.current = null;
     start.current = null; amount.current = 0;
-    viewport.current?.style.setProperty('--destination-edge', reduced ? '100%' : '0%');
     setDragging(false); setProgress(0); setPhase('loading');
     setRun(value => value + 1);
+    setMessage('Preparing your Kuala Lumpur skyline?');
+    try { await prepare(); } catch {
+      if (token === generation.current) finish('Malaysia unlocked. Destination graphics are unavailable.');
+      return;
+    }
+    if (token !== generation.current) return;
     if (reduced) {
       finish('Malaysia unlocked. Motion reduced to match your preferences.');
     } else {
@@ -55,9 +62,33 @@ export default function FlightExperience() {
   };
 
   useEffect(() => {
-    if (state === 'arrived') prize.current?.focus({ preventScroll: true });
+    if (state === 'arrived') {
+      prize.current?.focus({ preventScroll: true });
+      prize.current?.scrollIntoView({ block: 'nearest', behavior: reduced ? 'instant' : 'smooth' });
+    }
     if (state === 'flying') skip.current?.focus({ preventScroll: true });
-  }, [state, run]);
+  }, [state, run, reduced]);
+
+  useEffect(() => {
+    if (state !== 'flying') return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); finish('Flight skipped. Explore the 2027 rewards.'); }
+      if (event.key === 'Tab') {
+        const controls = Array.from(viewport.current?.querySelectorAll<HTMLElement>('button, a[href]') ?? []);
+        if (!controls.length) return;
+        event.preventDefault();
+        const index = controls.indexOf(document.activeElement as HTMLElement);
+        controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus({ preventScroll: true });
+      }
+    };
+    document.addEventListener('keydown', keyboard);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', keyboard);
+    };
+  }, [state, finish]);
 
   useEffect(() => {
     if (state !== 'flying') return;
@@ -73,21 +104,11 @@ export default function FlightExperience() {
       if (document.hidden && active()) finish('Flight skipped while away. Malaysia unlocked!');
     };
     document.addEventListener('visibilitychange', visibility);
-    const image = new Image(); image.src = SKYLINE;
-    Promise.all([
-      import('./flight3d'),
-      image.decode().then(() => true, () => false),
-    ]).then(([{ startFlight }, loaded]) => {
+    import('./flight3d').then(({ startFlight }) => {
       if (!active() || !canvas.current) return;
-      if (!loaded) {
-        setImageFailed(true);
-        finish('Malaysia unlocked. The destination photograph could not load; registration is still available.');
-        return;
-      }
-      setImageFailed(false);
       controller = startFlight(canvas.current, next => {
         if (active()) { setPhase(next); setMessage(labels[next]); }
-      }, () => { if (active()) finish(); });
+      }, () => { if (active()) finish(); }, viewport.current?.closest('[data-theme]')?.getAttribute('data-theme') === 'dark');
       flight.current = controller;
       if (!controller) finish('Malaysia unlocked. Showing the still destination because 3D is unavailable.');
     }).catch(() => {
@@ -100,15 +121,18 @@ export default function FlightExperience() {
     };
   }, [state, reduced, run, finish]);
 
-  return <div className={`flight-experience cinematic-flight layout-two flight-${state}`}
-    onKeyDown={event => {
-      if (event.key === 'Escape' && state === 'flying') {
-        event.preventDefault(); finish('Flight skipped. Explore the 2027 rewards.');
-      }
-    }}>
-    <div className="destination-scene">
-      {/* One stationary frame is shared by preparation, flight, and the settled destination. */}
-      <div ref={viewport} className={`flight-viewport phase-${phase}`} role="region" aria-label="Flight to Kuala Lumpur">
+  useEffect(() => { flight.current?.setTheme(environment.theme === 'dark'); }, [environment.theme]);
+  useEffect(() => () => { ++generation.current; }, []);
+
+  const reward = <div ref={prize} tabIndex={-1} className="prize-unlocked" role="region" aria-label="Malaysia unlocked rewards">
+      {!reduced && <div className="prize-burst" aria-hidden="true"><span className="prize-ring" />{Array.from({length:12},(_,i)=><i key={i} style={{'--burst-angle': `${i*30}deg`} as CSSProperties} />)}</div>}
+      <span className="season-tag">MALAYSIA UNLOCKED</span><strong>₹20,00,000</strong><span>TOTAL PRIZE POOL — 2027</span>
+      <p>₹10,00,000 GRAND WINNER</p><small>Malaysia trip for three grand-winning members.</small>
+      <Link className="button button-primary" to="/#register">REGISTER FOR 2027 →</Link>
+      <button className="text-link" type="button" onClick={launch}>Replay flight ↻</button>
+    </div>;
+
+  const flightScene = <div ref={viewport} className={`flight-viewport phase-${phase}`} role={state === 'flying' ? 'dialog' : 'region'} aria-modal={state === 'flying' ? true : undefined} aria-label="Flight to Kuala Lumpur">
         {state === 'ready' ? <div className="destination-copy">
           <span className="season-tag">2027 · NEXT LEVEL</span>
           <h3>Your ideas.<br />A world of possibilities.</h3>
@@ -118,8 +142,8 @@ export default function FlightExperience() {
           <span className="season-tag">{state === 'arrived' ? 'MALAYSIA UNLOCKED' : phase === 'loading' ? 'PREPARING YOUR FLIGHT' : 'TAKEOFF CONFIRMED'}</span>
           <h3>India → Malaysia</h3>
         </div>}
-        <figure className={`flight-city${imageFailed ? ' image-unavailable' : ''}`} aria-hidden={state !== 'arrived'}>
-          <img src={SKYLINE} alt="Kuala Lumpur city skyline with the Petronas Twin Towers" width="768" height="432"
+        <figure className={`flight-city${imageFailed ? ' image-unavailable' : ''}`} aria-hidden={state !== 'arrived'} style={{ '--skyline-image': `url("${environment.src}")` } as CSSProperties}>
+          <img src={environment.src} alt="Kuala Lumpur city skyline with the Petronas Twin Towers" width="768" height="432"
             onLoad={() => setImageFailed(false)} onError={() => setImageFailed(true)} />
           {imageFailed && <span className="flight-image-fallback">KUALA LUMPUR<br /><small>Destination photograph unavailable</small></span>}
           <figcaption>KUALA LUMPUR, MALAYSIA</figcaption>
@@ -128,7 +152,19 @@ export default function FlightExperience() {
         {state === 'flying' && <canvas key={run} aria-hidden="true" ref={canvas} />}
         {state === 'flying' && <button ref={skip} className="button button-secondary flight-stop" type="button"
           onClick={() => finish('Flight skipped. Explore the 2027 rewards.')}>Skip flight</button>}
-      </div>
+      </div>;
+
+  return <div data-theme={environment.theme} className={`flight-experience cinematic-flight layout-two flight-${state}`}
+    onKeyDown={event => {
+      if (event.key === 'Escape' && state === 'flying') {
+        event.preventDefault(); finish('Flight skipped. Explore the 2027 rewards.');
+      }
+    }}>
+    <div className="destination-scene">
+      {/* One stationary frame is shared by preparation, flight, and the settled destination. */}
+      {state === 'flying'
+        ? createPortal(<div data-theme={environment.theme} className={`cinematic-flight layout-two flight-${state} flight-overlay`}>{flightScene}</div>, document.body)
+        : flightScene}
     </div>
     <div className="flight-controls">
       {state === 'ready' && <>
@@ -161,11 +197,7 @@ export default function FlightExperience() {
       </>}
       <p role="status" aria-live="polite" aria-atomic="true" className="flight-status">{message}</p>
     </div>
-    {state === 'arrived' && <div ref={prize} tabIndex={-1} className="prize-unlocked" role="region" aria-label="Malaysia unlocked rewards">
-      <span className="season-tag">MALAYSIA UNLOCKED</span><strong>₹20,00,000</strong><span>TOTAL PRIZE POOL — 2027</span>
-      <p>₹10,00,000 GRAND WINNER</p><small>Malaysia trip for three grand-winning members.</small>
-      <Link className="button button-primary" to="/#register">REGISTER FOR 2027 →</Link>
-      <button className="text-link" type="button" onClick={launch}>Replay flight ↻</button>
-    </div>}
+    {state === 'arrived' && reward}
+
   </div>;
 }

@@ -2,33 +2,38 @@ import * as THREE from 'three';
 import brandUrl from '@/assets/images/header-brand.webp';
 import labxUrl from '@/assets/images/labx-original.webp';
 
-export type FlightPhase = 'entry' | 'flyover' | 'exit';
-export const FLIGHT_DURATION = 7000;
-// Endpoints are calculated from the complete projected aircraft bounds on resize.
-const FLIGHT_HEIGHT = 0.47;
-
-export type FlightController = { dispose: () => void };
-
-/** Integrated velocity: short ramps, with constant speed through most of the flight. */
-export function flightTravel(t: number) {
-  const entry = 700 / FLIGHT_DURATION, exit = 800 / FLIGHT_DURATION;
-  const distance = 1 - (entry + exit) / 2;
-  const p = THREE.MathUtils.clamp(t, 0, 1);
-  if (p < entry) return p * p / (2 * entry * distance);
-  if (p > 1 - exit) return 1 - (1 - p) ** 2 / (2 * exit * distance);
-  return (p - entry / 2) / distance;
+export type FlightPhase = 'entry' | 'turn' | 'flyover' | 'exit';
+export const FLIGHT_DURATION = 9000;
+// The incoming climb stays outside the right edge until it clears the visible city.
+// Depth through the left turn produces a yawing passenger-jet turn, not a vertical roll.
+const route = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(1.40, 1.22, -2), new THREE.Vector3(1.32, .48, -1),
+  new THREE.Vector3(.70, .37, 1), new THREE.Vector3(.30, .34, 3),
+  new THREE.Vector3(.18, .29, 0), new THREE.Vector3(.34, .22, -3),
+  new THREE.Vector3(.68, .16, -4), new THREE.Vector3(.98, -.08, -5),
+  new THREE.Vector3(1.40, -.40, -7),
+], false, 'centripetal');
+const milestones = [0, .10, .22, .34, .43, .54, .70, .86, 1];
+function routeParameter(t: number) {
+  const last = milestones.length - 1;
+  const i = Math.min(last-1, Math.max(0, milestones.findIndex((p, i) => i > 0 && t <= p) - 1));
+  const span = milestones[i+1] - milestones[i], u = (t-milestones[i])/span;
+  const slope = (j: number) => j === 0 || j === last ? 0 : 2 / (last * (milestones[j+1]-milestones[j-1]));
+  return (2*u**3-3*u*u+1)*i/last + (u**3-2*u*u+u)*span*slope(i)
+    + (-2*u**3+3*u*u)*(i+1)/last + (u**3-u*u)*span*slope(i+1);
 }
 
+export type FlightController = { dispose: () => void; setTheme: (dark: boolean) => void };
+
 /** A single bounded renderer/timeline. No renderer is created before an explicit launch. */
-export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPhase) => void, onComplete: () => void): FlightController | null {
+export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPhase) => void, onComplete: () => void, night = false): FlightController | null {
   let renderer: THREE.WebGLRenderer;
   try { renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: window.innerWidth > 600, powerPreference: 'low-power' }); }
   catch { return null; }
   const scene = new THREE.Scene();
-  const stage = canvas.parentElement!;
   let width = Math.max(1, canvas.clientWidth), viewportHeight = Math.max(1, canvas.clientHeight);
   const worldHeight = 10;
-  const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, .1, 100);
+  const camera = new THREE.PerspectiveCamera(2 * Math.atan(worldHeight / 36) * 180 / Math.PI, width / viewportHeight, .1, 100);
   camera.position.set(0, 0, 18);
   camera.updateMatrixWorld();
   renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 700 ? 1.25 : 1.75));
@@ -37,20 +42,26 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.setClearColor(0x000000, 0);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xb8a4d5, 2));
+  const ambient = new THREE.HemisphereLight(0xffffff, 0xb8a4d5, 2); scene.add(ambient);
   const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(4, 7, 9); scene.add(key);
   const fill = new THREE.DirectionalLight(0xe6dcff, .7); fill.position.set(-5, 2, 4); scene.add(fill);
 
+  const setTheme = (darkMode: boolean) => {
+    ambient.color.set(darkMode ? 0xb8c9ff : 0xffffff);
+    ambient.intensity = darkMode ? 1.5 : 2;
+    key.color.set(darkMode ? 0xe4eaff : 0xffffff);
+    fill.color.set(darkMode ? 0x9d7eff : 0xe6dcff);
+  };
+  setTheme(night);
   const jet = new THREE.Group(); scene.add(jet);
-  const white = new THREE.MeshStandardMaterial({ color: 0xf5f3ff, roughness: .85, metalness: .02 });
+  const white = new THREE.MeshStandardMaterial({ color: 0xf5f3ff, roughness: .36, metalness: .24 });
   const purple = new THREE.MeshStandardMaterial({ color: 0x6936c4, roughness: .8, metalness: .03 });
-  const silver = new THREE.MeshStandardMaterial({ color: 0xbec9df, roughness: .8, metalness: .05 });
+  const silver = new THREE.MeshStandardMaterial({ color: 0xbec9df, roughness: .25, metalness: .65 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x665a85, roughness: .8, metalness: .02 });
   const profile = [[.04,-3.5],[.13,-3.05],[.29,-2.4],[.43,-1.7],[.46,1.65],[.39,2.2],[.28,2.65],[.10,3.03],[0,3.12]];
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile.map(([r,y]) => new THREE.Vector2(r,y)), 28), white);
   body.rotation.z = -Math.PI/2; jet.add(body);
-  const belly = new THREE.Mesh(new THREE.CylinderGeometry(.455,.455,3.7,24,1,true,0,Math.PI), purple);
-  belly.rotation.z = -Math.PI/2; belly.position.x = -.05; jet.add(belly);
+
 
   function wing(points: number[][], depth: number, material: THREE.Material) {
     const shape = new THREE.Shape(points.map(([x,z]) => new THREE.Vector2(x,z)));
@@ -90,14 +101,43 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     }
     ctx.fillStyle='#281342';ctx.fillRect(295,36,210,128);
     if(labx.complete && labx.naturalWidth) ctx.drawImage(labx,305,55,190,87);
-    ctx.fillStyle='#8053c4';ctx.font='28px sans-serif';ctx.fillText('×',260,110);ctx.fillText('×',520,110);
+    ctx.fillStyle='#8053c4';ctx.font='28px sans-serif';ctx.fillText('Ã—',260,110);ctx.fillText('Ã—',520,110);
     texture.needsUpdate=true;
   };
   brand.onload=paint;labx.onload=paint;brand.src=brandUrl;labx.src=labxUrl;
   const sidePanel = new THREE.Mesh(new THREE.PlaneGeometry(2,.26),brandMaterial); sidePanel.position.set(.05,-.04,.466); jet.add(sidePanel);
   const farPanel = sidePanel.clone(); farPanel.position.z=-.466; farPanel.rotation.y=Math.PI; jet.add(farPanel);
+  // Attached cloth mesh; its leading edge stays fixed to the short tail tether.
+  const bannerGeometry = new THREE.PlaneGeometry(2.6, .64, 16, 3);
+  const banner = new THREE.Mesh(bannerGeometry, new THREE.MeshStandardMaterial({map: texture, roughness: .8, side: THREE.FrontSide}));
+  banner.position.set(-5.7, .1, .12); jet.add(banner);
+  const backGeometry = bannerGeometry.clone();
+  const back = new THREE.Mesh(backGeometry, new THREE.MeshStandardMaterial({map: texture, roughness: .8, side: THREE.BackSide}));
+  banner.add(back);
+  const tether = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-3.5,.1,.12),new THREE.Vector3(-4.4,.1,.12)]), new THREE.LineBasicMaterial({color:0xa291bb}));
+  jet.add(tether);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.2,.035,.025),new THREE.MeshStandardMaterial({color:0x73d5dc,roughness:.4}));
+  stripe.position.set(-.1,-.19,.46);jet.add(stripe);
+  const clothRest = Float32Array.from(bannerGeometry.attributes.position.array);
+  const clothUV = Float32Array.from(bannerGeometry.attributes.uv.array);
+  function flutter(t: number) {
+    const positions = bannerGeometry.attributes.position;
+    for(let i=0;i<positions.count;i++) {
+      const x=clothRest[i*3], trailing=(1.3-x)/2.6;
+      const z=.10 * trailing * Math.sin(t*18 + trailing*7);
+      positions.setZ(i,z);backGeometry.attributes.position.setZ(i,z);
+      const u=clothUV[i*2],v=clothUV[i*2+1];
+      bannerGeometry.attributes.uv.setXY(i,u,v);
+      backGeometry.attributes.uv.setXY(i,1-u,v);
+    }
+    for(const geometry of [bannerGeometry,backGeometry]) {
+      geometry.attributes.position.needsUpdate=true;geometry.attributes.uv.needsUpdate=true;
+      geometry.computeVertexNormals();
+    }
+  }
+  let modelScale=1;
   let raf = 0, started: number | null = null, previousPhase: FlightPhase | null = null;
-  let startX = 0, endX = 1, imageLeft = 0, imageWidth = width, lastReveal = 0;
+
   let progress = 0;
   const box = new THREE.Box3(), corner = new THREE.Vector3();
   function projectedBounds() {
@@ -110,32 +150,40 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     }
     return { left, right, top, bottom };
   }
-  function place(t: number) {
-    const x = THREE.MathUtils.lerp(startX, endX, flightTravel(t));
-    jet.position.set((x - .5) * worldHeight * width / viewportHeight, (.5 - FLIGHT_HEIGHT) * worldHeight, 0);
-    jet.updateMatrixWorld(true);
-    return x;
+  const forward = new THREE.Vector3(), up = new THREE.Vector3(), side = new THREE.Vector3();
+  const basis = new THREE.Matrix4();
+  function worldPoint(parameter: number) {
+    const p = route.getPoint(THREE.MathUtils.clamp(parameter, 0, 1));
+    const depth = (18-p.z)/18;
+    return new THREE.Vector3((p.x-.5)*worldHeight*width/viewportHeight*depth, (.5-p.y)*worldHeight*depth, p.z);
   }
+  function place(t: number) {
+    const parameter = routeParameter(t), point = route.getPoint(parameter);
+    jet.position.copy(worldPoint(parameter));
+    jet.scale.setScalar(modelScale);
+    forward.copy(worldPoint(parameter+.001)).sub(worldPoint(parameter-.001)).normalize();
+    side.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
+    up.crossVectors(side, forward).normalize();
+    basis.makeBasis(forward, up, side);
+    jet.quaternion.setFromRotationMatrix(basis);
+    // Restrained roll around the nose axis: the cabin remains upright.
+    jet.rotateX(.22 * Math.sin(t*Math.PI) - .28 * Math.exp(-(((t-.40)/.14)**2)));
+    flutter(t);
+    jet.updateMatrixWorld(true);
+    return point;
+  }
+
   function resize() {
     width = Math.max(1, canvas.clientWidth); viewportHeight = Math.max(1, canvas.clientHeight);
-    camera.left = -worldHeight * width / viewportHeight / 2; camera.right = -camera.left;
+    camera.aspect = width / viewportHeight;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, width < 700 ? 1.25 : 1.75));
     renderer.setSize(width, viewportHeight, false);
-    // Fixed perspective on the model, with level wings and no rocking or banking.
+    // Size the whole aircraft AND banner; perspective supplies the close-up scaling.
     jet.rotation.set(.42, -.06, 0); jet.position.set(0, 0, 0); jet.scale.setScalar(1);
     const unitBounds = projectedBounds();
-    const targetWidth = Math.min(width * .38, viewportHeight * .35, 320);
-    jet.scale.setScalar(targetWidth / ((unitBounds.right - unitBounds.left) * width));
-    const bounds = projectedBounds(), margin = Math.max(10 / width, .012);
-    startX = -(bounds.right - .5) - margin;
-    // The last projected vertex crosses the edge at the final timestamp, rather
-    // than disappearing early into an oversized offscreen exit margin.
-    endX = 1 + (.5 - bounds.left) + 1e-9;
-    const image = stage.querySelector('.flight-city')?.getBoundingClientRect();
-    const rect = canvas.getBoundingClientRect();
-    imageLeft = image ? image.left - rect.left : 0;
-    imageWidth = Math.max(1, image?.width ?? width);
+    const targetWidth = Math.min(width * .64, viewportHeight * .50, 580);
+    modelScale = targetWidth / ((unitBounds.right - unitBounds.left) * width);
     place(progress);
   }
   const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
@@ -159,7 +207,6 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
   }
   function complete() {
     if (disposed) return;
-    stage.style.setProperty('--destination-edge', '100%');
     dispose(); onComplete();
   }
   function tick(now: number) {
@@ -167,23 +214,15 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     if (started === null) started = now;
     const elapsed = Math.min(now - started, FLIGHT_DURATION);
     progress = elapsed / FLIGHT_DURATION;
-    const x = place(progress), bounds = projectedBounds();
-    // The rearmost tail point is projected through the same camera as the plane.
-    corner.set(-3.6, 0, 0).applyMatrix4(jet.matrixWorld).project(camera);
-    const tailX = (corner.x + 1) * width / 2;
-    const gap = THREE.MathUtils.clamp(width * .008, 6, 12);
-    const reveal = THREE.MathUtils.clamp((tailX - gap - imageLeft) / imageWidth, 0, 1);
-    // A resize must never hide an already revealed portion of the destination.
-    lastReveal = progress === 1 ? 1 : Math.max(lastReveal, reveal);
-    stage.style.setProperty('--destination-edge', `${lastReveal * 100}%`);
-    const phase: FlightPhase = elapsed < 700 ? 'entry' : elapsed < 6200 ? 'flyover' : 'exit';
+    const point = place(progress), bounds = projectedBounds();
+    const phase: FlightPhase = progress < .28 ? 'entry' : progress < .52 ? 'turn' : progress < .78 ? 'flyover' : 'exit';
     if (phase !== previousPhase) { previousPhase = phase; onPhase(phase); }
-    canvas.dataset.phase = phase;
-    canvas.dataset.screenX = String(x); canvas.dataset.screenY = String(FLIGHT_HEIGHT);
+    canvas.dataset.phase = phase; canvas.dataset.banner = 'attached';
+    canvas.dataset.screenX = String(point.x); canvas.dataset.screenY = String(point.y);
     canvas.dataset.bounds = JSON.stringify(bounds); canvas.dataset.progress = String(progress);
-    canvas.dataset.elapsedMs = String(elapsed); canvas.dataset.tailX = String(tailX);
-    canvas.dataset.reveal = String(lastReveal); canvas.dataset.running = 'true';
-    canvas.dataset.clearance = String(.62 - bounds.bottom);
+    canvas.dataset.elapsedMs = String(elapsed);
+    canvas.dataset.reveal = '1'; canvas.dataset.running = 'true';
+    canvas.dataset.clearance = String(.45 - bounds.bottom);
     renderer.render(scene, camera);
     if (progress < 1) raf = requestAnimationFrame(tick);
     else complete();
@@ -196,5 +235,5 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
       raf = requestAnimationFrame(tick);
     } catch { complete(); }
   });
-  return { dispose };
+  return { dispose, setTheme };
 }
