@@ -1,0 +1,46 @@
+/* Shared interaction and surface contracts, including portalled forms. */
+body { background: var(--surface); color: var(--ink); }
+input, textarea, select { color: var(--ink); background-color: var(--surface); accent-color: var(--purple); }
+input::placeholder, textarea::placeholder { color: var(--body); opacity: .85; }
+:is(input, textarea, select, summary, button, a):focus-visible { outline: 3px solid var(--purple); outline-offset: 4px; }
+.miih-admin { --border: var(--line); --muted: var(--body); --deep: var(--purple-dark); }
+.miih-auth-screen .miih-auth-intro { color: var(--ink); }
+.miih-auth-screen .miih-auth-intro :is(p, em, .miih-auth-symbol) { color: var(--purple-dark); }
+.miih-auth-screen .miih-auth-intro > span { color: var(--body); }
+.miih-admin-sidebar .miih-sidebar-caption { color: #c4bbd5; }
+.founder-story .eyebrow { color: var(--purple-dark); }
+.founder-rule { color: var(--purple-dark); }
+.founder-rule > span { background: var(--line); }
+.labx-original { background: transparent; padding: 0; width: 82px; height: 40px; }
+.labx-original img { height: 100%; width: 100%; object-fit: contain; filter: drop-shadow(0 0 1px #413251) drop-shadow(0 1px 1px #413251); }
+.domain-section .eyebrow { color: var(--purple-dark); }
+:is(.button, .nav-cta, .challenge-domains button, .track-controls button, .reward-card, .gallery-card, .miih-admin button, .flight-swipe, summary) {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+@media (hover: hover) {
+  :is(.button, .nav-cta, .challenge-domains button, .reward-card, .gallery-card, .miih-admin button, summary):hover {
+    transform: translateY(-3px); box-shadow: 0 8px 22px #8c52ff22;
+  }
+  .primary-nav a:hover { transform: translateY(-2px); }
+  .button:hover .icon { transform: translateX(3px); }
+}
+.primary-nav a, .button .icon { transition: transform 180ms ease, color 180ms ease; }
+:is(button, .button):active { transform: translateY(1px) scale(.98); }
+.challenge-domains button[aria-pressed="false"] { box-shadow: none; }
+.challenge-domains button:focus-visible { outline-style: dashed; }
+.site-footer { background: var(--lavender); color: var(--ink); }
+.site-footer :is(h2, p, a, .footer-bottom .container, .footer-links a) { color: var(--body); }
+.site-footer h2 { color: var(--ink); }
+@media (prefers-color-scheme: dark) {
+  .miih-admin { --ink: #f4efff; --purple: #9964ef; --deep: #c3a2ff; }
+  .zeai-crop, .india-crop { background: transparent; }
+  .labx-original img { filter: none; }
+  .button-primary, .nav-cta { color: #fff; }
+  .button-primary:hover, .nav-cta:hover { background: #7541c5; color: #fff; }
+  .cinematic-flight.layout-two { color: var(--ink); }
+  .hero-title span, .page-title span { background: linear-gradient(transparent 80%, #456235 80%, #456235 94%, transparent 94%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

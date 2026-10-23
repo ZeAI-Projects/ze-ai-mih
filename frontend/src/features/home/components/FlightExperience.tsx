@@ -8,7 +8,7 @@ import './flight_experience.css';
 import { useFlightEnvironment } from './flightEnvironment';
 const labels: Record<FlightPhase, string> = {
   entry: 'Your journey to Malaysia has begun.',
-  turn: 'Banking left and climbing toward Kuala Lumpur.',
+  cruise: 'Cruising toward Kuala Lumpur.',
   flyover: 'Flying above Kuala Lumpur.',
   exit: 'Arriving in Malaysia.',
 };
@@ -48,7 +48,7 @@ export default function FlightExperience() {
     start.current = null; amount.current = 0;
     setDragging(false); setProgress(0); setPhase('loading');
     setRun(value => value + 1);
-    setMessage('Preparing your Kuala Lumpur skyline?');
+    setMessage('Preparing your Kuala Lumpur skyline…');
     try { await prepare(); } catch {
       if (token === generation.current) finish('Malaysia unlocked. Destination graphics are unavailable.');
       return;
@@ -136,7 +136,7 @@ export default function FlightExperience() {
         {state === 'ready' ? <div className="destination-copy">
           <span className="season-tag">2027 · NEXT LEVEL</span>
           <h3>Your ideas.<br />A world of possibilities.</h3>
-          <div className="destination-awards"><strong>₹20,00,000 <small>Total prize pool</small></strong><span>₹10,00,000 Grand Winner award</span></div>
+          <div className="destination-awards"><strong>Your next reward awaits.</strong><span>Complete your flight to unlock the 2027 prize pool.</span></div>
           <p>Malaysia trip for three grand-winning members.</p>
         </div> : <div className="flight-cinema-heading">
           <span className="season-tag">{state === 'arrived' ? 'MALAYSIA UNLOCKED' : phase === 'loading' ? 'PREPARING YOUR FLIGHT' : 'TAKEOFF CONFIRMED'}</span>

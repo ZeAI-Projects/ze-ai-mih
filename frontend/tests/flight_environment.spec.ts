@@ -11,11 +11,12 @@ for (const theme of ['dark', 'light'] as const) {
     const photo = overlay.locator('.flight-city img');
     const canvas = overlay.locator('canvas');
     await expect(overlay).toHaveAttribute('data-theme', theme);
-    await expect(photo).toHaveAttribute('src', new RegExp(theme === 'dark' ? 'night.webp$' : 'day.webp$'));
+    await expect(photo).toHaveAttribute('src', new RegExp(theme === 'dark' ? 'tower1.webp$' : 'tower2.png$'));
     expect(await photo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
     await expect(overlay.locator('.flight-city')).toHaveCSS('opacity', '1');
     await page.screenshot({ path: info.outputPath('first-frame.png') });
     await expect(canvas).toHaveAttribute('data-running', 'true');
+    await expect(canvas).toHaveAttribute('data-night-lights', String(theme === 'dark'));
     await expect.poll(async () => Number(await canvas.getAttribute('data-progress')), { timeout: 7000 }).toBeGreaterThan(.35);
     await page.screenshot({ path: info.outputPath('bank.png') });
     const before = Number(await canvas.getAttribute('data-progress'));
@@ -33,7 +34,7 @@ for (const theme of ['dark', 'light'] as const) {
     await expect(page.locator('.prize-unlocked')).toBeVisible();
     // A client-side route change exercises React cleanup (a page reload would not).
     await page.evaluate(() => {
-      history.pushState(null, '', '/about');
+      history.pushState(null, '', '/admin/login');
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     await expect(page.locator('.flight-experience')).toHaveCount(0);
@@ -50,9 +51,9 @@ test('an undecoded theme replacement retains the previous city', async ({ page }
   await expect(overlay).toHaveAttribute('data-theme', 'light');
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
-  await page.route('**/kuala-lumpur-night.webp', async route => { await gate; await route.continue(); });
+  await page.route('**/tower1.webp', async route => { await gate; await route.continue(); });
   await page.emulateMedia({ colorScheme: 'dark' });
-  await expect(overlay.locator('img')).toHaveAttribute('src', /day.webp$/);
+  await expect(overlay.locator('img')).toHaveAttribute('src', /tower2.png$/);
   await expect(overlay.locator('.flight-city')).toHaveCSS('opacity', '1');
   release();
   await expect(overlay).toHaveAttribute('data-theme', 'dark');

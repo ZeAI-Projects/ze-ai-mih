@@ -1,12 +1,12 @@
 ﻿.about-page {
-  background: #fcfbf8;
+  background: var(--surface);
 }
 .about-page .section-heading span {
-  color: #6341ad;
+  color: var(--purple-dark);
 }
 .about-opening {
   padding: 68px 0 72px;
-  background: #f3f0e9;
+  background: var(--lavender);
 }
 .about-opening-top {
   display: grid;
@@ -20,7 +20,7 @@
   letter-spacing: -2.7px;
 }
 .about-opening-intro > p {
-  color: #665c6d;
+  color: var(--body);
   font-size: 17px;
   line-height: 1.8;
   margin-bottom: 20px;
@@ -35,7 +35,7 @@
   margin: 0;
   border-radius: 20px;
   overflow: hidden;
-  background: #d5cddf;
+  background: var(--lavender);
   aspect-ratio: 1.5;
 }
 .about-community-photo img {
@@ -66,7 +66,7 @@
   position: relative;
   padding: 30px;
   border-radius: 20px;
-  background: #dfeeaa;
+  background: var(--lavender);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -75,7 +75,7 @@
 .about-purpose-tile > .icon {
   width: 40px;
   height: 40px;
-  color: #43552e;
+  color: var(--success);
   margin-bottom: 20px;
 }
 .about-purpose-tile p {
@@ -85,7 +85,7 @@
 }
 .about-purpose-tile > span {
   font-size: 13px;
-  color: #52613d;
+  color: var(--body);
   line-height: 1.6;
   margin-top: 14px;
 }
@@ -98,7 +98,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid #697c48;
+  border: 1px solid var(--line);
   transition: background 180ms;
 }
 .about-purpose-tile > a:hover {
@@ -120,16 +120,16 @@
   margin-top: 0;
 }
 .about-journey {
-  border: 1px solid #e1d9ea;
+  border: 1px solid var(--line);
   border-radius: 22px;
   overflow: hidden;
-  background: #f0e9f6;
+  background: var(--lavender);
 }
 .journey-choices {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-bottom: 1px solid #dcd1e8;
-  background: #fffdf9;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
 }
 .journey-choices button {
   display: flex;
@@ -137,12 +137,12 @@
   gap: 14px;
   min-height: 80px;
   padding: 20px 24px;
-  color: #6c5e78;
+  color: var(--body);
   font: inherit;
   font-size: 15px;
   font-weight: 700;
   border: 0;
-  border-right: 1px solid #e1d9ea;
+  border-right: 1px solid var(--line);
   background: transparent;
   cursor: pointer;
   transition:
@@ -205,7 +205,7 @@
 }
 .journey-large-number {
   font-size: 54px;
-  color: #9273ba;
+  color: var(--purple-dark);
   line-height: 1;
   font-weight: 800;
   letter-spacing: -3px;
@@ -220,14 +220,14 @@
 .journey-story-copy > p {
   font-size: 16px;
   line-height: 1.8;
-  color: #665570;
+  color: var(--body);
   margin-top: 18px;
 }
 .journey-footnote {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.7px;
-  color: #806591;
+  color: var(--body);
   margin-top: 24px;
 }
 .section.about-company {
@@ -246,7 +246,7 @@
   align-items: flex-start;
   gap: 24px;
   padding: 28px;
-  border: 1px solid #dfd9e7;
+  border: 1px solid var(--line);
   border-radius: 16px;
 }
 .direction-icon {
@@ -256,12 +256,12 @@
   height: 50px;
   flex-shrink: 0;
   border-radius: 14px;
-  color: #6745af;
-  background: #ede5f8;
+  color: var(--purple-dark);
+  background: var(--lavender);
 }
 .about-direction article:nth-child(2) .direction-icon {
-  background: #e4edcf;
-  color: #526636;
+  background: var(--lavender);
+  color: var(--body);
 }
 .about-direction h3 {
   font-size: 27px;
@@ -271,15 +271,15 @@
 .about-direction p:not(.eyebrow) {
   font-size: 16px;
   line-height: 1.7;
-  color: #665d70;
+  color: var(--body);
 }
 .about-direction .eyebrow {
   margin-bottom: 12px;
   font-size: 10px;
 }
 .founder-section {
-  background: #302438;
-  color: #fff;
+  background: var(--lavender);
+  color: var(--ink);
 }
 .about-founder {
   display: grid;
@@ -343,10 +343,10 @@
   place-items: center;
   width: 58px;
   height: 58px;
-  border: 6px solid #302438;
+  border: 6px solid var(--line);
   border-radius: 19px;
-  color: #43324f;
-  background: #e0edac;
+  color: var(--ink);
+  background: var(--lavender);
   transform: rotate(12deg);
   transition: transform 220ms ease;
 }
@@ -403,12 +403,12 @@
   letter-spacing: -3px;
 }
 .founder-story h2 span {
-  color: #dfeeaa;
+  color: var(--purple-dark);
 }
 .founder-role {
   font-size: 16px;
   line-height: 1.7;
-  color: #d6cddd;
+  color: var(--body);
   margin-top: 17px;
 }
 .founder-rule {
@@ -432,11 +432,11 @@
 .founder-story > p:not(.eyebrow):not(.founder-role) {
   font-size: 16px;
   line-height: 1.85;
-  color: #d3c8d9;
+  color: var(--body);
   margin-top: 14px;
 }
 .founder-story .text-link {
-  color: #e0eeab;
+  color: var(--purple-dark);
   margin-top: 25px;
 }
 .about-values-heading {
@@ -452,21 +452,21 @@
 }
 .about-value-cards article {
   padding: 26px 23px;
-  border: 1px solid #dfd8e5;
+  border: 1px solid var(--line);
   border-radius: 18px;
-  background: #f1eaf8;
+  background: var(--lavender);
   transition:
     transform 180ms,
     box-shadow 180ms;
 }
 .about-value-cards article:nth-child(2) {
-  background: #ecf1dc;
+  background: var(--lavender);
 }
 .about-value-cards article:nth-child(3) {
-  background: #faeddd;
+  background: var(--lavender);
 }
 .about-value-cards article:nth-child(4) {
-  background: #e7edf4;
+  background: var(--lavender);
 }
 .about-value-cards article:hover {
   transform: translateY(-5px);
@@ -481,12 +481,12 @@
 .about-value-cards article > div > span {
   font-size: 12px;
   font-weight: 700;
-  color: #6a5f74;
+  color: var(--body);
 }
 .about-value-cards article .icon {
   width: 28px;
   height: 28px;
-  color: #6a5f74;
+  color: var(--body);
 }
 .about-value-cards h3 {
   font-size: 22px;
@@ -497,10 +497,10 @@
 .about-value-cards p {
   font-size: 15px;
   line-height: 1.8;
-  color: #625b6a;
+  color: var(--body);
 }
 .about-ecosystem {
-  background: #f1eee7;
+  background: var(--lavender);
 }
 .about-ecosystem-grid {
   display: grid;
@@ -520,11 +520,11 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
-  color: #645072;
+  color: var(--body);
 }
 .ecosystem-path > span {
   padding: 10px;
-  border: 1px dashed #bbaec7;
+  border: 1px dashed var(--line);
   border-radius: 8px;
 }
 .ecosystem-path > .icon {
@@ -532,16 +532,16 @@
 }
 .about-page .about-labx {
   padding: 36px;
-  border: 1px solid #ded0f1;
+  border: 1px solid var(--line);
   border-radius: 24px;
-  background: #e5d9f3;
+  background: var(--lavender);
 }
 .labx-topline {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  color: #6744aa;
+  color: var(--purple-dark);
 }
 .labx-topline .eyebrow {
   margin: 0;
@@ -559,10 +559,10 @@
   line-height: 1;
 }
 .about-labx h3 span {
-  color: #7551b8;
+  color: var(--purple-dark);
 }
 .about-page .about-labx > p {
-  color: #655071;
+  color: var(--body);
   font-size: 16px;
   line-height: 1.8;
 }
@@ -570,24 +570,24 @@
   margin-top: 24px;
 }
 .about-page .about-labx-focus button {
-  background: #faf6ff;
-  border-color: #c6b5dc;
-  color: #5d4379;
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--purple-dark);
 }
 .about-page .about-labx-focus button[aria-pressed='true'] {
   background: #4e316b;
-  border-color: #4e316b;
+  border-color: var(--line);
   color: white;
 }
 .about-page .labx-explorer > p {
-  color: #4f3b63;
+  color: var(--purple-dark);
   min-height: 100px;
 }
 .about-page .labx-plan-label {
   display: block;
-  border-top: 1px solid #cdbbdf;
+  border-top: 1px solid var(--line);
   padding-top: 18px;
-  color: #675375;
+  color: var(--body);
   font-size: 12px;
   line-height: 1.7;
 }
@@ -601,19 +601,19 @@
   align-items: flex-start;
   gap: 22px;
   padding: 23px 0;
-  border-top: 1px solid #ded7e5;
+  border-top: 1px solid var(--line);
 }
 .strength-rows article:first-child {
   padding-top: 0;
   border: 0;
 }
 .strength-rows article > span {
-  color: #826b9b;
+  color: var(--body);
   font-size: 13px;
   padding-top: 4px;
 }
 .strength-rows article > .icon {
-  color: #89779c;
+  color: var(--body);
   width: 20px;
   flex-shrink: 0;
   margin-left: auto;
@@ -625,7 +625,7 @@
   letter-spacing: -0.5px;
 }
 .strength-rows p {
-  color: #706577;
+  color: var(--body);
   font-size: 16px;
   line-height: 1.75;
 }
@@ -638,8 +638,8 @@
   justify-content: space-between;
   gap: 45px;
   padding: 48px;
-  background: #e2ecbb;
-  border: 1px solid #d5dfaf;
+  background: var(--lavender);
+  border: 1px solid var(--line);
   border-radius: 24px;
 }
 .about-connect-card h2 {
@@ -649,7 +649,7 @@
 }
 .about-connect-card p:not(.eyebrow) {
   font-size: 16px;
-  color: #596345;
+  color: var(--body);
   line-height: 1.7;
   margin-top: 18px;
 }
@@ -662,7 +662,7 @@
 }
 .about-connect-actions > span {
   font-size: 12px;
-  color: #596345;
+  color: var(--body);
 }
 @media (max-width: 1000px) {
   .about-opening-top {

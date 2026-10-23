@@ -10,51 +10,51 @@
 .labx-original img { width: 100%; height: auto; }
 .site-header .primary-nav a { font-size: 14px; }
 .primary-nav a[aria-current="location"] { color: var(--purple); text-decoration: underline; text-underline-offset: 8px; }
-.season-section { background: linear-gradient(180deg,#fff,#f7f3ff); }
+.season-section { background: linear-gradient(180deg,var(--surface),var(--surface)); }
 .season-section .season-grid { grid-template-columns: .9fr 1.1fr; align-items: start; }
 .season-section .season-past { background: transparent; border: 0; padding-left: 0; }
-.season-section .season-next { background: #f0e8ff; border: 1px solid #d9c4fa; padding: 0 0 24px; overflow: hidden; box-shadow: 0 18px 50px #3920630b; }
+.season-section .season-next { background: var(--lavender); border: 1px solid var(--line); padding: 0 0 24px; overflow: hidden; box-shadow: 0 18px 50px #3920630b; }
 .season-next > .button { margin: 20px 24px 0; }
-.season-section .boarding-pass { display: grid; grid-template-columns: 1fr 82px; padding: 0; margin: 28px 8px 20px 0; background: linear-gradient(110deg,#fffef9,#f6f2e9); border: 1px solid #ddd5c9; border-radius: 12px; box-shadow: 3px 14px 0 -9px #dad2c7,0 22px 30px -20px #3a2a43; transform: perspective(1000px) rotateY(5deg) rotateZ(-2deg); }
+.season-section .boarding-pass { display: grid; grid-template-columns: 1fr 82px; padding: 0; margin: 28px 8px 20px 0; background: linear-gradient(110deg,var(--surface),var(--lavender)); border: 1px solid var(--line); border-radius: 12px; box-shadow: 3px 14px 0 -9px #dad2c7,0 22px 30px -20px #3a2a43; transform: perspective(1000px) rotateY(5deg) rotateZ(-2deg); }
 .ticket-main { padding: 22px; min-width: 0; }
 .ticket-main > span,.ticket-main small { font-size: 9px; letter-spacing: .08em; }
 .ticket-main h4 { font-size: clamp(21px,2.4vw,29px); letter-spacing: .08em; }
-.ticket-stub { border-left: 2px dashed #c9c0b1; padding: 20px 10px; display: flex; align-items: center; flex-direction: column; justify-content: space-between; text-align: center; font-size: 10px; color: #6f597e; }
+.ticket-stub { border-left: 2px dashed var(--line); padding: 20px 10px; display: flex; align-items: center; flex-direction: column; justify-content: space-between; text-align: center; font-size: 10px; color: var(--body); }
 .ticket-stub strong { font-size: 36px; }.ticket-stub small { font-size: 8px; }
-.ticket-main .ticket-stamp { color: #8b5866; border-color: #8b5866; font-size: clamp(15px,1.6vw,20px); opacity: .8; }
+.ticket-main .ticket-stamp { color: var(--danger); border-color: var(--line); font-size: clamp(15px,1.6vw,20px); opacity: .8; }
 .cinematic-flight { position: relative; padding: 0; }
-.destination-scene { position: relative; min-height: 390px; overflow: hidden; background: radial-gradient(ellipse at 80% 12%,#fff 0,transparent 65%),linear-gradient(135deg,#f2eaff,#d7ccf1); }
+.destination-scene { position: relative; min-height: 390px; overflow: hidden; background: radial-gradient(ellipse at 80% 12%,var(--surface) 0,transparent 65%),linear-gradient(135deg,var(--lavender),var(--lavender)); }
 .destination-copy { position: relative; padding: 28px; z-index: 2; max-width: 72%; }
 .destination-copy h3 { margin: 25px 0 16px; font-size: clamp(26px,3vw,40px); line-height: 1.08; letter-spacing: -.04em; }
 .destination-copy p { font-size: 13px; max-width: 230px; }
 .destination-label { display: inline-block; margin-top: 20px; padding: 7px 9px; background: #ffffffdf; border-radius: 6px; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
 .tower-photo { position: absolute; right: -7%; bottom: -12%; width: 54%; height: 90%; object-fit: contain; object-position: bottom; filter: drop-shadow(-8px 4px 0 #ffffff42); }
 .cinematic-flight .flight-controls { display: flex; flex-wrap: wrap; padding: 22px 24px 5px; gap: 12px; }
-.cinematic-flight .flight-swipe { position: relative; display: flex; flex: 1 1 100%; align-items: center; justify-content: center; min-height: 58px; border: 1px solid #bba3df; border-radius: 40px; overflow: hidden; cursor: grab; background: #ffffffa8; font-size: 13px; font-weight: 700; user-select: none; padding: 12px; }
+.cinematic-flight .flight-swipe { position: relative; display: flex; flex: 1 1 100%; align-items: center; justify-content: center; min-height: 58px; border: 1px solid var(--line); border-radius: 40px; overflow: hidden; cursor: grab; background: #ffffffa8; font-size: 13px; font-weight: 700; user-select: none; padding: 12px; }
 .flight-swipe > span:not(.swipe-fill) { position: relative; z-index: 1; }
 .swipe-fill { position: absolute; inset: 0; background: #b897f4; transform-origin: left; }
 .flight-swipe progress { position: absolute; bottom: 0; left: 15%; width: 70%; height: 3px; accent-color: #7846ce; }
-.cinematic-flight .flight-status { flex-basis: 100%; font-size: 12px; min-height: 2.8em; margin: 0; color: #5c486f; }
-.photo-credit { display: block; padding: 0 24px; font-size: 9px; color: #695a78; }.photo-credit a { text-decoration: underline; }
+.cinematic-flight .flight-status { flex-basis: 100%; font-size: 12px; min-height: 2.8em; margin: 0; color: var(--purple-dark); }
+.photo-credit { display: block; padding: 0 24px; font-size: 9px; color: var(--body); }.photo-credit a { text-decoration: underline; }
 .flight-viewport { position: fixed; inset: 0; z-index: 110; pointer-events: none; overflow: hidden; background: linear-gradient(160deg,#fbf8ffed,#eee6ffd9); }
 .flight-flying .tower-photo { opacity:0; }
 .flight-viewport canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; }
-.flight-stop { position:absolute; z-index:4; right:20px; top:88px; pointer-events:auto; background:#fff; }
+.flight-stop { position:absolute; z-index:4; right:20px; top:88px; pointer-events:auto; background:var(--surface); }
 .flight-towers { position: absolute; width: min(36vw,500px); height: 64vh; object-fit: contain; object-position: bottom; right: 9%; bottom: 0; z-index: 1; animation: tower-entry .5s both; }
-.flight-map-route { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .36; }.flight-map-route path { fill: none; stroke: #8851ce; stroke-width: .2; stroke-dasharray: .6 1; }
-.prize-unlocked { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; margin: 0 24px 22px; padding: 25px 10px; border: 1px solid #c6a6ee; background: #fff; border-radius: 18px; animation: prize-pop .85s both; }
+.flight-map-route { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .36; }.flight-map-route path { fill: none; stroke: var(--purple-dark); stroke-width: .2; stroke-dasharray: .6 1; }
+.prize-unlocked { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; margin: 0 24px 22px; padding: 25px 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 18px; animation: prize-pop .85s both; }
 .prize-unlocked > strong { font-size: clamp(35px,4.5vw,58px); letter-spacing: -.05em; color: var(--purple-deep); line-height: 1.1; }.prize-unlocked p { margin: 0; }.prize-unlocked .text-link { background: none; border: 0; }
 @keyframes prize-pop { 0% { opacity:0; transform:translateY(35px) scale(.85); } 60% { opacity:1; transform:translateY(-12px) scale(1.04); } 80% { transform:translateY(4px) scale(.99); } 100% { transform:translateY(0) scale(1); } }
 @keyframes tower-entry { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-.domain-section { background: #fff !important; color: #2e203d !important; }
-.domain-section .section-heading,.domain-section .section-copy { color: #2e203d; }.domain-section .section-heading span { color: #8354c8; }
-.domain-section .track-controls { gap: 18px; }.domain-section .track-controls button { position: relative; border: 1px solid #ded2ed; background: #faf8ff; padding: 24px; border-radius: 18px; text-align: left; color: #49305f; }
-.domain-section .track-controls button[aria-pressed="true"] { background: #eee4ff; border: 2px solid #8953cf; box-shadow: 0 8px 20px #6335970b; padding: 23px; }.track-controls strong { font-size: 21px; }
+.domain-section { background: var(--surface) !important; color: var(--purple-dark) !important; }
+.domain-section .section-heading,.domain-section .section-copy { color: var(--purple-dark); }.domain-section .section-heading span { color: var(--purple-dark); }
+.domain-section .track-controls { gap: 18px; }.domain-section .track-controls button { position: relative; border: 1px solid var(--line); background: var(--surface); padding: 24px; border-radius: 18px; text-align: left; color: var(--purple-dark); }
+.domain-section .track-controls button[aria-pressed="true"] { background: var(--lavender); border: 2px solid var(--line); box-shadow: 0 8px 20px #6335970b; padding: 23px; }.track-controls strong { font-size: 21px; }
 .domain-section .challenge-domains { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-block: 28px; }
-.domain-section .challenge-domains button { min-height: 90px; display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; padding: 15px 10px; border: 1px solid #e4dbef; background: #fff; border-radius: 14px; color:#4a365f; font-weight:600; }
-.domain-section .challenge-domains button[aria-pressed="true"] { color: #713cb1; background: #f3ecff; border-color: #a47bd4; }.domain-glyph { font-size:24px; line-height:1; }
-.domain-section .challenge-empty { background: #f8f5fd; border: 1px dashed #ccb8e5; color: #574169; padding: 35px 20px; border-radius: 18px; text-align:center; }.challenge-empty h3 { font-size:20px; }
-.season-rewards .rewards-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.season-rewards .reward-card:first-child { grid-row:span 2; background:#eee3ff; display:flex; flex-direction:column; justify-content:center; }.season-rewards .reward-card:first-child p { font-size:clamp(24px,3vw,36px); font-weight:800; color:#7037ae; line-height:1.2; }
+.domain-section .challenge-domains button { min-height: 90px; display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; padding: 15px 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; color:var(--purple-dark); font-weight:600; }
+.domain-section .challenge-domains button[aria-pressed="true"] { color: var(--purple-dark); background: var(--lavender); border-color: var(--line); }.domain-glyph { font-size:24px; line-height:1; }
+.domain-section .challenge-empty { background: var(--surface); border: 1px dashed var(--line); color: var(--purple-dark); padding: 35px 20px; border-radius: 18px; text-align:center; }.challenge-empty h3 { font-size:20px; }
+.season-rewards .rewards-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.season-rewards .reward-card:first-child { grid-row:span 2; background:var(--lavender); display:flex; flex-direction:column; justify-content:center; }.season-rewards .reward-card:first-child p { font-size:clamp(24px,3vw,36px); font-weight:800; color:var(--purple-dark); line-height:1.2; }
 @media(max-width:767px) {
  .site-header .header-inner { min-height:64px; gap:8px; }.season-brand { gap:5px; }.labx-original { width:48px;height:27px;padding:2px 4px; }.zeai-hash { font-size:14px; }.season-brand .zeai-crop { width:45px; }.season-brand .zeai-crop img { width:154px;left:-6px;top:-15px; }.season-brand .india-crop { width:99px; }.season-brand .india-crop img { width:158px;left:-57px;top:-17px; }.brand-divider { height:18px; }
  .season-section .season-grid { grid-template-columns:1fr; }.season-section .season-past { padding:0; }.destination-scene { min-height:350px; }.destination-copy { padding:24px; }.destination-copy h3 { font-size:30px; }.tower-photo { width:55%; right:-8%; }.flight-towers { width:53vw; height:60vh; right:1%; }.domain-section .challenge-domains { grid-template-columns:repeat(2,minmax(0,1fr)); }.season-rewards .rewards-grid { grid-template-columns:1fr 1fr; }.season-rewards .reward-card:first-child { grid-column:1/-1;grid-row:auto; }.ticket-main { padding:19px; }

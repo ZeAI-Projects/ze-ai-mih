@@ -14,3 +14,9 @@ owner-provided event-01.webp photograph. They do not alter depicted people/conte
 System-theme flight environments: kuala-lumpur-day.webp is a WebP conversion of
 owner-supplied tower2.png; kuala-lumpur-night.webp is a WebP conversion of tower1.png.
 Original dimensions and depicted buildings are preserved. No external images were fetched.
+
+The current flight uses tower2.png (an unchanged copy of the root tower2.png)
+and tower1.webp (an unchanged copy of the root tower1.png, whose file contents
+are already WebP despite its original extension). CSS blends the edges into the
+sky without altering the source photographs. The header uses the existing
+transparent labx-logo.png, copied as labx-transparent.png without redrawing.

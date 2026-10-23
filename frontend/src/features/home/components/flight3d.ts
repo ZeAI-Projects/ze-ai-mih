@@ -2,26 +2,15 @@ import * as THREE from 'three';
 import brandUrl from '@/assets/images/header-brand.webp';
 import labxUrl from '@/assets/images/labx-original.webp';
 
-export type FlightPhase = 'entry' | 'turn' | 'flyover' | 'exit';
+export type FlightPhase = 'entry' | 'cruise' | 'flyover' | 'exit';
 export const FLIGHT_DURATION = 9000;
-// The incoming climb stays outside the right edge until it clears the visible city.
-// Depth through the left turn produces a yawing passenger-jet turn, not a vertical roll.
+// Monotone screen-space spline: left-middle entry, gentle climb, full top-right exit.
 const route = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(1.40, 1.22, -2), new THREE.Vector3(1.32, .48, -1),
-  new THREE.Vector3(.70, .37, 1), new THREE.Vector3(.30, .34, 3),
-  new THREE.Vector3(.18, .29, 0), new THREE.Vector3(.34, .22, -3),
-  new THREE.Vector3(.68, .16, -4), new THREE.Vector3(.98, -.08, -5),
-  new THREE.Vector3(1.40, -.40, -7),
+  new THREE.Vector3(-.55, .47, 1), new THREE.Vector3(-.10, .35, .5),
+  new THREE.Vector3(.30, .24, 0), new THREE.Vector3(.70, .10, -1),
+  new THREE.Vector3(1.15, -.08, -2), new THREE.Vector3(1.65, -.30, -3),
 ], false, 'centripetal');
-const milestones = [0, .10, .22, .34, .43, .54, .70, .86, 1];
-function routeParameter(t: number) {
-  const last = milestones.length - 1;
-  const i = Math.min(last-1, Math.max(0, milestones.findIndex((p, i) => i > 0 && t <= p) - 1));
-  const span = milestones[i+1] - milestones[i], u = (t-milestones[i])/span;
-  const slope = (j: number) => j === 0 || j === last ? 0 : 2 / (last * (milestones[j+1]-milestones[j-1]));
-  return (2*u**3-3*u*u+1)*i/last + (u**3-2*u*u+u)*span*slope(i)
-    + (-2*u**3+3*u*u)*(i+1)/last + (u**3-u*u)*span*slope(i+1);
-}
+const routeParameter = (t: number) => route.getUtoTmapping(t, 0);
 
 export type FlightController = { dispose: () => void; setTheme: (dark: boolean) => void };
 
@@ -46,7 +35,9 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
   const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(4, 7, 9); scene.add(key);
   const fill = new THREE.DirectionalLight(0xe6dcff, .7); fill.position.set(-5, 2, 4); scene.add(fill);
 
+  let nightMode = night;
   const setTheme = (darkMode: boolean) => {
+    nightMode = darkMode;
     ambient.color.set(darkMode ? 0xb8c9ff : 0xffffff);
     ambient.intensity = darkMode ? 1.5 : 2;
     key.color.set(darkMode ? 0xe4eaff : 0xffffff);
@@ -80,6 +71,16 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     const pylon = new THREE.Mesh(new THREE.BoxGeometry(.46,.38,.1),silver); pylon.position.set(-.15,.35,0); engine.add(pylon);
     for(let i=0;i<17;i++){const window = new THREE.Mesh(new THREE.SphereGeometry(.048,6,5),dark); window.scale.set(.85,1.1,.35); window.position.set(-1.8+i*.22,.16,side*.435); jet.add(window);}
   }
+  // Local +Z is starboard (right); port navigation is red, starboard green.
+  const lights = new THREE.Group(); jet.add(lights);
+  const beacon = (color: number, x: number, y: number, z: number) => {
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(.065, 8, 6), new THREE.MeshBasicMaterial({color}));
+    bulb.position.set(x,y,z); lights.add(bulb); return bulb;
+  };
+  beacon(0xff283e, -1.18,.3,-3.5);
+  beacon(0x35ec88, -1.18,.3,3.5);
+  beacon(0xffffff, -3.5,.15,0);
+  const strobes = [beacon(0xffffff,-1.4,.3,-3.5),beacon(0xffffff,-1.4,.3,3.5)];
   const tailShape = new THREE.Shape([new THREE.Vector2(-3.35,.08),new THREE.Vector2(-3.15,1.48),new THREE.Vector2(-2.73,1.52),new THREE.Vector2(-2.12,.14)]);
   const tail = new THREE.Mesh(new THREE.ExtrudeGeometry(tailShape,{depth:.08,bevelEnabled:false}),purple); tail.position.z=-.04; jet.add(tail);
   const cockpit = new THREE.Mesh(new THREE.SphereGeometry(.34,16,8),dark); cockpit.scale.set(1.05,.45,.85); cockpit.position.set(2.37,.25,0); jet.add(cockpit);
@@ -167,7 +168,9 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     basis.makeBasis(forward, up, side);
     jet.quaternion.setFromRotationMatrix(basis);
     // Restrained roll around the nose axis: the cabin remains upright.
-    jet.rotateX(.22 * Math.sin(t*Math.PI) - .28 * Math.exp(-(((t-.40)/.14)**2)));
+    jet.rotateX(.10 + .06 * Math.sin(t*Math.PI));
+    lights.visible = nightMode;
+    strobes.forEach(light => { light.visible = (t * FLIGHT_DURATION) % 1400 < 90; });
     flutter(t);
     jet.updateMatrixWorld(true);
     return point;
@@ -215,8 +218,9 @@ export function startFlight(canvas: HTMLCanvasElement, onPhase: (phase: FlightPh
     const elapsed = Math.min(now - started, FLIGHT_DURATION);
     progress = elapsed / FLIGHT_DURATION;
     const point = place(progress), bounds = projectedBounds();
-    const phase: FlightPhase = progress < .28 ? 'entry' : progress < .52 ? 'turn' : progress < .78 ? 'flyover' : 'exit';
+    const phase: FlightPhase = progress < .28 ? 'entry' : progress < .52 ? 'cruise' : progress < .78 ? 'flyover' : 'exit';
     if (phase !== previousPhase) { previousPhase = phase; onPhase(phase); }
+    canvas.dataset.nightLights = String(nightMode);
     canvas.dataset.phase = phase; canvas.dataset.banner = 'attached';
     canvas.dataset.screenX = String(point.x); canvas.dataset.screenY = String(point.y);
     canvas.dataset.bounds = JSON.stringify(bounds); canvas.dataset.progress = String(progress);

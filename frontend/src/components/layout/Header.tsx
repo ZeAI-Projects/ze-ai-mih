@@ -16,7 +16,18 @@ export function Header() {
   const { hash, pathname, key } = useLocation();
   const reducedMotion = useReducedMotion();
   const homeScroll = useRef<'smooth' | 'instant' | null>(null);
+  const stickyRef = useRef<HTMLElement>(null);
   const { isOpen, headerRef, toggleRef, closeMenu, toggleMenu } = useMobileNavigation();
+
+  useEffect(() => {
+    const header = stickyRef.current;
+    if (!header) return;
+    const measure = () => document.documentElement.style.setProperty('--header-height', `${header.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--header-height'); };
+  }, []);
 
   useEffect(() => {
     if (!homeScroll.current) return;
@@ -34,7 +45,7 @@ export function Header() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <header className="site-header">
+      <header className="site-header" ref={stickyRef}>
         <span className="journey-progress" aria-hidden="true" />
         <div className="container header-inner" ref={headerRef}>
           <Link

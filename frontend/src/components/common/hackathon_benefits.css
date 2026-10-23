@@ -1,5 +1,5 @@
 .hackathon-benefits {
-  background: #fcfaf6;
+  background: var(--surface);
 }
 
 .hackathon-benefits .section-heading span {
@@ -17,9 +17,9 @@
   align-items: flex-start;
   gap: 16px;
   padding: 25px 22px;
-  border: 1px solid #eae3ee;
+  border: 1px solid var(--line);
   border-radius: 15px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .benefit-number {
@@ -28,20 +28,20 @@
   flex: 0 0 34px;
   height: 34px;
   border-radius: 50%;
-  background: #eee6fc;
+  background: var(--lavender);
   color: var(--purple-dark);
   font-size: 10px;
   font-weight: 700;
 }
 
 .benefit-card:nth-child(3n + 2) .benefit-number {
-  background: #edf2d4;
-  color: #506222;
+  background: var(--lavender);
+  color: var(--ink);
 }
 
 .benefit-card:nth-child(3n) .benefit-number {
-  background: #fff0df;
-  color: #9c5317;
+  background: var(--lavender);
+  color: var(--danger);
 }
 
 .benefit-card h3 {

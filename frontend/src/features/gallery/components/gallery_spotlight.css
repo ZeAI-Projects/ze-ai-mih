@@ -6,7 +6,7 @@
   width: 100%;
   padding: 0;
   overflow: hidden;
-  border: 1px solid #ddd1ea;
+  border: 1px solid var(--line);
   border-radius: 25px;
   background: #30243d;
   color: #fff;
@@ -35,8 +35,8 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 30px;
-  background: #e3f3a0;
-  color: #30243d;
+  background: var(--lavender);
+  color: var(--purple-dark);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.5px;
@@ -54,8 +54,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #fff;
-  color: #653697;
+  background: var(--surface);
+  color: var(--purple-dark);
   transition: transform 220ms ease;
 }
 .spotlight-caption {
@@ -81,13 +81,13 @@
   justify-self: start;
   font-size: 12px;
   line-height: 1.4;
-  color: #30243d;
+  color: var(--purple-dark);
 }
 .gallery-panel--afterparty .gallery-spotlight {
   margin: 0 0 32px;
 }
 .gallery-panel--afterparty .gallery-spotlight > button {
-  border-color: #725689;
+  border-color: var(--line);
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .gallery-spotlight > button:hover img {

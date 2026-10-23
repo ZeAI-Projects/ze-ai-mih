@@ -1,5 +1,5 @@
 .section.next-chapter {
-  background: #f2efe8;
+  background: var(--lavender);
   padding-top: 0;
 }
 .next-chapter-card {
@@ -8,8 +8,8 @@
   gap: 64px;
   padding: clamp(28px, 5vw, 64px);
   border-radius: 30px;
-  background: #eae2f6;
-  border: 1px solid #ded1ee;
+  background: var(--lavender);
+  border: 1px solid var(--line);
 }
 .next-chapter-copy h2 {
   font-size: clamp(40px, 4.4vw, 64px);
@@ -17,10 +17,10 @@
   letter-spacing: -2.7px;
 }
 .next-chapter-copy h2 span {
-  color: #6240ae;
+  color: var(--purple-dark);
 }
 .next-chapter-copy > p:not(.eyebrow) {
-  color: #61536f;
+  color: var(--body);
   font-size: 17px;
   line-height: 1.8;
   max-width: 390px;
@@ -34,7 +34,7 @@
   align-items: center;
   gap: 9px;
   margin-top: 18px;
-  color: #61536f;
+  color: var(--body);
   font-size: 13px;
 }
 .idea-playground {
@@ -53,10 +53,10 @@
   gap: 7px;
   min-height: 44px;
   padding: 9px 12px;
-  border: 1px solid #cfc0e1;
+  border: 1px solid var(--line);
   border-radius: 30px;
   background: #ffffff68;
-  color: #514060;
+  color: var(--body);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -72,14 +72,14 @@
 .idea-picker button[aria-pressed='true'] {
   color: #fff;
   background: #382449;
-  border-color: #382449;
+  border-color: var(--line);
 }
 .idea-note {
   padding: 28px;
   border-radius: 3px 28px 3px 3px;
-  background: #e0efab;
+  background: var(--lavender);
   box-shadow: 5px 8px 0 #60447818;
-  color: #2a3520;
+  color: var(--success);
 }
 .idea-note-top,
 .idea-note-bottom {
@@ -137,7 +137,7 @@
 }
 .idea-disclaimer {
   margin-top: 17px;
-  color: #6b5d76;
+  color: var(--body);
   font-size: 12px;
   line-height: 1.65;
 }

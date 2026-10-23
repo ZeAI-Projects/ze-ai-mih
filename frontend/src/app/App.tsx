@@ -46,7 +46,7 @@ export function App() {
         return () => observer.disconnect();
       }
     }
-  }, [location.pathname, location.hash, metadata, reducedMotion]);
+  }, [location.pathname, location.hash, location.key, metadata, reducedMotion]);
 
   useEffect(() => {
     if (reducedMotion) return;

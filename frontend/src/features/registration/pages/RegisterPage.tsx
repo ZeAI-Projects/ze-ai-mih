@@ -200,7 +200,7 @@ export function RegisterPage({ embedded = false }: { embedded?: boolean }) {
         </div>
       </section>
 
-      <section className="section" aria-labelledby="participation-faq-title">
+      <section id="faq" tabIndex={-1} className="section" aria-labelledby="participation-faq-title">
         <div className="container">
           <div className="section-grid">
             <div>

@@ -13,7 +13,7 @@ body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--ink);
-  background: #fff;
+  background: var(--surface);
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -56,19 +56,19 @@ a {
 }
 a:focus-visible,
 button:focus-visible {
-  outline: 3px solid #7941df;
+  outline: 3px solid var(--line);
   outline-offset: 5px;
   border-radius: 4px;
 }
 .site-footer a:focus-visible {
-  outline-color: #c9aaff;
+  outline-color: var(--line);
 }
 main:focus {
   outline: 0;
 }
 ::selection {
-  background: #e4d6ff;
-  color: #38126a;
+  background: var(--lavender);
+  color: var(--purple-dark);
 }
 .container {
   width: min(var(--container), calc(100% - 96px));
@@ -102,8 +102,8 @@ main:focus {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: #fff;
-  border-bottom: 1px solid #f0edf4;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
   box-shadow: 0 3px 14px #25212d06;
 }
 .header-inner {
@@ -125,7 +125,7 @@ main:focus {
   width: 100%;
   aspect-ratio: 7.35;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
 }
 .brand-image img {
   position: absolute;
@@ -282,11 +282,11 @@ main:focus {
   border-color: var(--purple);
 }
 .button-light {
-  background: #fff;
+  background: var(--surface);
   color: var(--purple-dark);
 }
 .button-light:hover {
-  background: #f0e7ff;
+  background: var(--lavender);
 }
 .text-link {
   display: inline-flex;
@@ -309,7 +309,7 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #77707f;
+  color: var(--body);
   font-size: 11px;
   letter-spacing: 0.1px;
   margin-top: 30px;
@@ -326,7 +326,7 @@ main:focus {
 .idea-board {
   position: relative;
   background: var(--lavender);
-  border: 1px solid #e9dffb;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 26px 29px 22px;
   overflow: hidden;
@@ -341,12 +341,12 @@ main:focus {
   font-size: 8px;
   letter-spacing: 1.5px;
   font-weight: 700;
-  color: #8b7d9e;
+  color: var(--body);
   position: relative;
 }
 .idea-board-top {
   padding-bottom: 27px;
-  border-bottom: 1px solid #e6dcf6;
+  border-bottom: 1px solid var(--line);
 }
 .idea-board-top .icon {
   color: var(--purple);
@@ -371,14 +371,14 @@ main:focus {
   align-items: center;
   gap: 21px;
   padding: 24px 0;
-  border-bottom: 1px solid #e6dcf6;
+  border-bottom: 1px solid var(--line);
   min-height: 100px;
 }
 .idea-step-number {
   font-size: 10px;
   align-self: flex-start;
   padding-top: 6px;
-  color: #9584b1;
+  color: var(--body);
   letter-spacing: 1px;
 }
 .idea-step-title {
@@ -392,7 +392,7 @@ main:focus {
 }
 .idea-step-copy {
   font-size: 11px;
-  color: #81738f;
+  color: var(--body);
   margin-top: 5px;
 }
 .idea-step-icon {
@@ -403,7 +403,7 @@ main:focus {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   color: var(--purple);
 }
 .idea-step-icon .icon {
@@ -505,8 +505,8 @@ main:focus {
   max-width: 440px;
 }
 .event-preview {
-  background: #fff;
-  border: 1px solid #e8defa;
+  background: var(--surface);
+  border: 1px solid var(--line);
   padding: 36px 38px;
   border-radius: 9px;
   box-shadow: 0 8px 30px #6c3bb605;
@@ -515,8 +515,8 @@ main:focus {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid #e7d8ff;
-  background: #f6f0ff;
+  border: 1px solid var(--line);
+  background: var(--lavender);
   color: var(--purple-dark);
   padding: 6px 11px;
   font-size: 9px;
@@ -547,7 +547,7 @@ main:focus {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid #f0ebf6;
+  border-top: 1px solid var(--line);
   padding: 15px 0;
   font-size: 11px;
 }
@@ -558,12 +558,12 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #8c819b;
+  color: var(--body);
 }
 .event-fact dt .icon {
   width: 16px;
   height: 16px;
-  color: #a48abf;
+  color: var(--body);
 }
 .event-fact dd {
   font-weight: 500;
@@ -580,8 +580,8 @@ main:focus {
   max-width: 350px;
 }
 .archive-placeholder {
-  border: 1px dashed #d7cce6;
-  background: #fdfbff;
+  border: 1px dashed var(--line);
+  background: var(--surface);
   border-radius: 8px;
   padding: 44px 35px;
   text-align: center;
@@ -591,7 +591,7 @@ main:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0e7ff;
+  background: var(--lavender);
   border-radius: 50%;
   width: 48px;
   height: 48px;
@@ -602,7 +602,7 @@ main:focus {
   font-size: 8px;
   letter-spacing: 1.7px;
   margin-bottom: 11px;
-  color: #927aa8;
+  color: var(--body);
 }
 .archive-placeholder h3 {
   font-size: 22px;
@@ -657,7 +657,7 @@ main:focus {
 }
 .footer-logo {
   display: block;
-  background: #fff;
+  background: var(--surface);
   border-radius: 3px;
   padding: 9px 9px 8px;
   max-width: 320px;
@@ -673,7 +673,7 @@ main:focus {
   display: flex;
   width: 35px;
   height: 35px;
-  border: 1px solid #737178;
+  border: 1px solid var(--line);
   border-radius: 6px;
   align-items: center;
   justify-content: center;
@@ -684,7 +684,7 @@ main:focus {
   line-height: 1;
 }
 .social-link:hover {
-  border-color: #b18aff;
+  border-color: var(--line);
   background: #ffffff0a;
 }
 .site-footer h2 {
@@ -713,7 +713,7 @@ main:focus {
   line-height: 1.8;
 }
 .contact-list .icon {
-  color: #9c70ff;
+  color: var(--purple-dark);
   width: 19px;
   height: 19px;
   margin-top: 2px;
@@ -751,7 +751,7 @@ main:focus {
   justify-content: space-between;
   gap: 20px;
   font-size: 10px;
-  color: #a9a5b2;
+  color: var(--body);
 }
 .footer-bottom span {
   font-size: 9px;
@@ -760,7 +760,7 @@ main:focus {
 .page-hero {
   padding: 65px 0 68px;
   background: var(--lavender);
-  border-bottom: 1px solid #eee6fa;
+  border-bottom: 1px solid var(--line);
 }
 .page-title {
   font-size: clamp(36px, 4.1vw, 56px);
@@ -789,7 +789,7 @@ main:focus {
 .capability-list {
   background: var(--lavender);
   padding: 35px;
-  border: 1px solid #eee5fa;
+  border: 1px solid var(--line);
   border-radius: 9px;
 }
 .capability-list > .eyebrow {
@@ -874,26 +874,26 @@ main:focus {
   display: flex;
   gap: 11px;
   align-items: center;
-  color: #77707f;
+  color: var(--body);
 }
 .detail-row .icon {
   width: 17px;
   height: 17px;
-  color: #9873c4;
+  color: var(--purple-dark);
 }
 .detail-row dd {
   text-align: right;
-  color: #30273c;
+  color: var(--purple-dark);
 }
 .registration-note {
   font-size: 11px;
   line-height: 1.85;
-  color: #81788c;
+  color: var(--body);
   margin-top: 16px;
 }
 .registration-panel {
   background: var(--lavender);
-  border: 1px solid #e9dffa;
+  border: 1px solid var(--line);
   border-radius: 9px;
   padding: 36px;
 }
@@ -901,7 +901,7 @@ main:focus {
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  background: #efe4ff;
+  background: var(--lavender);
   color: var(--purple);
   display: flex;
   align-items: center;
@@ -954,9 +954,9 @@ main:focus {
   padding: 0;
 }
 .registration-dialog {
-  border: 1px solid #e8dafa;
+  border: 1px solid var(--line);
   border-radius: 16px;
-  background: white;
+  background: var(--surface);
   max-width: 480px;
   width: calc(100% - 40px);
   max-height: calc(100dvh - 48px);
@@ -1027,7 +1027,7 @@ main:focus {
 .event-fact dt,
 .archive-placeholder .eyebrow,
 .registration-note {
-  color: #74677f;
+  color: var(--body);
 }
 @media (min-width: 1500px) {
   .hero {
@@ -1152,7 +1152,7 @@ main:focus {
     left: 0;
     right: 0;
     top: 100%;
-    background: #fff;
+    background: var(--surface);
     padding: 15px 24px 25px;
     box-shadow: 0 10px 12px #25212d0a;
     border-bottom: 1px solid var(--line);
@@ -1687,6 +1687,6 @@ main:focus {
 
 /* Theme native file-selector buttons in any existing admin forms that still use file inputs.
    The custom registration picker is deliberately excluded. */
-#root input[type="file"]:not(.miih-upload-native){font:inherit;color:#554466;border:1px solid #e4d9ef;background:#faf7ff;border-radius:10px;padding:9px;max-width:100%;box-sizing:border-box;}
-#root input[type="file"]:not(.miih-upload-native)::file-selector-button{appearance:none;border:1px solid #bda3e5;border-radius:8px;background:#eee3fc;color:#5f359e;padding:9px 13px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-right:12px;}
-#root input[type="file"]:not(.miih-upload-native)::file-selector-button:hover{background:#e4d3fa;}
+#root input[type="file"]:not(.miih-upload-native){font:inherit;color:var(--body);border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px;max-width:100%;box-sizing:border-box;}
+#root input[type="file"]:not(.miih-upload-native)::file-selector-button{appearance:none;border:1px solid var(--line);border-radius:8px;background:var(--lavender);color:var(--purple-dark);padding:9px 13px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-right:12px;}
+#root input[type="file"]:not(.miih-upload-native)::file-selector-button:hover{background:var(--lavender);}

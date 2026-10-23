@@ -1,5 +1,5 @@
 ﻿.gallery-preview {
-  background: #f2efe8;
+  background: var(--lavender);
 }
 .gallery-preview-grid {
   display: grid;
@@ -14,13 +14,13 @@
   font-weight: 800;
 }
 .gallery-preview-copy h2 span {
-  color: #6040b1;
+  color: var(--purple-dark);
   background: linear-gradient(transparent 76%, #daed96 76%, #daed96 94%, transparent 94%);
 }
 .gallery-preview-copy > p:not(.eyebrow) {
   margin-top: 24px;
   max-width: 380px;
-  color: #615b69;
+  color: var(--body);
 }
 .gallery-preview-copy .button {
   margin-top: 28px;
@@ -36,10 +36,10 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border: 1px solid #c8c0d3;
+  border: 1px solid var(--line);
   border-radius: 50%;
   background: transparent;
-  color: #38234f;
+  color: var(--purple-dark);
   cursor: pointer;
   transition:
     background 180ms,
@@ -49,7 +49,7 @@
   transform: rotate(180deg);
 }
 .memory-navigation button:hover {
-  background: #fff;
+  background: var(--surface);
   transform: translateY(-2px);
 }
 .memory-navigation > span {
@@ -58,7 +58,7 @@
   font-variant-numeric: tabular-nums;
 }
 .memory-navigation > span > span {
-  color: #756b81;
+  color: var(--body);
   font-weight: 500;
 }
 main .gallery-preview-copy .memory-hint {
@@ -68,9 +68,9 @@ main .gallery-preview-copy .memory-hint {
 .memory-book {
   min-width: 0;
   padding: 12px;
-  border: 1px solid #ddd6ca;
+  border: 1px solid var(--line);
   border-radius: 24px;
-  background: #fffdf8;
+  background: var(--surface);
   box-shadow: 0 16px 36px #3e294510;
 }
 .memory-feature {
@@ -143,13 +143,13 @@ main .gallery-preview-copy .memory-hint {
   border-radius: 9px;
   overflow: hidden;
   cursor: pointer;
-  background: #e6e1d7;
+  background: var(--lavender);
   transition:
     border-color 180ms,
     transform 180ms;
 }
 .memory-filmstrip button[aria-pressed='true'] {
-  border-color: #7150ca;
+  border-color: var(--line);
 }
 .memory-filmstrip button:hover {
   transform: translateY(-3px);

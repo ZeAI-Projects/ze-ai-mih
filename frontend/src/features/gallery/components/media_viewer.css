@@ -37,7 +37,7 @@
   background: #ffffff20;
 }
 .media-viewer :focus-visible {
-  outline-color: #dbc1ff;
+  outline-color: var(--line);
 }
 .media-viewer-photo {
   width: 100%;

@@ -8,7 +8,7 @@
 }
 
 .participation-faqs summary {
-  color: #362644;
+  color: var(--purple-dark);
   font-size: 16px;
   font-weight: 600;
   line-height: 1.6;

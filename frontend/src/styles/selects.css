@@ -1,9 +1,9 @@
 /* Shared select theme. Native semantics retain labels, validation and keyboard use. */
 #root select {
   font: inherit;
-  color: #30223f;
-  background-color: #fff;
-  border: 1px solid #ded0ef;
+  color: var(--purple-dark);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px 16px;
   min-height: 44px;
@@ -12,12 +12,12 @@
   accent-color: #8c52ff;
 }
 #root select:focus-visible {
-  outline: 3px solid #d7c2ff;
+  outline: 3px solid var(--line);
   outline-offset: 2px;
-  border-color: #8c52ff;
+  border-color: var(--line);
 }
 #root select:disabled { cursor: not-allowed; opacity: .6; }
-#root select option { color: #30223f; background: #fff; }
+#root select option { color: var(--purple-dark); background: var(--surface); }
 /* The picker is in the top layer, so dialogs and scrolling panels cannot clip it. */
 @supports (appearance: base-select) {
   #root select:not([multiple]):not([size]),
@@ -25,9 +25,9 @@
     appearance: base-select;
   }
   #root select::picker(select) {
-    background: #fff;
-    color: #30223f;
-    border: 1px solid #d8c5fa;
+    background: var(--surface);
+    color: var(--purple-dark);
+    border: 1px solid var(--line);
     border-radius: 14px;
     padding: 6px;
     margin-block: 6px;
@@ -37,7 +37,7 @@
     overscroll-behavior: contain;
     scrollbar-color: #ac86e0 #f6f1fd;
   }
-  #root select::picker-icon { color: #8042df; transition: rotate .15s; }
+  #root select::picker-icon { color: var(--purple-dark); transition: rotate .15s; }
   #root select:open::picker-icon { rotate: 180deg; }
   #root select option {
     padding: 10px 12px;
@@ -48,8 +48,8 @@
     cursor: pointer;
   }
   #root select option:hover,
-  #root select option:focus { background: #f3ebff; color: #652bb7; outline: none; }
-  #root select option:checked { background: #ede2ff; color: #632bb3; font-weight: 600; }
-  #root select option::checkmark { color: #8042df; }
+  #root select option:focus { background: var(--lavender); color: var(--purple-dark); outline: none; }
+  #root select option:checked { background: var(--lavender); color: var(--purple-dark); font-weight: 600; }
+  #root select option::checkmark { color: var(--purple-dark); }
   #root select option:disabled { opacity: .5; cursor: not-allowed; }
 }

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const sources = {
-  light: '/media/flight/kuala-lumpur-day.webp',
-  dark: '/media/flight/kuala-lumpur-night.webp',
+  light: '/media/flight/tower2.png',
+  dark: '/media/flight/tower1.webp',
 };
 type Theme = keyof typeof sources;
 const systemTheme = (): Theme => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

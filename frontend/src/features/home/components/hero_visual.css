@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  color: #473657;
+  color: var(--purple-dark);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.5;
@@ -23,7 +23,7 @@
 .polaroid-intro .icon {
   width: 23px;
   height: 23px;
-  color: #7542ce;
+  color: var(--purple-dark);
 }
 
 .polaroid-stack {
@@ -36,7 +36,7 @@
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: #25212a;
+  color: var(--ink);
   text-align: left;
   cursor: pointer;
   -webkit-user-select: none;
@@ -48,8 +48,8 @@
   position: absolute;
   inset: 24px 25px 28px;
   z-index: 0;
-  border: 1px solid #d5cfc5;
-  background: #eee8da;
+  border: 1px solid var(--line);
+  background: var(--lavender);
   box-shadow: 0 9px 20px #24112e14;
   pointer-events: none;
   content: '';
@@ -61,11 +61,11 @@
 
 .polaroid-stack::after {
   transform: translateY(5px) rotate(-8deg) scale(0.98);
-  background: #f8f4e9;
+  background: var(--lavender);
 }
 
 .polaroid-stack:focus-visible {
-  outline: 3px solid #7941df;
+  outline: 3px solid var(--line);
   outline-offset: 5px;
   border-radius: 12px;
 }
@@ -76,8 +76,8 @@
   display: flex;
   flex-direction: column;
   padding: 14px 14px 0;
-  border: 1px solid #e0dacf;
-  background: #fffdf5;
+  border: 1px solid var(--line);
+  background: var(--surface);
   background-image: repeating-linear-gradient(0deg, #66564203 0 1px, transparent 1px 3px);
   box-shadow:
     0 2px 4px #24112e13,
@@ -125,7 +125,7 @@
 }
 
 .polaroid-caption strong {
-  color: #262229;
+  color: var(--ink);
   font-size: clamp(18px, 1.75vw, 25px);
   font-weight: 700;
   line-height: 1.25;
@@ -133,7 +133,7 @@
 }
 
 .polaroid-caption > span {
-  color: #655e67;
+  color: var(--body);
   font-size: 14px;
   line-height: 1.4;
 }
@@ -147,10 +147,10 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border: 2px solid #262229;
+  border: 2px solid var(--line);
   border-radius: 50%;
   background: #d7ff73;
-  color: #262229;
+  color: var(--ink);
   box-shadow: 2px 3px 0 #262229;
   pointer-events: none;
   transition: transform 180ms ease;
@@ -173,13 +173,13 @@
   justify-content: space-between;
   gap: 5px 16px;
   margin-top: 17px;
-  color: #62566c;
+  color: var(--body);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .polaroid-counter {
-  color: #43334f;
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   white-space: nowrap;
@@ -191,7 +191,7 @@
   gap: 12px;
   min-height: 44px;
   margin-top: 10px;
-  color: #6834b2;
+  color: var(--purple-dark);
   font-size: 15px;
   font-weight: 700;
   text-decoration: underline;

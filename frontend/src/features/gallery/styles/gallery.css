@@ -1,6 +1,6 @@
 ﻿.gallery-page {
-  --gallery-paper: #fbfaf7;
-  --gallery-muted: #62576d;
+  --gallery-paper: var(--surface);
+  --gallery-muted: var(--body);
   background: var(--gallery-paper);
 }
 .gallery-intro {
@@ -54,8 +54,8 @@
   flex: 0 0 250px;
   padding: 23px;
   border-radius: 22px 22px 22px 5px;
-  background: #eee6fc;
-  color: #422364;
+  background: var(--lavender);
+  color: var(--purple-dark);
 }
 .idea-spark-label {
   display: flex;
@@ -68,7 +68,7 @@
 .idea-spark-label .icon {
   width: 21px;
   height: 21px;
-  color: #7445b1;
+  color: var(--purple-dark);
 }
 .gallery-idea-spark p {
   min-height: 98px;
@@ -85,7 +85,7 @@
   border: 0;
   padding: 5px 0;
   background: transparent;
-  color: #6332a3;
+  color: var(--purple-dark);
   font-size: 15px;
   font-weight: 700;
   text-align: left;
@@ -107,13 +107,13 @@
 .gallery-description {
   max-width: 590px;
   font-size: 19px;
-  color: #60566b;
+  color: var(--body);
   line-height: 1.75;
 }
 .gallery-context {
   max-width: 345px;
   padding-left: 22px;
-  border-left: 1px solid #dbd0e7;
+  border-left: 1px solid var(--line);
 }
 .gallery-context-label {
   display: inline-flex;
@@ -121,7 +121,7 @@
   gap: 8px;
   font-size: 15px;
   font-weight: 700;
-  color: #4e425f;
+  color: var(--purple-dark);
   margin-bottom: 7px;
 }
 .gallery-context-label > span {
@@ -144,12 +144,12 @@
 }
 .gallery-panel--photos {
   padding-top: 38px;
-  border-top: 1px solid #e0d6e9;
+  border-top: 1px solid var(--line);
 }
 .gallery-panel--videos {
   margin-top: 82px;
   padding-top: 52px;
-  border-top: 1px solid #e0d6e9;
+  border-top: 1px solid var(--line);
 }
 .gallery-panel-heading {
   display: flex;
@@ -205,7 +205,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid #795791;
+  border: 1px solid var(--line);
   padding: 10px 16px;
   border-radius: 30px;
   color: #e5d0fa;
@@ -223,7 +223,7 @@
   color: #d0bedc;
   font-size: 15px;
   line-height: 1.7;
-  border-top: 1px solid #4b365c;
+  border-top: 1px solid var(--line);
   margin-top: 26px;
   padding-top: 20px;
 }
@@ -246,10 +246,10 @@
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 4px;
-  color: #654c7c;
+  color: var(--purple-dark);
 }
 .gallery-credits summary:focus-visible {
-  outline: 3px solid #7941df;
+  outline: 3px solid var(--line);
   outline-offset: 4px;
   border-radius: 4px;
 }
@@ -274,18 +274,18 @@
   align-items: center;
   gap: 24px;
   padding: 36px;
-  border: 1px solid #dfd2eb;
+  border: 1px solid var(--line);
   border-radius: 20px;
-  background: #eee7f7;
+  background: var(--lavender);
 }
 .gallery-next-icon {
   flex: 0 0 62px;
   height: 62px;
   display: grid;
   place-items: center;
-  background: #d8c4fa;
+  background: var(--lavender);
   border-radius: 17px;
-  color: #6b3baf;
+  color: var(--purple-dark);
   transform: rotate(-8deg);
 }
 .gallery-next-icon .icon {
@@ -296,7 +296,7 @@
   flex-grow: 1;
 }
 .gallery-next-kicker {
-  color: #7956a0;
+  color: var(--purple-dark);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.7px;
@@ -309,7 +309,7 @@
   margin-bottom: 9px;
 }
 .gallery-next-copy > p:last-child {
-  color: #675373;
+  color: var(--body);
   font-size: 16px;
   line-height: 1.65;
 }
@@ -474,5 +474,5 @@
 }
 
 /* Published images/videos added by Studio; existing gallery layout is unchanged. */
-.miih-gallery-additions{padding:2rem 0}.miih-gallery-additions h2{margin-bottom:1rem}.miih-gallery-additions h3{margin:1.5rem 0 .8rem}.miih-gallery-additions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem}.miih-gallery-additions-grid figure{margin:0;background:#fff;border-radius:1rem;overflow:hidden;box-shadow:0 3px 18px #1b143315}.miih-gallery-additions-grid img,.miih-gallery-additions-grid video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}.miih-gallery-additions-grid figcaption{padding:.65rem .85rem}
+.miih-gallery-additions{padding:2rem 0}.miih-gallery-additions h2{margin-bottom:1rem}.miih-gallery-additions h3{margin:1.5rem 0 .8rem}.miih-gallery-additions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1rem}.miih-gallery-additions-grid figure{margin:0;background:var(--surface);border-radius:1rem;overflow:hidden;box-shadow:0 3px 18px #1b143315}.miih-gallery-additions-grid img,.miih-gallery-additions-grid video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}.miih-gallery-additions-grid figcaption{padding:.65rem .85rem}
 

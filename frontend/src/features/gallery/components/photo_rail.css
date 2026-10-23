@@ -9,7 +9,7 @@
   margin-bottom: 23px;
 }
 .photo-rail-controls > p {
-  color: #6c5d78;
+  color: var(--body);
   font-size: 15px;
   line-height: 1.5;
 }
@@ -28,9 +28,9 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid #d9cce6;
+  border: 1px solid var(--line);
   border-radius: 30px;
-  color: #653697;
+  color: var(--purple-dark);
   background: transparent;
   min-height: 46px;
   padding: 10px 16px;
@@ -38,7 +38,7 @@
   font-weight: 700;
 }
 .rail-autoplay:hover {
-  background: #eee7fa;
+  background: var(--lavender);
 }
 .rail-arrow {
   width: 46px;
@@ -46,13 +46,13 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  border: 1px solid #d9cce6;
+  border: 1px solid var(--line);
   border-radius: 50%;
   background: transparent;
-  color: #653697;
+  color: var(--purple-dark);
 }
 .rail-arrow:hover {
-  background: #eee7fa;
+  background: var(--lavender);
 }
 .rail-arrow .icon {
   width: 21px;
@@ -189,7 +189,7 @@
 }
 .photo-rail-help {
   margin-top: 20px;
-  color: #6b5b77;
+  color: var(--body);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -202,7 +202,7 @@
 }
 .photo-rail-collection--afterparty .rail-arrow {
   color: #fff;
-  border-color: #79568f;
+  border-color: var(--line);
 }
 .photo-rail-collection--afterparty .rail-arrow:hover {
   background: #493258;

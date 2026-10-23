@@ -28,12 +28,20 @@ export function Challenges() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [track, setTrack] = useState('RISING_BUILDERS');
-  const [domain, setDomain] = useState('');
+  const [domain, setDomain] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<Result>({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const chooseDomain = (next: string) => {
+    // Re-selecting the current filter must not start an unfinishable loading state.
+    if (domain === next && page === 1) return;
+    setResult({ items: [], total: 0 });
+    setLoading(true);
+    setDomain(next);
+    setPage(1);
+  };
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError('');
@@ -63,9 +71,9 @@ export function Challenges() {
       ['RISING_BUILDERS', 'Rising Builders', 'School students through 1st-year college'],
       ['NEXT_LEVEL_BUILDERS', 'Next-Level Builders', '2nd-year college through startup teams and founders'],
     ].map(([code, name, description]) => <button type="button" key={code} aria-pressed={track === code} onClick={() => { setTrack(code); setPage(1); }}><strong>{tracks.find(t => t.code === code)?.name || name}</strong><span>{description}</span></button>)}</div>
-    <div className="challenge-domains" aria-label="Domain filter"><button type="button" aria-pressed={!domain} onClick={() => { setDomain(''); setPage(1); }}><span className="domain-glyph" aria-hidden="true">✦</span>All enabled domains</button>{domains.map(d => <button type="button" key={d.id} aria-pressed={domain === d.id} onClick={() => { setDomain(d.id); setPage(1); }}><span className="domain-glyph" aria-hidden="true">{domainGlyph(d.domain_name)}</span>{d.domain_name}</button>)}</div>
-    <div aria-live="polite" aria-busy={loading}>{loading ? <p>Loading challenges…</p> : error ? <div className="challenge-empty" role="alert"><h3>Challenge catalogue</h3><p>{error}</p><button type="button" onClick={() => setRetry(v => v+1)}>Retry</button></div> : result.items.length ? <div className="challenge-grid">{result.items.map(item => <ChallengeCard key={item.id} item={item} />)}</div> : <div className="challenge-empty"><h3>CHALLENGES UNLOCKING SOON</h3><p>Published challenges for this track and domain will appear here.</p></div>}</div>
-    {!loading && !error && result.total > 6 && <div className="challenge-pagination"><button type="button" disabled={page === 1} onClick={() => setPage(p => p-1)}>Previous</button><span>Page {page} of {Math.ceil(result.total/6)}</span><button type="button" disabled={page*6 >= result.total} onClick={() => setPage(p => p+1)}>Next</button></div>}
+    <div className="challenge-domains" aria-label="Domain filter"><button type="button" aria-pressed={domain === ''} onClick={() => chooseDomain('')}><span className="domain-glyph" aria-hidden="true">✦</span>All enabled domains</button>{domains.map(d => <button type="button" key={d.id} aria-pressed={domain === d.id} onClick={() => chooseDomain(d.id)}><span className="domain-glyph" aria-hidden="true">{domainGlyph(d.domain_name)}</span>{d.domain_name}</button>)}</div>
+    <div aria-live="polite" aria-busy={loading}>{loading ? <p>Loading challenges…</p> : error ? <div className="challenge-empty" role="alert"><h3>Challenge catalogue</h3><p>{error}</p><button type="button" onClick={() => setRetry(v => v+1)}>Retry</button></div> : domain === null && result.items.length ? <div className="challenge-empty"><h3>Choose a domain</h3><p>Select a domain to explore its published challenges.</p></div> : result.items.length ? <div className="challenge-grid">{result.items.map(item => <ChallengeCard key={item.id} item={item} />)}</div> : <div className="challenge-empty"><h3>CHALLENGES UNLOCKING SOON</h3><p>Published challenges for this track and domain will appear here.</p></div>}</div>
+    {domain !== null && !loading && !error && result.total > 6 && <div className="challenge-pagination"><button type="button" disabled={page === 1} onClick={() => setPage(p => p-1)}>Previous</button><span>Page {page} of {Math.ceil(result.total/6)}</span><button type="button" disabled={page*6 >= result.total} onClick={() => setPage(p => p+1)}>Next</button></div>}
     <Link className="button button-primary" to="/#register">Choose your challenge &amp; register →</Link>
   </div></section>;
 }

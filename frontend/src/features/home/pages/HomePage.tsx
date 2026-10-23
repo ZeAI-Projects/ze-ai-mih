@@ -2,12 +2,11 @@
 import { HeroVisual } from '../components/HeroVisual';
 import { useLocation } from 'react-router-dom';
 import { lazy, useEffect, useRef, useState } from 'react';
-import brandLogo from '@/assets/images/header-brand.webp';
 import { useReducedMotion } from '@/hooks/use_reduced_motion';
 import { DeferredSection } from '@/components/common/DeferredSection';
 import { SeasonReplay } from '../components/SeasonReplay';
 import { Challenges } from '../components/Challenges';
-import { ZeaiMark } from '@/components/common/HeaderBrand';
+import { MadeInIndiaMark, ZeaiMark } from '@/components/common/HeaderBrand';
 import { SeasonRewards } from '../components/SeasonRewards';
 import '@/features/about/styles/about.css';
 import '../styles/home.css';
@@ -43,7 +42,7 @@ export function HomePage() {
       <div className="container hero-grid"><div className="hero-copy">
         <div ref={brandRow} className="season-eyebrow hero-brand-row">
           <ZeaiMark />
-          <span className="india-crop"><img src={brandLogo} alt="#MadeInIndia" width="2170" height="725" /></span>
+          <MadeInIndiaMark />
           <span key={yearEntry.run} role="img" aria-label="2027" className={`hero-year${yearEntry.started ? ' hero-year--started' : ''}${reducedMotion ? ' hero-year--reduced' : ''}`}>
             <span className="hero-year-digits" aria-hidden="true">
               <span>2</span><span>0</span><span>2</span>

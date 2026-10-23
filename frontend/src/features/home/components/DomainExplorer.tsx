@@ -18,7 +18,7 @@ const IDEAS = [
 ];
 
 export function DomainExplorer() {
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
   return (
     <>
       <ul className="domain-list" aria-label="Hackathon domains">
@@ -36,7 +36,7 @@ export function DomainExplorer() {
           </li>
         ))}
       </ul>
-      <div className="domain-idea" id="domain-idea" role="status" aria-live="polite">
+      {selected !== null && <div className="domain-idea" id="domain-idea" role="status" aria-live="polite">
         <span className="domain-idea-icon" aria-hidden="true">
           <Icon name="spark" />
         </span>
@@ -49,7 +49,7 @@ export function DomainExplorer() {
           <br />
           not an official brief.
         </span>
-      </div>
+      </div>}
     </>
   );
 }

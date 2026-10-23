@@ -6,6 +6,8 @@ import '@/styles/variables.css';
 import '@/styles/globals.css';
 import '@/styles/experience.css';
 import '@/styles/selects.css';
+import '@/styles/system-theme.css';
+import '@/styles/site-polish.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('The application root is missing.');

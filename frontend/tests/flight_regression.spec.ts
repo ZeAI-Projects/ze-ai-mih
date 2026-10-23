@@ -76,6 +76,10 @@ test('curved nine-second flight keeps skyline static, exits and replays', async 
   await expect(canvas).toHaveCount(0);
   const samples = await page.evaluate(() => (window as unknown as {flightSamples: {x:number;y:number;left:number;right:number;top:number;bottom:number;p:number}[]}).flightSamples);
   expect(samples.some(s => s.x < .25 && s.y > .3)).toBe(true);
+  for (let i = 1; i < samples.length; i++) {
+    expect(samples[i].x).toBeGreaterThanOrEqual(samples[i-1].x);
+    expect(samples[i].y).toBeLessThanOrEqual(samples[i-1].y);
+  }
   expect(samples.at(-1)!.left > 1 || samples.at(-1)!.bottom < 0).toBe(true);
   for (const s of samples) {
     const overlapsX = s.right > (initial!.x-stage!.x)/stage!.width && s.left < (initial!.x+initial!.width-stage!.x)/stage!.width;

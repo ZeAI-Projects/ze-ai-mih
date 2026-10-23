@@ -9,8 +9,8 @@
 .india-crop { width: 126px; height: 27px; }
 .india-crop img { position: absolute; width: 217px; max-width: none; height: auto; left: -79px; top: -24px; }
 .brand-divider { width: 1px; height: 22px; background: var(--line); }
-.labx-wordmark { font-size: 23px; font-weight: 800; color: #555; letter-spacing: -1px; }
-.labx-wordmark span { color: #009ac4; }
+.labx-wordmark { font-size: 23px; font-weight: 800; color: var(--body); letter-spacing: -1px; }
+.labx-wordmark span { color: var(--purple-dark); }
 .zeai-hash { color: var(--purple); font-size: 19px; }
 .primary-nav { gap: 20px; }
 .primary-nav a { font-size: 13px; }
@@ -22,13 +22,13 @@
 .hero-brand-row .zeai-crop img { width: 322.5px; left: -12px; top: -33px; }
 .hero-brand-row .india-crop { width: 201px; height: 40.5px; }
 .hero-brand-row .india-crop img { width: 325.5px; left: -118.5px; top: -36px; }
-.hero-year { display: block; width: 4em; height: 1.75em; overflow: hidden; font-size: 42px; font-weight: 800; line-height: 1.167; color: #7037b1; }
+.hero-year { display: block; width: 4em; height: 1.75em; overflow: hidden; font-size: 42px; font-weight: 800; line-height: 1.167; color: var(--purple-dark); }
 .hero-year-digits { display: flex; width: max-content; padding-top: .2917em; }
 .hero-year-digits > span { display: block; width: .64em; text-align: center; }
 .hero-year-slot { position: relative; perspective: 180px; }
 .hero-year-slot > span { position: absolute; inset: 0; }
 .hero-year-seven { opacity: 0; transform: translateX(2em) rotate(18deg); }
-.hero-year-impact { opacity: 0; color: #ae77ed; pointer-events: none; }
+.hero-year-impact { opacity: 0; color: var(--purple-dark); pointer-events: none; }
 .hero-year--started .hero-year-six { animation: hero-six-kicked 2400ms linear both; }
 .hero-year--started .hero-year-seven { animation: hero-seven-kick 2400ms linear both; }
 .hero-year--started .hero-year-impact { animation: hero-year-spark 2400ms linear both; }
@@ -83,17 +83,17 @@
 }
 .season-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 24px; margin-top: 32px; align-items: stretch; }
 .season-card { border: 1px solid var(--line); border-radius: 24px; padding: clamp(20px,3vw,36px); min-width: 0; }
-.season-past { background: #faf9fc; }
-.season-next { background: var(--lavender); border-color: #d2b9ff; }
-.season-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--purple-deep); padding: 6px 10px; background: #ece2ff; border-radius: 6px; }
+.season-past { background: var(--surface); }
+.season-next { background: var(--lavender); border-color: var(--line); }
+.season-tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--purple-deep); padding: 6px 10px; background: var(--lavender); border-radius: 6px; }
 .season-card h3 { font-size: clamp(22px,2.5vw,30px); line-height: 1.2; margin: 24px 0 16px; }
 .season-prize { display: block; font-size: clamp(30px,3.4vw,46px); letter-spacing: -.04em; color: var(--purple-deep); }
 .season-card > p { margin: 8px 0 24px; font-size: 14px; }
-.boarding-pass { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-top: 35px; position: relative; overflow: hidden; }
+.boarding-pass { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-top: 35px; position: relative; overflow: hidden; }
 .boarding-pass > span,.boarding-pass small { font-size: 10px; display: block; letter-spacing: .08em; }
 .boarding-pass h4 { font-size: 25px; margin: 22px 0 4px; }
 .boarding-pass p { font-size: 12px; }
-.ticket-route { display: flex; gap: 12px; align-items: center; border-block: 1px dashed #ccc; padding: 20px 0; font-size: 14px; }
+.ticket-route { display: flex; gap: 12px; align-items: center; border-block: 1px dashed var(--line); padding: 20px 0; font-size: 14px; }
 .ticket-stamp { display: block; color: var(--purple-deep); border: 3px double var(--purple-deep); transform: rotate(-7deg); font-size: 20px; line-height: 1.2; text-align: center; padding: 12px; margin: 20px 0; }
 .flight-slot { min-height: 360px; }
 .flight-scene { display: block; width: 100%; height: auto; overflow: hidden; }
@@ -104,29 +104,29 @@
 @keyframes route-reveal { from { opacity: .2; } to { opacity: 1; } }
 .flight-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .flight-controls .button { min-height: 42px; padding: 10px 16px; font-size: 12px; }
-.flight-swipe { position: relative; flex: 1; min-width: 190px; padding: 10px; border: 1px solid #cdb7f5; border-radius: 10px; touch-action: pan-y; user-select: none; cursor: grab; overflow: hidden; font-size: 12px; text-align: center; }
+.flight-swipe { position: relative; flex: 1; min-width: 190px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; touch-action: pan-y; user-select: none; cursor: grab; overflow: hidden; font-size: 12px; text-align: center; }
 .flight-swipe > span:not(.flight-swipe-fill),.flight-swipe small { position: relative; display: block; }
 .flight-swipe small { font-size: 10px; }
-.flight-swipe-fill { position: absolute; inset: 0; background: #d8c2ff; transform-origin: left; }
+.flight-swipe-fill { position: absolute; inset: 0; background: var(--lavender); transform-origin: left; }
 .flight-feedback { min-height: 3em; font-size: 12px; }
 .track-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0; }
-.track-controls button { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: white; color: var(--ink); }
+.track-controls button { text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); color: var(--ink); }
 .track-controls strong,.track-controls span { display: block; }
 .track-controls strong { font-size: 20px; }
 .track-controls span { font-size: 13px; margin-top: 4px; }
 .track-controls [aria-pressed=true] { background: var(--purple-deep); color: white; border-color: var(--purple-deep); }
 .challenge-domains { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-.challenge-domains button,.challenge-pagination button { border: 1px solid var(--line); border-radius: 8px; background: white; padding: 10px 14px; font-size: 13px; }
+.challenge-domains button,.challenge-pagination button { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 10px 14px; font-size: 13px; }
 .challenge-domains [aria-pressed=true] { border-color: var(--purple); color: var(--purple-deep); box-shadow: inset 0 0 0 1px var(--purple); }
 .challenge-grid,.rewards-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; margin: 28px 0; }
-.challenge-card,.reward-card { padding: 26px; border: 1px solid var(--line); background: white; border-radius: 16px; overflow-wrap: anywhere; }
+.challenge-card,.reward-card { padding: 26px; border: 1px solid var(--line); background: var(--surface); border-radius: 16px; overflow-wrap: anywhere; }
 .challenge-card p { white-space: pre-wrap; }
 .challenge-card h3,.reward-card h3 { font-size: 20px; margin: 14px 0 8px; }
 .challenge-card p,.reward-card p { font-size: 14px; }
 .challenge-card summary { cursor: pointer; color: var(--purple-deep); margin-top: 16px; }
-.challenge-empty { padding: 36px; margin: 22px 0; border: 1px dashed #cdb7f5; border-radius: 16px; }
+.challenge-empty { padding: 36px; margin: 22px 0; border: 1px dashed var(--line); border-radius: 16px; }
 .challenge-pagination { display: flex; gap: 16px; align-items: center; margin-bottom: 24px; }
-.season-rewards { background: #fcfaff; }
+.season-rewards { background: var(--surface); }
 .reward-card > svg { color: var(--purple); width: 28px; height: 28px; }
 .reward-terms { font-size: 13px; max-width: 800px; margin-bottom: 26px; }
 #register .page-title { font-size: clamp(30px,5vw,56px); }

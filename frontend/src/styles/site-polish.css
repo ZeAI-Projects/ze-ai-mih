@@ -1,0 +1,132 @@
+/* Public-site presentation. Flight rendering and overlay styles are intentionally excluded. */
+html { scroll-padding-top: calc(var(--header-height, 88px) + 20px); }
+#home, #replay, #challenges, #rewards, #about, #gallery, #register, #faq,
+#participation-faq-title { scroll-margin-top: 0; }
+.site-header { background: var(--surface); border-bottom-color: var(--line); box-shadow: var(--shadow-soft); }
+.site-header .brand { width: auto; max-width: calc(100% - 60px); }
+.site-header .season-brand { gap: 12px; }
+.site-header .primary-nav > a { padding-inline: 8px; border-radius: 8px; }
+.site-header .primary-nav > a[aria-current] { background: var(--lavender); text-decoration-thickness: 2px; }
+.site-header .menu-toggle { flex: 0 0 44px; background: var(--lavender); }
+.site-header .labx-original { flex-shrink: 0; width: 76px; height: 38px; }
+.labx-original img { filter: brightness(.45); }
+.zeai-crop, .india-crop { background: transparent; }
+.site-footer .brand-image--footer img { filter: none; opacity: 1; }
+.site-footer .brand-image { background: transparent; }
+@media (prefers-color-scheme: light) {
+  .zeai-crop img, .india-crop img, .site-footer .brand-image img { mix-blend-mode: multiply; }
+}
+@media (prefers-color-scheme: dark) {
+  .labx-original img { filter: none; }
+  .zeai-crop img, .india-crop img, .site-footer .brand-image img { filter: brightness(1.25); }
+}
+
+/* Consistent public cards, type and controls. */
+main .section { padding-block: var(--section-space); }
+main :is(.reward-card, .challenge-card, .about-value-cards article) {
+  border-radius: var(--card-radius); box-shadow: var(--shadow-soft);
+}
+main .button-primary { background: var(--control-fill); color: #fff; }
+main .button-secondary { background: var(--surface); color: var(--purple-dark); border-color: var(--line); }
+main .button { min-height: 48px; }
+main :is(.reward-card, .challenge-card) h3 { color: var(--ink); }
+main :is(.reward-card, .challenge-card) p { color: var(--body); line-height: 1.75; }
+main .season-rewards .reward-card:first-child p { color: var(--purple-dark); }
+.domain-section .section-copy { margin-top: 18px; color: var(--body); max-width: 640px; }
+.domain-section .section-heading { color: var(--ink); }
+.domain-section .track-controls { margin-top: 30px; }
+.domain-section .track-controls button { background: var(--surface); color: var(--ink); }
+.domain-section .track-controls button[aria-pressed="true"] { border-color: var(--purple); background: var(--lavender); }
+.domain-section .challenge-domains button { color: var(--ink); box-shadow: none; min-height: 104px; gap: 12px; }
+.domain-section .domain-glyph { color: var(--purple-dark); }
+.domain-section .challenge-domains button[aria-pressed="true"] {
+  background: var(--lavender); border-color: var(--purple); box-shadow: inset 0 0 0 1px var(--purple);
+  color: var(--purple-dark);
+}
+.domain-section .challenge-domains button:focus-visible { outline: 3px dashed var(--purple); outline-offset: 4px; }
+.domain-section .challenge-empty {
+  padding: clamp(28px, 4vw, 48px); border: 1px dashed var(--line); border-radius: var(--card-radius);
+  background: var(--lavender); color: var(--body); display: grid; justify-items: center; gap: 12px;
+}
+.domain-section .challenge-empty h3 { color: var(--ink); font-size: clamp(18px, 2vw, 23px); letter-spacing: -.03em; }
+.domain-section .challenge-empty p { max-width: 540px; line-height: 1.8; }
+.domain-section .challenge-empty button { color: var(--purple-dark); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 22px; min-height: 44px; }
+.domain-section > .container > .button { margin-top: 28px; }
+
+/* Ticket and resting destination card only: the accepted cinematic is untouched. */
+.season-section .season-grid { align-items: start; gap: clamp(24px, 4vw, 52px); margin-top: 36px; }
+.season-section .boarding-pass { transform: none; border-radius: var(--card-radius); background: var(--surface); box-shadow: var(--shadow-soft); margin-inline: 0; }
+.season-section .ticket-main { padding: clamp(22px, 2.5vw, 32px); }
+.season-section .ticket-main h4 { margin-block: 22px 8px; letter-spacing: .045em; color: var(--ink); }
+.season-section .ticket-main p { font-size: 13px; color: var(--body); }
+.season-section .ticket-route { margin-top: 20px; padding-block: 18px; gap: 10px; font-size: clamp(11px, 1.1vw, 14px); }
+.season-section .ticket-route + p { margin-top: 16px; font-weight: 700; color: var(--ink); }
+.season-section .ticket-stub { background: var(--lavender); border-radius: 0 var(--card-radius) var(--card-radius) 0; gap: 20px; }
+.season-section .ticket-main .ticket-stamp { border-color: currentColor; transform: rotate(-4deg); margin: 28px 0 24px; padding: 12px 6px; opacity: .9; }
+.season-section .ticket-main > small { display: block; font-weight: 700; color: var(--purple-dark); }
+.season-section .season-next { border-radius: var(--card-radius); box-shadow: var(--shadow-soft); }
+.season-next .season-next-pool { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 24px 28px; margin: 0; border-bottom: 1px solid var(--line); }
+.season-next-pool strong { color: var(--purple-dark); font-size: clamp(28px, 3vw, 40px); line-height: 1.2; letter-spacing: -.045em; }
+.season-next-pool span { color: var(--body); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+#replay .flight-experience.flight-ready .flight-viewport { height: auto; display: flex; flex-direction: column; }
+#replay .flight-experience.flight-ready .destination-copy { position: relative; padding: 24px 28px; }
+#replay .flight-experience.flight-ready .destination-copy h3 { font-size: clamp(24px, 2.5vw, 32px); margin-block: 14px; }
+#replay .flight-experience.flight-ready .destination-awards strong { font-size: 18px; letter-spacing: -.02em; }
+#replay .flight-experience.flight-ready .flight-city { position: relative; width: 100%; height: auto; max-height: none; aspect-ratio: auto; margin: 0; }
+#replay .flight-experience.flight-ready .flight-city img { width: 100%; height: auto; max-height: none; object-fit: contain; }
+
+/* Native details retain keyboard and screen-reader semantics. */
+#register .participation-faqs { display: grid; gap: 12px; border: 0; }
+#register .participation-faqs details { margin: 0; padding: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; transition: border-color 180ms, box-shadow 180ms, background-color 180ms; }
+#register .participation-faqs summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 68px;
+  padding: 20px 24px; list-style: none; color: var(--ink); font-size: 16px; font-weight: 700; line-height: 1.6;
+}
+#register .participation-faqs summary::-webkit-details-marker { display: none; }
+#register .participation-faqs summary::after { content: '+'; flex: 0 0 28px; display: grid; place-items: center; height: 28px; border-radius: 50%; background: var(--lavender); color: var(--purple-dark); font-size: 22px; font-weight: 400; }
+#register .participation-faqs details[open] { background: var(--lavender); border-color: var(--purple); box-shadow: var(--shadow-soft); }
+#register .participation-faqs details[open] summary::after { content: '−'; background: var(--surface); }
+#register .participation-faqs summary:focus-visible { outline: 3px solid var(--purple); outline-offset: -5px; border-radius: 14px; }
+#register .participation-faqs p { margin: 0; padding: 0 24px 24px; color: var(--body); font-size: 15px; line-height: 1.85; }
+
+.site-footer { padding-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--line); background: var(--lavender); }
+.site-footer .footer-grid { gap: clamp(28px, 4vw, 56px); padding-bottom: 40px; }
+.site-footer .footer-logo { max-width: 310px; margin-bottom: 20px; }
+.site-footer .footer-brand > p, .site-footer .contact-list li, .site-footer .footer-links a { font-size: 14px; }
+.site-footer h2 { margin-bottom: 18px; }
+.site-footer .footer-links nav { gap: 8px; }
+.site-footer .footer-links a { min-height: 36px; }
+.site-footer .contact-list { gap: 14px; }
+.site-footer .social-link { color: var(--purple-dark); background: var(--surface); border-color: var(--line); border-radius: 12px; }
+.site-footer .footer-bottom { padding-block: 18px; border-top: 1px solid var(--line); }
+.site-footer a { transition: color 160ms ease, transform 160ms ease, background-color 160ms ease; }
+.site-footer a:focus-visible { outline-color: var(--purple); }
+@media (hover: hover) {
+  .site-header .primary-nav > a:hover { background: var(--lavender); color: var(--purple-dark); }
+  main .button-primary:hover { background: var(--control-hover); }
+  main .button-secondary:hover { background: var(--lavender); border-color: var(--purple); }
+  .domain-section .challenge-domains button:hover { transform: translateY(-3px); border-color: var(--purple); box-shadow: var(--shadow-hover); }
+  main :is(.reward-card, .challenge-card):hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  #register .participation-faqs details:hover { border-color: var(--purple); }
+  #register .participation-faqs summary:hover { color: var(--purple-dark); transform: none; box-shadow: none; }
+  .site-footer :is(.footer-links a, .contact-list a):hover { color: var(--purple-dark); text-decoration: underline; text-underline-offset: 4px; }
+  .site-footer .social-link:hover { transform: translateY(-2px); background: var(--accent-soft); color: var(--accent-ink); }
+}
+.domain-section .challenge-domains button:active { transform: translateY(0) scale(.98); }
+@media (max-width: 860px) {
+  .site-header .season-brand { gap: 7px; }
+  .site-header .labx-original { width: 56px; height: 32px; }
+  .site-header .primary-nav { padding: 12px 24px 20px; box-shadow: var(--shadow-soft); }
+}
+@media (max-width: 480px) {
+  .site-header .season-brand { gap: 5px; }
+  .site-header .labx-original { width: 44px; height: 28px; }
+  .site-header .zeai-hash { font-size: 12px; }
+  .site-header .brand-divider { height: 16px; }
+  .season-next .season-next-pool, #replay .flight-experience.flight-ready .destination-copy { padding: 22px 20px; }
+  #register .participation-faqs summary { padding: 18px; font-size: 15px; }
+  #register .participation-faqs p { padding: 0 18px 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header *, main *, .site-footer * { transition: none !important; }
+}
