@@ -12,6 +12,13 @@
   background: #100a1cda;
   backdrop-filter: blur(6px);
 }
+.media-viewer-video {
+  display: block;
+  width: 100%;
+  height: min(65dvh, 680px);
+  object-fit: contain;
+  background: #100c16;
+}
 .media-viewer-header {
   display: flex;
   justify-content: space-between;

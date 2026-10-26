@@ -198,18 +198,21 @@
   color: #d6c5e3;
 }
 .photo-rail-collection--afterparty .rail-count {
-  color: #dff294;
+  color: #cfb8ff;
 }
 .photo-rail-collection--afterparty .rail-arrow {
   color: #fff;
-  border-color: var(--line);
-}
-.photo-rail-collection--afterparty .rail-arrow:hover {
+  border: 0;
   background: #493258;
 }
-.photo-rail-collection--afterparty .rail-photo-number {
-  color: #e2f59e;
+.photo-rail-collection--afterparty .rail-arrow:hover {
+  background: #654582;
 }
+.photo-rail-collection--afterparty .rail-photo-number {
+  color: #cfb8ff;
+  border: 0;
+}
+.photo-rail-collection--afterparty .rail-photo-expand { border: 0; }
 @media (min-width: 1001px) {
   .photo-rail-card {
     flex-basis: 56%;

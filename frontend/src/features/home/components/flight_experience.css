@@ -137,28 +137,24 @@
   .cinematic-flight .prize-burst { display: none; }
 }
 
-/* Full-width photographic destination with uninterrupted flight sky above it.
-   The original tower2 photograph has the wider, safer landmark composition. */
+/* The active destination photograph covers the viewport without edge fillers. */
 .cinematic-flight.flight-overlay { padding: 0; background: var(--lavender); backdrop-filter: none; }
 .cinematic-flight.flight-overlay .flight-viewport {
-  --scene-height: 100svh; height: 100svh; border: 0; border-radius: 0;
+  --scene-height: 100dvh; height: 100%; border: 0; border-radius: 0;
   background: linear-gradient(170deg,var(--lavender),var(--lavender) 58%,var(--lavender));
 }
 .cinematic-flight.flight-overlay .flight-city {
-  width: 100%; height: 55%; aspect-ratio: auto; margin: 0;
+  inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0;
   opacity: 1;
 }
 .cinematic-flight.flight-overlay .flight-city img {
-  position: relative; z-index: 1; width: auto; max-width: 100%; margin: 0 auto;
-  object-fit: contain; object-position: center bottom;
-  mask-image: linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent), linear-gradient(transparent,#000 8%,#000);
-  mask-composite: intersect;
+  position: relative; z-index: 1; width: 100%; height: 100%; max-height: none; margin: 0;
+  /* Keep the tower spires inside the crop on ultrawide displays. */
+  object-fit: cover; object-position: center top;
+  -webkit-mask-image: none; mask-image: none;
 }
 .cinematic-flight.flight-overlay .flight-city::before {
-  content: ''; position: absolute; inset: -16px; z-index: 0;
-  background: var(--skyline-image) center bottom / cover no-repeat;
-  filter: blur(18px); opacity: .28; pointer-events: none;
-  mask-image: linear-gradient(transparent,#000 45%);
+  content: none;
 }
 .cinematic-flight.flight-overlay .flight-city::after { z-index: 2; }
 .cinematic-flight.flight-overlay .flight-city figcaption { z-index: 3; }
@@ -196,22 +192,8 @@
 .cinematic-flight .flight-city img {
   width: 100%; height: auto; max-height: 55svh; object-fit: contain;
 }
-.cinematic-flight.flight-overlay .flight-city {
-  width: 100%; height: min(55svh, 56.25vw); margin: 0;
-}
-.cinematic-flight.flight-overlay .flight-city img {
-  width: auto; height: 100%; max-width: 100%; margin: 0 auto;
-  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(transparent, #000 12%);
-  mask-composite: intersect;
-}
-.cinematic-flight.flight-overlay .flight-city::before {
-  inset: 0; filter: blur(24px); opacity: .65;
-}
 .cinematic-flight[data-theme="dark"].flight-overlay .flight-viewport {
   background: linear-gradient(#111522, #242830 65%, #242830);
-}
-.cinematic-flight[data-theme="dark"].flight-overlay .flight-city {
-  height: min(55svh, 66.6667vw);
 }
 .cinematic-flight.flight-ready .flight-city { max-height: 42%; }
 .cinematic-flight.flight-ready .flight-city img { max-height: 200px; }

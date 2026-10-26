@@ -6,11 +6,10 @@ interface AutoplayVideoCardProps {
   video: HackathonVideo;
   enabled: boolean;
   index: number;
+  onOpen: () => void;
 }
 
-type PlaybackMode = 'auto' | 'play' | 'pause';
-
-export function AutoplayVideoCard({ video, enabled }: AutoplayVideoCardProps) {
+export function AutoplayVideoCard({ video, enabled, onOpen }: AutoplayVideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const wantsPlayback = useRef(false);
   const [inView, setInView] = useState(false);
@@ -20,16 +19,7 @@ export function AutoplayVideoCard({ video, enabled }: AutoplayVideoCardProps) {
   const [documentVisible, setDocumentVisible] = useState(
     () => document.visibilityState === 'visible',
   );
-  const [playback, setPlayback] = useState<{ enabled: boolean; mode: PlaybackMode }>({
-    enabled,
-    mode: 'auto',
-  });
-
-  // Suspending autoplay cancels a manual start but preserves a deliberate pause.
-  const mode = playback.enabled === enabled || playback.mode === 'pause' ? playback.mode : 'auto';
-  if (playback.enabled !== enabled) setPlayback({ enabled, mode });
-  const shouldPlay =
-    inView && documentVisible && (mode === 'play' || (enabled && mode !== 'pause'));
+  const shouldPlay = inView && documentVisible && enabled;
 
   const startPlayback = useCallback(() => {
     const element = videoRef.current;
@@ -45,9 +35,8 @@ export function AutoplayVideoCard({ video, enabled }: AutoplayVideoCardProps) {
       setNotice(
         error instanceof DOMException && error.name === 'NotAllowedError' ? 'blocked' : 'error',
       );
-      setPlayback({ enabled, mode: 'pause' });
     });
-  }, [enabled]);
+  }, []);
 
   useEffect(() => {
     const element = videoRef.current;
@@ -89,24 +78,6 @@ export function AutoplayVideoCard({ video, enabled }: AutoplayVideoCardProps) {
     };
   }, []);
 
-  function play() {
-    setNotice(null);
-    if (!inView) videoRef.current?.scrollIntoView({ block: 'center' });
-    if (videoRef.current?.error) videoRef.current.load();
-    setPlayback({ enabled, mode: 'play' });
-    // Keep explicit retries inside the click's browser playback authorization.
-    if (inView && hasEnteredView) {
-      wantsPlayback.current = true;
-      startPlayback();
-    }
-  }
-
-  function pause() {
-    wantsPlayback.current = false;
-    videoRef.current?.pause();
-    setPlayback({ enabled, mode: 'pause' });
-  }
-
   return (
     <article className="autoplay-video-card" data-video-id={video.id} aria-label={video.location}>
       <div className="autoplay-video-screen">
@@ -125,30 +96,22 @@ export function AutoplayVideoCard({ video, enabled }: AutoplayVideoCardProps) {
           onPlay={() => {
             setPlaying(true);
             setNotice(null);
-            // Keep browser-initiated playback in sync with the gallery state.
-            if (!wantsPlayback.current) setPlayback({ enabled, mode: 'play' });
+            if (!wantsPlayback.current) videoRef.current?.pause();
           }}
-          onPause={(event) => {
-            setPlaying(false);
-            // A deliberate pause persists when the visitor scrolls away and back.
-            if (wantsPlayback.current && event.currentTarget.paused) {
-              setPlayback({ enabled, mode: 'pause' });
-            }
-          }}
+          onPause={() => setPlaying(false)}
           onError={() => {
             wantsPlayback.current = false;
             setPlaying(false);
             setNotice('error');
-            setPlayback({ enabled, mode: 'pause' });
-          }}
+                }}
         >
           Your browser cannot play this video. <a href={video.src}>Open the video file</a>.
         </video>
         <button
           className="autoplay-video-toggle"
           type="button"
-          onClick={playing ? pause : play}
-          aria-label={`${playing ? 'Pause' : 'Play'} video: ${video.location}`}
+          onClick={onOpen}
+          aria-label={`Open video player: ${video.location}`}
           data-playing={playing}
         />
         {notice && (

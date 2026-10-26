@@ -6,7 +6,7 @@ export const SITE = {
   ORGANISER: 'ZeAI Soft',
   OFFICIAL_URL: 'https://zeaisoft.com/',
   ABOUT_URL: 'https://zeaisoft.com/about.php',
-  EMAIL: 'info@zeaisoft.com',
+  EMAIL: 'labx@zeaisoft.com',
   PHONE: '+919787636374',
   PHONE_DISPLAY: '+91-9787-63-6374',
   ADDRESS:

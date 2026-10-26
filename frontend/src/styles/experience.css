@@ -66,7 +66,7 @@ summary {
   z-index: 0;
   display: inline;
   color: var(--purple-dark);
-  background: linear-gradient(transparent 77%, #dff29a 77%, #dff29a 94%, transparent 94%);
+  background: none;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -248,7 +248,7 @@ main .text-link,
     border-color 160ms ease;
 }
 .domain-list button > span {
-  color: #dff29a;
+  color: #cfb8ff;
   font-size: 12px;
 }
 .domain-list button:hover {
@@ -256,7 +256,7 @@ main .text-link,
   border-color: var(--line);
 }
 .domain-list button[aria-pressed='true'] {
-  background: #dff29a;
+  background: #cfb8ff;
   color: var(--purple-dark);
   border-color: var(--line);
 }
@@ -278,7 +278,7 @@ main .text-link,
   background: #ffffff07;
 }
 .domain-idea-icon {
-  color: #dff29a;
+  color: #cfb8ff;
 }
 .domain-idea-label {
   font-size: 12px;

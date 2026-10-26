@@ -2,6 +2,7 @@
 import { get } from '@/lib/miihApi';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
+import { useReducedMotion } from '@/hooks/use_reduced_motion';
 import { HACKATHON_PHOTOS, HACKATHON_VIDEOS, AFTERPARTY_PHOTOS } from '../data/media';
 import { MediaViewer, type MediaSelection } from '../components/MediaViewer';
 import { PhotoRail } from '../components/PhotoRail';
@@ -18,6 +19,7 @@ const IDEA_SPARKS = [
 ];
 
 export function GalleryPage() {
+  const reducedMotion = useReducedMotion();
   const [selection, setSelection] = useState<MediaSelection>(null);
   const [newMedia,setNewMedia]=useState<Array<{key:string;url:string;kind:'IMAGE'|'VIDEO';label:string;category:string;alt_text?:string}>>([]);
   useEffect(()=>{let active=true;const refresh=()=>{void get<typeof newMedia>('/public/gallery-additions').then(rows=>{if(active)setNewMedia(rows);}).catch(()=>{});};refresh();window.addEventListener('miih:data-updated',refresh);return()=>{active=false;window.removeEventListener('miih:data-updated',refresh);};},[]);
@@ -117,8 +119,10 @@ export function GalleryPage() {
                 </h2>
               </div>
               <p>
-                Two edited event films and three moments from the floor. Click a film to pause or
-                play. Playback starts when you choose, so you can explore at your own pace.
+                Two edited event films and three moments from the floor.{' '}
+                {reducedMotion
+                  ? 'Click a film to open the player. Automatic playback is off to match your reduced-motion preference.'
+                  : 'Films play muted as you scroll into view. Click a film to open the full player.'}
               </p>
             </div>
             <div className="gallery-video-grid">
@@ -127,7 +131,8 @@ export function GalleryPage() {
                   key={video.id}
                   video={video}
                   index={index}
-                  enabled={false}
+                  enabled={!reducedMotion && selection === null}
+                  onOpen={() => setSelection({ kind: 'video', index })}
                 />
               ))}
             </div>
@@ -174,25 +179,6 @@ export function GalleryPage() {
           {newMedia.length>0&&<section className="miih-gallery-additions" aria-label="Additional hackathon gallery media"><h2>More hackathon moments</h2>{Array.from(new Set(newMedia.map(m=>m.category))).map(category=><div key={category}><h3>{category}</h3><div className="miih-gallery-additions-grid">{newMedia.filter(m=>m.category===category).map(m=><figure key={m.key}>{m.kind==='VIDEO'?<video src={m.url} controls playsInline preload="metadata"/>:<img src={m.url} alt={m.alt_text||m.label} loading="lazy"/>}<figcaption>{m.label}</figcaption></figure>)}</div></div>)}</section>}
           <div className="gallery-credit-row">
             <p>Our people. Our moments. Made in India.</p>
-            <details className="gallery-credits">
-              <summary>Media credits</summary>
-              <ul>
-                {[...HACKATHON_PHOTOS, ...AFTERPARTY_PHOTOS].map((photo) => (
-                  <li key={photo.id}>
-                    <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      {photo.title} — {photo.credit} <Icon name="external" />
-                    </a>
-                  </li>
-                ))}
-                {HACKATHON_VIDEOS.map((video) => (
-                  <li key={video.id}>
-                    <a href={video.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      {video.location} — {video.credit} <Icon name="external" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </details>
           </div>
           <aside className="gallery-next" aria-labelledby="gallery-next-title">
             <div className="gallery-next-icon" aria-hidden="true">

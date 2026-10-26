@@ -1,9 +1,9 @@
 import { useEffect, useRef, type MouseEvent, type KeyboardEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { HACKATHON_PHOTOS, AFTERPARTY_PHOTOS } from '../data/media';
+import { HACKATHON_PHOTOS, AFTERPARTY_PHOTOS, HACKATHON_VIDEOS } from '../data/media';
 import './media_viewer.css';
 
-export type MediaSelection = { kind: 'photo' | 'afterparty'; index: number } | null;
+export type MediaSelection = { kind: 'photo' | 'afterparty' | 'video'; index: number } | null;
 
 interface MediaViewerProps {
   selection: MediaSelection;
@@ -14,7 +14,8 @@ interface MediaViewerProps {
 export function MediaViewer({ selection, onClose, onPhotoChange }: MediaViewerProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const photos = selection?.kind === 'afterparty' ? AFTERPARTY_PHOTOS : HACKATHON_PHOTOS;
-  const photo = selection ? photos[selection.index] : null;
+  const photo = selection && selection.kind !== 'video' ? photos[selection.index] : null;
+  const video = selection?.kind === 'video' ? HACKATHON_VIDEOS[selection.index] : null;
   const isOpen = selection !== null;
 
   useEffect(() => {
@@ -100,10 +101,23 @@ export function MediaViewer({ selection, onClose, onPhotoChange }: MediaViewerPr
           height={photo.height}
         />
       )}
+      {video && (
+        <video
+          key={video.id}
+          className="media-viewer-video"
+          src={video.src}
+          poster={video.poster}
+          aria-label={video.title}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+        />
+      )}
       <div className="media-viewer-caption">
         <div aria-live="polite">
-          <h2 id="media-viewer-title">{photo?.title}</h2>
-          <p>{photo?.caption}</p>
+          <h2 id="media-viewer-title">{video?.title ?? photo?.title}</h2>
+          <p>{video?.description ?? photo?.caption}</p>
           {photo && (
             <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">
               From {photo.credit} <Icon name="external" />

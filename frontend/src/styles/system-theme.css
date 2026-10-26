@@ -38,7 +38,6 @@ input::placeholder, textarea::placeholder { color: var(--body); opacity: .85; }
   .button-primary, .nav-cta { color: #fff; }
   .button-primary:hover, .nav-cta:hover { background: #7541c5; color: #fff; }
   .cinematic-flight.layout-two { color: var(--ink); }
-  .hero-title span, .page-title span { background: linear-gradient(transparent 80%, #456235 80%, #456235 94%, transparent 94%); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

@@ -113,7 +113,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.13) brightness(0.96);
+  filter: none;
 }
 
 .polaroid-caption {
@@ -149,9 +149,9 @@
   height: 52px;
   border: 2px solid var(--line);
   border-radius: 50%;
-  background: #d7ff73;
-  color: var(--ink);
-  box-shadow: 2px 3px 0 #262229;
+  background: var(--control-fill);
+  color: #fff;
+  box-shadow: 0 3px 10px #00000020;
   pointer-events: none;
   transition: transform 180ms ease;
 }
@@ -172,18 +172,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 5px 16px;
-  margin-top: 17px;
+  margin-top: 24px;
   color: var(--body);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .polaroid-counter {
-  color: var(--ink);
+  color: var(--body);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 500;
   white-space: nowrap;
 }
+
+.polaroid-meta p { margin: 0; }
 
 .hero-visual-explore {
   display: inline-flex;

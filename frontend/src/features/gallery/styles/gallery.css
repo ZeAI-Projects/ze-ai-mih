@@ -27,6 +27,9 @@
   margin: 24px 0 32px;
 }
 .gallery-heading-row h2 {
+  min-width: 0;
+  overflow-wrap: break-word;
+  text-wrap: balance;
   font-size: clamp(45px, 5.5vw, 78px);
   line-height: 1.12;
   font-weight: 700;
@@ -39,14 +42,14 @@
   color: var(--purple-dark);
 }
 .gallery-heading-row h2 > span::after {
-  content: '';
+  content: none;
   position: absolute;
   left: -3px;
   right: -8px;
   bottom: 5px;
   z-index: -1;
   height: 23px;
-  background: #dff294;
+  background: #cfb8ff;
   transform: rotate(-2deg);
   border-radius: 3px;
 }
@@ -185,6 +188,7 @@
   gap: 18px;
 }
 .gallery-panel--afterparty {
+  --line: #51405f;
   color: #fff;
   background: #23172e;
   margin-top: 84px;
@@ -196,7 +200,7 @@
   color: #d5b5ff;
 }
 .gallery-panel--afterparty .gallery-panel-heading h2 span {
-  color: #e2f59e;
+  color: #cfb8ff;
 }
 .gallery-panel--afterparty .gallery-panel-heading > p {
   color: #d7c7e2;
@@ -205,7 +209,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--line);
+  border: 0;
+  background: #342341;
   padding: 10px 16px;
   border-radius: 30px;
   color: #e5d0fa;
@@ -217,13 +222,13 @@
 .afterparty-tag > span {
   font-size: 20px;
   line-height: 1;
-  color: #e2f59e;
+  color: #cfb8ff;
 }
 .afterparty-sample-note {
   color: #d0bedc;
   font-size: 15px;
   line-height: 1.7;
-  border-top: 1px solid var(--line);
+  border-top: 0;
   margin-top: 26px;
   padding-top: 20px;
 }

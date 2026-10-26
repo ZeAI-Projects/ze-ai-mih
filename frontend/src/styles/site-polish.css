@@ -9,11 +9,13 @@ html { scroll-padding-top: calc(var(--header-height, 88px) + 20px); }
 .site-header .primary-nav > a[aria-current] { background: var(--lavender); text-decoration-thickness: 2px; }
 .site-header .menu-toggle { flex: 0 0 44px; background: var(--lavender); }
 .site-header .labx-original { flex-shrink: 0; width: 76px; height: 38px; }
-.labx-original img { filter: brightness(.45); }
+.labx-original img { filter: none; }
 .zeai-crop, .india-crop { background: transparent; }
 .site-footer .brand-image--footer img { filter: none; opacity: 1; }
 .site-footer .brand-image { background: transparent; }
 @media (prefers-color-scheme: light) {
+  .site-header .labx-original { background: transparent; }
+  .site-header .labx-original img { filter: url(#labx-light-ink); }
   .zeai-crop img, .india-crop img, .site-footer .brand-image img { mix-blend-mode: multiply; }
 }
 @media (prefers-color-scheme: dark) {

@@ -87,7 +87,7 @@
   margin: 0 0 32px;
 }
 .gallery-panel--afterparty .gallery-spotlight > button {
-  border-color: var(--line);
+  border: 0;
 }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .gallery-spotlight > button:hover img {

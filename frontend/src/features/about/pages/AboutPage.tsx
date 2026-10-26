@@ -165,10 +165,10 @@ export function AboutPage({ embedded = false }: { embedded?: boolean }) {
             <div className="founder-portrait-window">
               <img
                 className="founder-portrait"
-                src="/media/made-in-india-2026/kirthika-founder-portrait.png"
-                alt="Portrait of Kirthika K., Founder and Managing Director of ZeAI Soft, wearing a beige blazer"
-                width={800}
-                height={800}
+                src="/media/made-in-india-2026/kirthika-profile-cutout.png"
+                alt="Portrait of Kirthika K., Founder and Managing Director of ZeAI Soft, wearing an orange saree"
+                width={1024}
+                height={1535}
                 loading="lazy"
                 decoding="async"
               />
