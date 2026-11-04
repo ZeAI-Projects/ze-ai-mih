@@ -43,6 +43,18 @@ SUPABASE_SERVICE_ROLE_KEY=YOUR_BACKEND_ONLY_SECRET_KEY
 
 For Vercel: the React frontend can be hosted there; the FastAPI backend **must be deployed separately** or via a consciously configured Python runtime, not through `npm run dev`. Add the actual HTTPS frontend URL to `FRONTEND_ORIGINS` when deployed.
 
+## Deploying the backend on Render
+
+The repository-root `render.yaml` defines a Render Blueprint for this FastAPI service. Create or update the service from that Blueprint and provide `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `FRONTEND_ORIGINS` in Render's environment settings. Keep secret values out of the Blueprint and source control.
+
+For an existing Render service not managed by the Blueprint, set its **Root Directory** to `backend`, **Build Command** to `pip install -r requirements.txt`, and **Start Command** to:
+
+```sh
+uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+Set the health check path to `/health`. Do not use `gunicorn your_application.wsgi`: that is a placeholder WSGI import path and this application is an ASGI FastAPI app exposed as `main:app`.
+
 ## Current Pay Now behavior — deliberately inactive
 
 - The configured button label defaults to **Secure Your Spot - Pay Now**.
