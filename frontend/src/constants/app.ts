@@ -6,9 +6,9 @@ export const SITE = {
   ORGANISER: 'ZeAI Soft',
   OFFICIAL_URL: 'https://zeaisoft.com/',
   ABOUT_URL: 'https://zeaisoft.com/about.php',
-  EMAIL: 'labx@zeaisoft.com',
-  PHONE: '+919787636374',
-  PHONE_DISPLAY: '+91-9787-63-6374',
+  EMAIL: 'mih@zeaisoft.com',
+  PHONE: '+918925803067',
+  PHONE_DISPLAY: '+91-892-580-3067',
   ADDRESS:
     '8th floor Kosmo one Tower C, Ambattur Industrial Estate, Ambattur, Chennai, Tamil Nadu 600058',
   MAP_URL:
