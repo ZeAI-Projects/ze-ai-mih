@@ -1,0 +1,114 @@
+/* Public-page surfaces only; system theme, admin, and flight overlay stay independent. */
+@media (prefers-color-scheme: dark) {
+  main {
+    --night-card: #1c1e30;
+    --night-raised: #25273d;
+    --night-border: #393c54;
+    --night-muted: #bfc2d5;
+  }
+
+  main .hero-visual .polaroid-card {
+    background: var(--night-card);
+    background-image: none;
+    border-color: #4a4d65;
+    box-shadow: 0 18px 40px #00000040;
+  }
+  main .hero-visual .polaroid-stack::before,
+  main .hero-visual .polaroid-stack::after {
+    background: var(--night-raised);
+    border-color: var(--night-border);
+    box-shadow: none;
+  }
+  main .hero-visual .polaroid-image img { filter: none; }
+  main .hero-visual .polaroid-image { border-radius: 4px; }
+  main .hero-visual .polaroid-caption strong { color: #f5f4fa; }
+  main .hero-visual .polaroid-caption > span,
+  main .hero-visual .polaroid-meta { color: var(--night-muted); }
+  main .hero-visual .polaroid-drop-mark {
+    background: #8250dc;
+    color: #fff;
+    border-color: var(--night-card);
+    box-shadow: 0 4px 14px #00000040;
+  }
+
+  main .season-section .boarding-pass {
+    background: var(--night-card);
+    border-color: var(--night-border);
+    box-shadow: 0 16px 36px #00000030;
+  }
+  main .season-section .ticket-main > span {
+    color: var(--night-muted);
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: .1em;
+  }
+  main .season-section .ticket-main h4 { color: #f5f4fa; }
+  main .season-section .ticket-main p { color: var(--night-muted); }
+  main .season-section .ticket-route {
+    color: #f5f4fa;
+    border-color: #45485f;
+    flex-wrap: wrap;
+  }
+  main .season-section .ticket-route > span { color: #c3a2ff; }
+  main .season-section .ticket-main .ticket-stamp {
+    transform: none;
+    background: #352432;
+    color: #ffb6c4;
+    border: 1px solid #765064;
+    border-radius: 10px;
+    padding: 14px 10px;
+    font-size: clamp(13px, 1.2vw, 16px);
+    line-height: 1.6;
+    letter-spacing: .06em;
+    opacity: 1;
+  }
+  main .season-section .ticket-stub {
+    background: var(--night-raised);
+    color: var(--night-muted);
+    border-color: #45485f;
+  }
+  main .season-section .ticket-stub strong { color: #d3bcff; }
+
+  main .season-rewards .reward-card,
+  main .domain-section .challenge-domains button,
+  main .domain-section .challenge-empty,
+  main .about-page .about-direction article,
+  main .about-page .about-value-cards article,
+  main .gallery-page .gallery-idea-spark,
+  main .next-chapter-card {
+    background: var(--night-card);
+    border: 1px solid var(--night-border);
+    box-shadow: 0 8px 24px #00000020;
+  }
+  main .domain-section .challenge-domains button[aria-pressed='true'] {
+    background: #302547;
+    border-color: #a783e5;
+  }
+  main .gallery-page .gallery-idea-spark p { color: #e3dfef; }
+  main .about-page .about-value-cards p { color: var(--night-muted); }
+  main .registration-panel {
+    background: var(--night-card);
+    color: #f5f4fa;
+    border: 1px solid var(--night-border);
+    box-shadow: 0 12px 32px #00000030;
+  }
+  main .registration-panel > p:not(.eyebrow),
+  main .registration-panel .registration-contact p { color: var(--night-muted); }
+  main .registration-panel .text-link { color: #d3bcff; }
+  main .registration-panel .button:disabled {
+    background: #34364c;
+    color: #bfc2d5;
+    opacity: 1;
+    box-shadow: none;
+  }
+  main #register .participation-faqs details {
+    background: var(--night-card);
+    border-color: var(--night-border);
+  }
+  main #register .participation-faqs details[open] {
+    background: var(--night-raised);
+    border-color: #85709f;
+  }
+  .site-footer { background: #171827; border-top-color: #393c54; }
+  .site-header { border-bottom-color: #393c54; box-shadow: 0 4px 20px #00000020; }
+}

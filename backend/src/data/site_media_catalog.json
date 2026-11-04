@@ -1,0 +1,450 @@
+[
+  {
+    "key": "media_c8982d5a3399656",
+    "original_src": "/media/afterparty-01.jpg",
+    "label": "Afterparty 01",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_2dba924482d326e",
+    "original_src": "/media/afterparty-02.jpg",
+    "label": "Afterparty 02",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_677d052a14aab53",
+    "original_src": "/media/afterparty-03.jpg",
+    "label": "Afterparty 03",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_e444f434a624a01",
+    "original_src": "/media/afterparty-04.jpg",
+    "label": "Afterparty 04",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_63673f265d42244",
+    "original_src": "/media/afterparty-05.jpg",
+    "label": "Afterparty 05",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_6506afbf438b255",
+    "original_src": "/media/afterparty-06.jpg",
+    "label": "Afterparty 06",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_2ca401708f3c901",
+    "original_src": "/media/afterparty-07.jpg",
+    "label": "Afterparty 07",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_44df07ec0bf6652",
+    "original_src": "/media/afterparty-08.jpg",
+    "label": "Afterparty 08",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_3f1d11bb7519480",
+    "original_src": "/media/afterparty-09.jpg",
+    "label": "Afterparty 09",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_d23432c8d0a279a",
+    "original_src": "/media/afterparty-10.jpg",
+    "label": "Afterparty 10",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_ec2386e9f784509",
+    "original_src": "/media/coding-together.jpg",
+    "label": "Coding Together",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_2e4db05853e558d",
+    "original_src": "/media/community-hackathon.jpg",
+    "label": "Community Hackathon",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_6131572d799a1cf",
+    "original_src": "/media/creative-brainstorm.jpg",
+    "label": "Creative Brainstorm",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_cf7f5a30bce5933",
+    "original_src": "/media/creative-brainstorm.mp4",
+    "label": "Creative Brainstorm",
+    "kind": "VIDEO",
+    "group": "Site media"
+  },
+  {
+    "key": "media_778246c5069087f",
+    "original_src": "/media/event-04.jpg",
+    "label": "Event 04",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_efcc9f8871fd973",
+    "original_src": "/media/event-05.jpg",
+    "label": "Event 05",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_e8d29d7335f40fb",
+    "original_src": "/media/event-06.jpg",
+    "label": "Event 06",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_e4b4429e3b458f4",
+    "original_src": "/media/event-07.jpg",
+    "label": "Event 07",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_2be58f4d8d858f3",
+    "original_src": "/media/event-08.jpg",
+    "label": "Event 08",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_1558c56fc3a3858",
+    "original_src": "/media/event-09.jpg",
+    "label": "Event 09",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_343cb8ba995522e",
+    "original_src": "/media/event-10.jpg",
+    "label": "Event 10",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_f3c90079da20ea5",
+    "original_src": "/media/focused-coding.jpg",
+    "label": "Focused Coding",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_264b56bf89af8ee",
+    "original_src": "/media/focused-coding.mp4",
+    "label": "Focused Coding",
+    "kind": "VIDEO",
+    "group": "Site media"
+  },
+  {
+    "key": "media_63de40d212b32b4",
+    "original_src": "/media/ideas-in-motion.jpg",
+    "label": "Ideas In Motion",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_b4534d511097085",
+    "original_src": "/media/made-in-india-2026/afterparty-01.webp",
+    "label": "Afterparty 01",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_cb97a6c2b358323",
+    "original_src": "/media/made-in-india-2026/afterparty-02.webp",
+    "label": "Afterparty 02",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_91afcb0ac8d5c17",
+    "original_src": "/media/made-in-india-2026/afterparty-03.webp",
+    "label": "Afterparty 03",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_8640ceccbb61549",
+    "original_src": "/media/made-in-india-2026/afterparty-04.webp",
+    "label": "Afterparty 04",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_645d14a05e11995",
+    "original_src": "/media/made-in-india-2026/afterparty-05.webp",
+    "label": "Afterparty 05",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_687a4d49429aa0c",
+    "original_src": "/media/made-in-india-2026/afterparty-06.webp",
+    "label": "Afterparty 06",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_6f2dbaa65ad2054",
+    "original_src": "/media/made-in-india-2026/afterparty-07.webp",
+    "label": "Afterparty 07",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_c36cd7f142cd905",
+    "original_src": "/media/made-in-india-2026/afterparty-08.webp",
+    "label": "Afterparty 08",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_720cdbde1d23373",
+    "original_src": "/media/made-in-india-2026/afterparty-09.webp",
+    "label": "Afterparty 09",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_3b13000922f104e",
+    "original_src": "/media/made-in-india-2026/afterparty-10.webp",
+    "label": "Afterparty 10",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_4cb8e1a76b26d0f",
+    "original_src": "/media/made-in-india-2026/event-01.webp",
+    "label": "Event 01",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_a557abb1b5e7142",
+    "original_src": "/media/made-in-india-2026/event-02.webp",
+    "label": "Event 02",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_886dd92a37b8033",
+    "original_src": "/media/made-in-india-2026/event-03.webp",
+    "label": "Event 03",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_81caf06fd981b77",
+    "original_src": "/media/made-in-india-2026/event-04.webp",
+    "label": "Event 04",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_f65af928bde9ec3",
+    "original_src": "/media/made-in-india-2026/event-05.webp",
+    "label": "Event 05",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_59c0a6e842c586f",
+    "original_src": "/media/made-in-india-2026/event-06.webp",
+    "label": "Event 06",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_fdf6d08cd03f98f",
+    "original_src": "/media/made-in-india-2026/event-07.webp",
+    "label": "Event 07",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_f7c4d4c7518efcf",
+    "original_src": "/media/made-in-india-2026/event-08.webp",
+    "label": "Event 08",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_386be229679d6b5",
+    "original_src": "/media/made-in-india-2026/event-09.webp",
+    "label": "Event 09",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_986b8532c806715",
+    "original_src": "/media/made-in-india-2026/film-1.mp4",
+    "label": "Film 1",
+    "kind": "VIDEO",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_3ad68e9ac18cb0f",
+    "original_src": "/media/made-in-india-2026/film-1.webp",
+    "label": "Film 1",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_f0433f3be51c99f",
+    "original_src": "/media/made-in-india-2026/film-2.mp4",
+    "label": "Film 2",
+    "kind": "VIDEO",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_694579663416d26",
+    "original_src": "/media/made-in-india-2026/film-2.webp",
+    "label": "Film 2",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_936677108c2073a",
+    "original_src": "/media/made-in-india-2026/film-3.mp4",
+    "label": "Film 3",
+    "kind": "VIDEO",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_0bd34c7dcd40640",
+    "original_src": "/media/made-in-india-2026/film-3.webp",
+    "label": "Film 3",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_39b5cfdf9ed988a",
+    "original_src": "/media/made-in-india-2026/film-4.mp4",
+    "label": "Film 4",
+    "kind": "VIDEO",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_240b3bbf044ade2",
+    "original_src": "/media/made-in-india-2026/film-4.webp",
+    "label": "Film 4",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_194b6bfa68e0b12",
+    "original_src": "/media/made-in-india-2026/film-5.mp4",
+    "label": "Film 5",
+    "kind": "VIDEO",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_8f15d745fec3756",
+    "original_src": "/media/made-in-india-2026/film-5.webp",
+    "label": "Film 5",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_4b053d241a9cfde",
+    "original_src": "/media/made-in-india-2026/kirthika-founder-portrait.png",
+    "label": "Kirthika Founder Portrait",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_b2594ddb1a50f33",
+    "original_src": "/media/made-in-india-2026/kirthika-profile-cutout.png",
+    "label": "Kirthika Profile Cutout",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_845738a6078f27d",
+    "original_src": "/media/made-in-india-2026/kirthika-profile-refined.png",
+    "label": "Kirthika Profile Refined",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_d3f2242e33578ff",
+    "original_src": "/media/made-in-india-2026/kirthika-profile-retouched.png",
+    "label": "Kirthika Profile Retouched",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_1f23a04972ce62c",
+    "original_src": "/media/made-in-india-2026/kirthika-profile.webp",
+    "label": "Kirthika Profile",
+    "kind": "IMAGE",
+    "group": "Hackathon 2026"
+  },
+  {
+    "key": "media_fdad54f3c4ee29b",
+    "original_src": "/media/pair-programming.jpg",
+    "label": "Pair Programming",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_a83e9cd1e9a7d47",
+    "original_src": "/media/pair-programming.mp4",
+    "label": "Pair Programming",
+    "kind": "VIDEO",
+    "group": "Site media"
+  },
+  {
+    "key": "media_192a3adbf830365",
+    "original_src": "/media/robotics-team.jpg",
+    "label": "Robotics Team",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_345e3df2997e088",
+    "original_src": "/media/robotics-team.mp4",
+    "label": "Robotics Team",
+    "kind": "VIDEO",
+    "group": "Site media"
+  },
+  {
+    "key": "media_65aea5d6affa031",
+    "original_src": "/media/team-collaboration.jpg",
+    "label": "Team Collaboration",
+    "kind": "IMAGE",
+    "group": "Site media"
+  },
+  {
+    "key": "media_60943ff91066d22",
+    "original_src": "/media/team-collaboration.mp4",
+    "label": "Team Collaboration",
+    "kind": "VIDEO",
+    "group": "Site media"
+  }
+]

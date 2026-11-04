@@ -1,0 +1,203 @@
+/* Scoped to the existing flight component. The surrounding site keeps its own styles. */
+.cinematic-flight.layout-two { min-width: 0; color: var(--purple-dark); }
+.cinematic-flight.layout-two .destination-scene { display: block; min-height: 0; padding: 0; overflow: hidden; border-radius: 24px; background: var(--lavender); }
+.cinematic-flight .flight-viewport {
+  --scene-height: clamp(440px, 72svh, 760px);
+  position: relative; inset: auto; width: 100%; height: var(--scene-height);
+  overflow: hidden; isolation: isolate; border-radius: inherit;
+  background: linear-gradient(150deg, var(--surface) 5%, var(--lavender) 65%, var(--lavender));
+}
+.cinematic-flight .flight-viewport > canvas { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; pointer-events: none; }
+.cinematic-flight .destination-copy { position: absolute; z-index: 3; top: 0; left: 0; max-width: none; padding: 28px; }
+.cinematic-flight .destination-copy h3 { margin: 18px 0; font-size: clamp(27px, 2.7vw, 38px); line-height: 1.16; }
+.cinematic-flight .season-tag { color: var(--purple-dark); font-size: 11px; font-weight: 750; letter-spacing: .12em; }
+.cinematic-flight .destination-awards { display: grid; gap: 8px; color: var(--purple-dark); }
+.cinematic-flight .destination-awards strong { font-size: clamp(26px, 3vw, 36px); letter-spacing: -.04em; }
+.cinematic-flight .destination-awards small { display: inline-block; margin-left: 6px; font-size: 12px; letter-spacing: 0; font-weight: 500; }
+.cinematic-flight .destination-awards > span { font-size: 13px; font-weight: 650; }
+.cinematic-flight .destination-copy p { max-width: none; margin: 12px 0 0; font-size: 12px; }
+.cinematic-flight .flight-cinema-heading { position: absolute; top: 25px; left: 28px; max-width: calc(100% - 160px); z-index: 3; pointer-events: none; }
+.cinematic-flight .flight-cinema-heading h3 { margin: 10px 0 0; font-size: clamp(22px, 3vw, 36px); line-height: 1.2; letter-spacing: -.04em; }
+.cinematic-flight .flight-stop { position: absolute; top: 20px; right: 20px; z-index: 4; min-height: 44px; padding: 10px 16px; font-size: 12px; }
+/* The complete 16:9 photograph fits below 70% of the frame, including both spires.
+   Its position and scale never depend on flight progress. */
+.cinematic-flight .flight-city {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  width: min(70%, calc(var(--scene-height) * .5333333333)); height: auto; aspect-ratio: 16 / 9;
+  margin: 0 auto; overflow: hidden; border-radius: 0;
+  opacity: 1; transform: none; transition: none; animation: none;
+  clip-path: none; -webkit-mask-image: none; mask-image: none;
+}
+.cinematic-flight .flight-city img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.cinematic-flight .flight-city::after { content: ''; position: absolute; inset: 60% 0 0; background: linear-gradient(transparent, #28143b94); pointer-events: none; }
+.cinematic-flight .flight-city figcaption { position: absolute; bottom: 18px; right: 18px; z-index: 1; color: white; font-size: 10px; font-weight: 750; letter-spacing: .13em; }
+.cinematic-flight.flight-arrived .flight-city { clip-path: none; -webkit-mask-image: none; mask-image: none; }
+.cinematic-flight .flight-image-fallback { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: var(--lavender); color: var(--purple-dark); font-weight: 750; letter-spacing: .08em; }
+.cinematic-flight .flight-image-fallback small { font-size: 12px; letter-spacing: 0; font-weight: 400; }
+.cinematic-flight .image-unavailable img { visibility: hidden; }
+.cinematic-flight .flight-controls { display: grid; gap: 14px; padding: 20px; }
+.cinematic-flight .launch-route-labels { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .15em; font-weight: 800; color: var(--purple-dark); }
+.cinematic-flight.layout-two .flight-swipe { position: relative; display: grid; place-items: center; height: 76px; min-width: 0; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 40px; background: var(--surface); box-shadow: inset 0 1px 4px #6335970b; touch-action: pan-y; user-select: none; }
+.cinematic-flight .flight-swipe .swipe-fill { position: absolute; inset: 0; background: linear-gradient(90deg, var(--lavender), var(--lavender)); transform: scaleX(var(--launch-progress)); transform-origin: left; transition: transform .2s ease; }
+.cinematic-flight .flight-swipe .launch-handle { position: absolute; left: calc(8px + (100% - 72px) * var(--launch-progress)); top: 8px; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: white; font-size: 28px; background: linear-gradient(140deg, #b28aef, #6532bb); transition: left .2s ease; transform: rotate(-14deg); }
+.cinematic-flight .is-dragging .launch-handle, .cinematic-flight .is-dragging .swipe-fill { transition: none; }
+.cinematic-flight .launch-track-copy { position: relative; margin-left: 42px; font-size: 10px; font-weight: 800; letter-spacing: .07em; pointer-events: none; }
+.cinematic-flight .launch-markers { position: absolute; display: flex; justify-content: space-between; width: 50%; left: 30%; bottom: 10px; }
+.cinematic-flight .launch-markers i { width: 4px; height: 4px; border-radius: 50%; background: var(--lavender); }
+.cinematic-flight .launch-markers i.active { background: #7535c7; box-shadow: none; }
+.cinematic-flight .flight-swipe progress { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.cinematic-flight .launch-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cinematic-flight .launch-actions > span { font-size: 10px; color: var(--body); }
+.cinematic-flight .launch-actions .button { min-height: 44px; white-space: nowrap; }
+.cinematic-flight .flight-status { font-size: 12px; line-height: 1.5; margin: 0; color: var(--body); }
+.cinematic-flight.layout-two .prize-unlocked { display: grid; justify-items: center; gap: 12px; position: relative; padding: 30px 16px; text-align: center; animation: flight-quiet-reward .3s ease both; background: linear-gradient(var(--lavender), var(--surface)); border-radius: 20px; }
+
+.cinematic-flight.layout-two .prize-unlocked > strong { font-size: clamp(38px, 4.5vw, 60px); line-height: 1.1; letter-spacing: -.04em; }
+.cinematic-flight .prize-unlocked > p { margin: 0; font-weight: 700; }
+.cinematic-flight .prize-unlocked > small { font-size: 11px; }
+.cinematic-flight .prize-unlocked > .button { margin-top: 8px; font-size: 12px; min-height: 44px; }
+.cinematic-flight .text-link { min-height: 44px; padding: 8px 14px; border: 0; background: transparent; font: inherit; color: var(--purple-dark); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.cinematic-flight :is(button, a, [tabindex]):focus-visible { outline: 3px solid var(--line); outline-offset: 4px; }
+@keyframes flight-quiet-reward { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 767px) {
+  .cinematic-flight.layout-two .destination-scene { border-radius: 20px; }
+  .cinematic-flight .destination-copy { padding: 24px 20px; }
+  .cinematic-flight .flight-cinema-heading { top: 22px; left: 18px; max-width: calc(100% - 120px); }
+  .cinematic-flight .flight-cinema-heading h3 { font-size: 23px; }
+  .cinematic-flight .flight-cinema-heading .season-tag { font-size: 9px; }
+  .cinematic-flight .flight-stop { top: 14px; right: 12px; padding: 8px 10px; font-size: 11px; }
+  .cinematic-flight .flight-city figcaption { bottom: 16px; right: 14px; font-size: 9px; }
+  .cinematic-flight .flight-controls { padding-inline: 16px; }
+  .cinematic-flight .launch-actions > span { max-width: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-flight.layout-two *, .cinematic-flight.layout-two *::before, .cinematic-flight.layout-two *::after { animation: none !important; transition: none !important; }
+}
+
+/* Expanded cinematic stage; only the active flight leaves its original card. */
+.cinematic-flight.flight-flying:not(.flight-overlay) .destination-scene {
+  min-height: clamp(440px, 72svh, 760px);
+}
+.cinematic-flight.flight-overlay {
+  position: fixed; inset: 0; z-index: 110;
+  padding: 24px; background: #28143c66; backdrop-filter: blur(5px);
+}
+.cinematic-flight.flight-overlay .flight-viewport {
+  --scene-height: calc(100svh - 48px);
+  height: var(--scene-height); width: 100%;
+  border: 1px solid var(--line); border-radius: 28px;
+  box-shadow: 0 24px 80px #24113240;
+}
+@media(max-width:767px) {
+  .cinematic-flight.flight-overlay { padding: 10px; }
+  .cinematic-flight.flight-overlay .flight-viewport {
+    --scene-height: calc(100svh - 20px);
+    border-radius: 20px;
+  }
+}
+
+/* The cinematic overlay closes before this in-card achievement is mounted. */
+.cinematic-flight.layout-two .prize-unlocked { overflow: hidden; }
+.cinematic-flight.layout-two .prize-unlocked > strong {
+  position: relative; z-index: 1; color: var(--purple-dark);
+  text-shadow: 0 6px 30px #b182ee50; animation: prize-boom 1.15s .2s both;
+}
+.cinematic-flight .prize-unlocked > p { animation: prize-stage-in .4s .65s both; }
+.cinematic-flight .prize-unlocked > .button { animation: prize-stage-in .4s .9s both; }
+.cinematic-flight .prize-burst { position: absolute; left: 50%; top: 34%; width: 0; height: 0; pointer-events: none; }
+.prize-burst .prize-ring {
+  position: absolute; width: 230px; height: 230px; left: -115px; top: -115px;
+  border: 3px solid var(--line); border-radius: 50%; animation: prize-shockwave 1.2s .25s both;
+}
+.prize-burst i {
+  position: absolute; width: 8px; height: 12px; background: #76d5d0; border-radius: 2px;
+  animation: prize-confetti 1.25s .3s both; transform-origin: center;
+}
+.prize-burst i:nth-child(even) { background: #c9ed85; }
+.prize-burst i:nth-child(3n) { background: #a477de; }
+.cinematic-flight .reward-close {
+  position: absolute; top: 18px; right: 18px; min-height: 44px; border: 1px solid var(--line);
+  border-radius: 24px; background: var(--surface); color: var(--purple-dark); padding: 8px 16px; cursor: pointer;
+}
+@keyframes prize-stage-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes prize-boom {
+  0% { opacity: 0; transform: translateY(38px) scale(.8); }
+  40% { opacity: 1; transform: translateY(-20px) scale(1.12); }
+  65% { transform: translateY(9px) scale(.96); }
+  82% { transform: translateY(-5px) scale(1.04); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes prize-shockwave { from { opacity: .85; transform: scale(.35); } to { opacity: 0; transform: scale(2.5); } }
+@keyframes prize-confetti {
+  0% { opacity: 0; transform: rotate(var(--burst-angle)) translateY(15px) scale(.3); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--burst-angle)) translateY(clamp(120px,22vw,280px)) rotate(70deg); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .cinematic-flight .prize-burst { display: none; }
+}
+
+/* The active destination photograph covers the viewport without edge fillers. */
+.cinematic-flight.flight-overlay { padding: 0; background: var(--lavender); backdrop-filter: none; }
+.cinematic-flight.flight-overlay .flight-viewport {
+  --scene-height: 100dvh; height: 100%; border: 0; border-radius: 0;
+  background: linear-gradient(170deg,var(--lavender),var(--lavender) 58%,var(--lavender));
+}
+.cinematic-flight.flight-overlay .flight-city {
+  inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0;
+  opacity: 1;
+}
+.cinematic-flight.flight-overlay .flight-city img {
+  position: relative; z-index: 1; width: 100%; height: 100%; max-height: none; margin: 0;
+  /* Keep the tower spires inside the crop on ultrawide displays. */
+  object-fit: cover; object-position: center top;
+  -webkit-mask-image: none; mask-image: none;
+}
+.cinematic-flight.flight-overlay .flight-city::before {
+  content: none;
+}
+.cinematic-flight.flight-overlay .flight-city::after { z-index: 2; }
+.cinematic-flight.flight-overlay .flight-city figcaption { z-index: 3; }
+.cinematic-flight.flight-arrived .flight-viewport { --scene-height: 240px; }
+.cinematic-flight.flight-arrived .flight-city { width: 100%; height: 100%; aspect-ratio: auto; }
+.cinematic-flight.flight-arrived .flight-city img { object-fit: contain; object-position: center bottom; }
+.cinematic-flight.flight-arrived .flight-cinema-heading { display: none; }
+.cinematic-flight .flight-swipe.is-dragging { box-shadow: 0 0 24px #a278dc55, inset 0 0 14px #dcc4ff66; }
+.cinematic-flight .launch-markers i.active { box-shadow: 0 0 8px #9560de; }
+.cinematic-flight .launch-handle { box-shadow: 0 4px 12px #7046a73b; }
+
+.cinematic-flight.flight-overlay .flight-stop { top: auto; right: auto; bottom: 20px; left: 20px; background: var(--surface); }
+
+/* Theme is applied only after the new local photograph has decoded. */
+.cinematic-flight.flight-overlay .flight-viewport { background: linear-gradient(var(--lavender),var(--lavender) 65%,var(--lavender)); }
+.cinematic-flight.flight-overlay .flight-viewport::before {
+  content: ''; position: absolute; inset: 8% -10% 35%; pointer-events: none;
+  background: radial-gradient(ellipse at 25% 50%,#ffffff50,transparent 45%), radial-gradient(ellipse at 70% 25%,#ffffff38,transparent 36%);
+  mask-image: linear-gradient(transparent,#000 30%,#000 70%,transparent);
+  animation: flight-cloud-drift 9s ease-out both;
+}
+.cinematic-flight[data-theme="dark"].flight-overlay { color: #f4efff; }
+.cinematic-flight[data-theme="dark"].flight-overlay .flight-viewport { background: linear-gradient(#101c42,#5293d9 45%,#5293d9); }
+
+.cinematic-flight[data-theme="dark"] .flight-city img { filter: none; }
+.cinematic-flight[data-theme="dark"].flight-overlay .season-tag { color: #e1d1ff; background: #35235e; }
+.cinematic-flight[data-theme="dark"].flight-overlay .flight-stop { background: #201b3e; color: #eee3ff; border-color: var(--line); }
+@keyframes flight-cloud-drift { from { transform: translateX(-2%); } to { transform: translateX(3%); } }
+
+/* A full-width panorama meets a sampled sky color; preserve the source ratio.
+   On tall screens the city sits lower, leaving more open flight space. */
+.cinematic-flight .flight-city {
+  width: 100%; height: auto; aspect-ratio: auto;
+}
+.cinematic-flight .flight-city img {
+  width: 100%; height: auto; max-height: 55svh; object-fit: contain;
+}
+.cinematic-flight[data-theme="dark"].flight-overlay .flight-viewport {
+  background: linear-gradient(#111522, #242830 65%, #242830);
+}
+.cinematic-flight.flight-ready .flight-city { max-height: 42%; }
+.cinematic-flight.flight-ready .flight-city img { max-height: 200px; }
+.cinematic-flight .flight-viewport { background: linear-gradient(var(--surface), var(--lavender)); }
+@media (prefers-color-scheme: dark) {
+  .cinematic-flight .flight-stop { color: var(--ink); }
+}
