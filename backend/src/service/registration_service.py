@@ -8,7 +8,6 @@ from src.repository.query_utils import one, many, scalar
 from src.repository.registration_repository import RegistrationRepository
 from src.service.pitch_conditions import is_pitch_dependent
 
-
 def verify_draft_token(reg:dict|None,token:str|None):
     if not reg: raise HTTPException(404,'Registration not found')
     if not token or len(token)<40 or not reg.get('leader_edit_token_hash'):
@@ -16,6 +15,51 @@ def verify_draft_token(reg:dict|None,token:str|None):
     expected=reg['leader_edit_token_hash']
     if not secrets.compare_digest(hashlib.sha256(token.encode()).hexdigest(),expected):
         raise HTTPException(403,'Incorrect registration edit token')
+
+def normalize_member_mobile(value:str):
+    digits=re.sub(r'\D','',value)
+    return digits[2:] if len(digits)==12 and digits.startswith('91') else digits
+
+def validate_unique_member_contacts(members):
+    emails=[member.email.strip().casefold() for member in members]
+    if len(set(emails))!=len(emails):
+        raise HTTPException(422,'Team member emails must be unique')
+    mobiles=[normalize_member_mobile(member.mobile) for member in members]
+    if len(set(mobiles))!=len(mobiles):
+        raise HTTPException(422,'Team member mobile numbers must be unique')
+
+async def _submission_errors(db,rid,registration):
+    current=await scalar(db,'SELECT public.miih_submission_errors(:id)',{'id':rid})
+    if not isinstance(current,list) or not current:
+        return current
+    previous_version=registration.get('form_version_id')
+    edition_id=registration.get('edition_id')
+    if not previous_version or not edition_id:
+        return current
+    published=await one(db,'''SELECT id FROM public.form_versions
+      WHERE edition_id=:edition AND status='PUBLISHED'
+      ORDER BY published_at DESC NULLS LAST,version_number DESC LIMIT 1''',
+      {'edition':edition_id})
+    if not published or str(published['id'])==str(previous_version):
+        return current
+    old_questions=await many(db,'''SELECT q.field_key FROM public.form_questions q
+      JOIN public.form_sections s ON s.id=q.section_id
+      WHERE s.form_version_id=:version AND s.is_active AND q.is_active AND q.is_required''',
+      {'version':previous_version})
+    live_questions=await many(db,'''SELECT q.field_key FROM public.form_questions q
+      JOIN public.form_sections s ON s.id=q.section_id
+      WHERE s.form_version_id=:version AND s.is_active AND q.is_active AND q.is_required''',
+      {'version':published['id']})
+    old_required={question['field_key'] for question in old_questions}
+    live_required={question['field_key'] for question in live_questions}
+    no_longer_required=old_required-live_required
+    if not no_longer_required:
+        return current
+    return [error for error in current if not (
+        isinstance(error,str)
+        and (field_key:=error.partition(':')[0]) in no_longer_required
+        and (error==field_key or error.startswith(field_key+':'))
+    )]
 
 async def authorized_draft(db,rid,token,lock=False):
     reg=await RegistrationRepository(db).registration(rid,lock=lock)
@@ -49,8 +93,7 @@ async def save_team(db,rid,token,payload):
     size=len(payload.members)
     if not reg['min_team_size']<=size<=reg['max_team_size']:
         raise HTTPException(422,f'Team needs {reg["min_team_size"]} to {reg["max_team_size"]} members')
-    emails=[m.email.strip().casefold() for m in payload.members]
-    if len(set(emails))!=len(emails):raise HTTPException(422,'Team member emails must be unique')
+    validate_unique_member_contacts(payload.members)
     if payload.domain_id and not await scalar(db,'''SELECT EXISTS(
         SELECT 1 FROM public.edition_domains ed JOIN public.domains d ON d.id=ed.domain_id
         WHERE ed.edition_id=:e AND ed.domain_id=:d AND ed.is_enabled AND d.is_active)''',
@@ -146,15 +189,17 @@ async def save_answers(db,rid,token,payload):
             ready.append((q,member,a))
             continue
         if a.file_id:
-            if q['input_type']!='FILE':raise HTTPException(422,'File not valid for this question')
+            if q['input_type'] not in ('FILE','IMAGE'):raise HTTPException(422,'File not valid for this question')
             allowed=await one(db,'''SELECT id,mime_type FROM public.file_assets WHERE id=:fid
               AND registration_id=:rid AND storage_bucket='miih-registration-private' ''',
               {'fid':a.file_id,'rid':rid})
             if not allowed:raise HTTPException(422,'File does not belong to this registration')
+            if q['input_type']=='IMAGE' and allowed['mime_type'] not in ('image/jpeg','image/png','image/webp'):
+                raise HTTPException(422,'This question requires an image file')
             if ('photo' in q['field_key'] or 'portrait' in q['field_key']) and allowed['mime_type'] not in ('image/jpeg','image/png','image/webp'):
                 raise HTTPException(422,'Profile photographs must be JPG, PNG or WebP images')
         else:
-            if q['input_type']=='FILE':raise HTTPException(422,'File required')
+            if q['input_type'] in ('FILE','IMAGE'):raise HTTPException(422,'File required')
             if q['input_type']=='BOOLEAN' and type(a.value) is not bool:
                 raise HTTPException(422,'Expected a Yes/No value')
             if q['input_type'] in ('TEXT','TEXTAREA','EMAIL','PHONE','URL','DATE','SINGLE_SELECT'):
@@ -269,11 +314,11 @@ async def record_payment(db,rid,token,payload):
 async def errors(db,rid,token):
     reg=await RegistrationRepository(db).registration(rid)
     verify_draft_token(reg,token)
-    return await scalar(db,'SELECT public.miih_submission_errors(:id)',{'id':rid})
+    return await _submission_errors(db,rid,reg)
 
 async def submit(db,rid,token):
     reg=await authorized_draft(db,rid,token,lock=True)
-    current=await scalar(db,'SELECT public.miih_submission_errors(:id)',{'id':rid})
+    current=await _submission_errors(db,rid,reg)
     if current: raise HTTPException(422,{'validation_errors':current})
     from sqlalchemy import text
     submitted=await one(db,'''UPDATE public.team_registrations SET status='SUBMITTED' WHERE id=:id AND status='DRAFT' RETURNING team_id,registration_code,team_name,submitted_at''',{'id':rid})

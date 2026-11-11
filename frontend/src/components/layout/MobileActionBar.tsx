@@ -2,10 +2,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Icon } from '@/components/ui/Icon';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import './mobile_action_bar.css';
 
 export function MobileActionBar() {
   const { pathname } = useLocation();
+  const openRegistration = useRegistrationModal();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -42,15 +44,14 @@ export function MobileActionBar() {
         </Link>
       )}
       {onRegister ? (
-        <a className="mobile-action-primary" href="#registration-title">
+        <button className="mobile-action-primary" type="button" onClick={openRegistration}>
           Registration <Icon name="arrow" />
-        </a>
+        </button>
       ) : (
-        <Link className="mobile-action-primary" to="/#register">
+        <Link className="mobile-action-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>
           Register <Icon name="arrow" />
         </Link>
       )}
     </nav>
   );
 }
-

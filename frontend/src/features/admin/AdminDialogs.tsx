@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
+import type { Theme } from '@/hooks/use_theme';
 import './styles/adminDialogs.css';
 
 type DialogField = {
@@ -7,6 +8,9 @@ type DialogField = {
   label: string;
   value?: string;
   required?: boolean;
+  readonly?: boolean;
+  minLength?: number;
+  maxLength?: number;
   options?: string[];
   multiline?: boolean;
 };
@@ -36,7 +40,7 @@ export function adminFormDialog(title: string, fields: DialogField[], message?: 
   return requestDialog({ title, fields, message, confirmLabel: 'Continue' });
 }
 
-export function AdminDialogHost() {
+export function AdminDialogHost({theme}:{theme:Theme}) {
   const [dialog, setDialog] = useState<DialogRequest | null>(null);
   const [values, setValues] = useState<DialogValues>({});
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -114,7 +118,7 @@ export function AdminDialogHost() {
   }
   if (!dialog) return null;
   return createPortal(
-    <div className="miih-app-dialog-overlay" role="presentation">
+    <div className="miih-app-dialog-overlay" data-admin-theme={theme} role="presentation">
       <div ref={dialogRef} className="miih-app-dialog" role="dialog" aria-modal="true" aria-labelledby="miih-dialog-title" aria-describedby={dialog.message ? 'miih-dialog-description' : undefined}>
         <div className="miih-app-dialog-heading">
           <div><span>ZEAI · ADMIN WORKSPACE</span><h2 id="miih-dialog-title">{dialog.title}</h2></div>
@@ -127,8 +131,8 @@ export function AdminDialogHost() {
               <span>{field.label}{field.required && ' *'}</span>
               {field.options ? <select value={values[field.key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))} required={field.required}>
                 {field.options.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select> : field.multiline ? <textarea rows={3} value={values[field.key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))} required={field.required}/>
-                : <input value={values[field.key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))} required={field.required}/>}
+              </select> : field.multiline ? <textarea rows={3} value={values[field.key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))} required={field.required} readOnly={field.readonly}/>
+                : <input value={values[field.key] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [field.key]: e.target.value }))} required={field.required} readOnly={field.readonly} minLength={field.minLength} maxLength={field.maxLength}/>}
             </label>)}
           </div>
           <div className="miih-app-dialog-actions">

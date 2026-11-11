@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
 import { ROUTES } from '@/constants/routes';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import './next_chapter.css';
 
 const CHALLENGES = [
@@ -35,6 +36,7 @@ const CHALLENGES = [
 ] as const;
 
 export function NextChapter() {
+  const openRegistration = useRegistrationModal();
   const [category, setCategory] = useState(0);
   const [prompt, setPrompt] = useState(0);
   const challenge = CHALLENGES[category];
@@ -52,7 +54,7 @@ export function NextChapter() {
             Big ideas often start with a small question. Pick something you care about and find your
             first spark.
           </p>
-          <Link className="button button-primary" to={ROUTES.REGISTER}>
+          <Link className="button button-primary" to={ROUTES.REGISTER} onClick={(event) => { event.preventDefault(); openRegistration(); }}>
             View upcoming event <Icon name="arrow" />
           </Link>
           <span className="next-edition-note">

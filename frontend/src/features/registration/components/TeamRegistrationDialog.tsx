@@ -10,9 +10,17 @@ type Member = {full_name:string;email:string;mobile:string};
 type Draft = {id:string;edit_token:string;registration_code?:string};
 type AnswerRow = {question:Question;member_order?:number;value:unknown};
 const emptyMember = ():Member=>({full_name:'',email:'',mobile:''});
+const normalizedMobile=(value:string)=>{
+  const digits=value.replace(/\D/g,'');
+  return digits.length===12&&digits.startsWith('91')?digits.slice(2):digits;
+};
+const validMobile=(value:string)=>/^\+?[0-9 ()-]{7,30}$/.test(value.trim())&&normalizedMobile(value).length>=7&&normalizedMobile(value).length<=15;
 const cleanLabel=(s:string)=>s.replace(/^\s*(?:Q(?:uestion)?\s*)?\d+\s*[.):-]\s*/i,'').trim();
+const CHENNAI_TRAVEL_QUESTION='will you be travelling to chennai for the final arena?';
 const CANONICAL = new Set(['team_name','source_team_id','participant_category','investor_pitch_interest','team_domain','full_name','email','mobile','team_role','attending_member_count','attending_member_names','payment_transaction_id','payment_proof']);
 const fieldKey = (q:Question, member?:number) => `${q.id}@${member ?? 'team'}`;
+type ValidationIssue = {key:string;message:string};
+const isChennaiTravelQuestion=(q:Question)=>q.question_label.trim().replace(/\s+/g,' ').toLowerCase()===CHENNAI_TRAVEL_QUESTION;
 // Q25 controls Q20-Q24 and Q26. Older published forms sometimes lack
 // visibility_rules, so also recognize legacy numbers and PITCH scope.
 const PITCH_QUESTION_NUMBERS = new Set([20,21,22,23,24,26]);
@@ -26,7 +34,7 @@ function normalizeValue(q:Question, v:unknown):unknown { if(q.input_type==='NUMB
 function fieldValid(q:Question, v:unknown):boolean {
   if (v===undefined || v===null || v==='' || (Array.isArray(v)&&v.length===0)) return !q.is_required;
   if(q.input_type==='BOOLEAN')return typeof v==='boolean' && (q.validation_rules?.must_be_true !== true || v===true);
-  if(q.input_type==='FILE')return typeof v==='string' && /^[0-9a-f-]{36}$/i.test(v);
+  if(q.input_type==='FILE'||q.input_type==='IMAGE')return typeof v==='string' && /^[0-9a-f-]{36}$/i.test(v);
   if(q.input_type==='MULTI_SELECT')return Array.isArray(v) && v.length>0;
   if(q.input_type==='NUMBER')return typeof v==='number' && Number.isFinite(v);
   if(q.input_type==='EMAIL')return typeof v==='string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -35,26 +43,26 @@ function fieldValid(q:Question, v:unknown):boolean {
   return v!==undefined && v!==null && String(v).trim().length>0;
 }
 function friendlyError(err:unknown) {return err instanceof Error ? err.message : 'Something went wrong. Please try again.';}
-function QuestionField({question, value, onChange, onFile, busy, uploadState, onRemove}: {question:Question;value:unknown;onChange:(v:unknown)=>void;onFile:(f:File)=>void;busy:boolean;uploadState?:UploadState;onRemove:()=>void}) {
+function QuestionField({question, value, onChange, onFile, busy, uploadState, onRemove, validationKey, issue}: {question:Question;value:unknown;onChange:(v:unknown)=>void;onFile:(f:File)=>void;busy:boolean;uploadState?:UploadState;onRemove:()=>void;validationKey:string;issue?:ValidationIssue}) {
   const inputId=useId();
   const required = question.is_required;
   const label = <label htmlFor={inputId}>{cleanLabel(question.question_label)}{required&&<span aria-label="required" className="miih-required"> *</span>}</label>;
   if(question.input_type==='DERIVED')return null;
   const options=(question.options||[]).filter(o=>o.is_active!==false);
   const val=(typeof value==='string'||typeof value==='number')?String(value):'';
-  return <div className="miih-form-field" data-question={question.field_key}>
+  return <div className="miih-form-field" data-question={question.field_key} data-validation-key={validationKey} data-invalid={issue?.key===validationKey||undefined}>
     {label}{question.description&&<p className="miih-field-help">{question.description}</p>}
-    {question.input_type==='BOOLEAN' ? <div className="miih-choice-row" role="group" aria-label={question.question_label}>
+    {question.input_type==='BOOLEAN' ? <div className="miih-choice-row" role="group" aria-label={question.question_label} aria-invalid={issue?.key===validationKey}>
         <label><input type="radio" name={inputId} checked={value===true} onChange={()=>onChange(true)}/> Yes</label>
         <label><input type="radio" name={inputId} checked={value===false} onChange={()=>onChange(false)}/> No</label>
-      </div> : question.input_type==='FILE' ? <RegistrationUpload inputId={inputId} state={uploadState} stored={typeof value==='string' && /^[0-9a-f-]{36}$/i.test(value)} photo={/photo|portrait/i.test(question.field_key)} disabled={busy} onSelect={onFile} onRemove={onRemove}/> : question.input_type==='TEXTAREA' ?
-      <textarea id={inputId} rows={3} value={val} placeholder={question.placeholder||'Enter details'} onChange={e=>onChange(e.target.value)}/> :
+      </div> : question.input_type==='FILE'||question.input_type==='IMAGE' ? <RegistrationUpload inputId={inputId} state={uploadState} stored={typeof value==='string' && /^[0-9a-f-]{36}$/i.test(value)} photo={question.input_type==='IMAGE'||/photo|portrait/i.test(question.field_key)} disabled={busy} onSelect={onFile} onRemove={onRemove}/> : question.input_type==='TEXTAREA' ?
+      <textarea id={inputId} aria-invalid={issue?.key===validationKey} rows={3} value={val} placeholder={question.placeholder||'Enter details'} onChange={e=>onChange(e.target.value)}/> :
       question.input_type==='SINGLE_SELECT' ?
-      <select id={inputId} value={val} onChange={e=>onChange(e.target.value)}><option value="">Select an option</option>{options.map(o=><option value={o.option_value} key={o.option_value}>{o.option_label}</option>)}</select> :
-      question.input_type==='MULTI_SELECT' ? <div className="miih-choice-row">
-        {options.map(o=><label key={o.option_value}><input type="checkbox" checked={Array.isArray(value)&&value.includes(o.option_value)} onChange={e=>{const cur=Array.isArray(value)?value as string[]:[];onChange(e.target.checked?[...cur,o.option_value]:cur.filter(x=>x!==o.option_value));}}/> {o.option_label}</label>)}
-      </div> : <input id={inputId} type={question.input_type==='EMAIL'?'email':question.input_type==='PHONE'?'tel':question.input_type==='DATE'?'date':question.input_type==='URL'?'url':question.input_type==='NUMBER'?'number':'text'} value={val} onChange={e=>onChange(question.input_type==='NUMBER'?(e.target.value===''?undefined:Number(e.target.value)):e.target.value)} placeholder={question.placeholder||'Enter details'} />}
-    {!fieldValid(question,value)&&<small className="miih-error">{value===undefined||value===''?'This field is required.':'Please enter a valid answer.'}</small>}
+      <select id={inputId} aria-invalid={issue?.key===validationKey} value={val} onChange={e=>onChange(e.target.value)}><option value="">Select an option</option>{options.map(o=><option value={o.option_value} key={o.option_value}>{o.option_label}</option>)}</select> :
+      question.input_type==='MULTI_SELECT' ? <div className="miih-choice-row" aria-invalid={issue?.key===validationKey}>
+        {options.map(o=><label key={o.option_value}><input type="checkbox" aria-invalid={issue?.key===validationKey} checked={Array.isArray(value)&&value.includes(o.option_value)} onChange={e=>{const cur=Array.isArray(value)?value as string[]:[];onChange(e.target.checked?[...cur,o.option_value]:cur.filter(x=>x!==o.option_value));}}/> {o.option_label}</label>)}
+      </div> : <input id={inputId} aria-invalid={issue?.key===validationKey} type={question.input_type==='EMAIL'?'email':question.input_type==='PHONE'?'tel':question.input_type==='DATE'?'date':question.input_type==='URL'?'url':question.input_type==='NUMBER'?'number':'text'} value={val} onChange={e=>onChange(question.input_type==='NUMBER'?(e.target.value===''?undefined:Number(e.target.value)):e.target.value)} placeholder={question.placeholder||'Enter details'} />}
+    {issue?.key===validationKey&&<small className="miih-error" role="alert">{issue.message}</small>}
   </div>;
 }
 export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>void}) {
@@ -63,6 +71,7 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   const [loadState,setLoadState]=useState<'loading'|'loaded'|'unpublished'|'error'>('loading');
   const [reloadKey,setReloadKey]=useState(0);
   const [message,setMessage]=useState('');
+  const [validationIssue,setValidationIssue]=useState<ValidationIssue|null>(null);
   const [busy,setBusy]=useState(false);
   const [draft,setDraft]=useState<Draft|null>(null);
   const [step,setStep]=useState(0);
@@ -199,8 +208,8 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
     window.addEventListener('keydown',handleKey);
     return()=>{window.removeEventListener('keydown',handleKey);previous?.focus();};
   },[open,onClose]);
-  const questions = useMemo(()=>config?.sections.flatMap(s=>s.questions).filter(q=>q.is_active!==false)||[],[config]);
-  const details=useMemo(()=>config?.sections.map(s=>({...s,questions:s.questions.filter(q=>q.is_active!==false && !CANONICAL.has(q.field_key) && q.input_type!=='DERIVED')})).filter(s=>s.questions.length) || [],[config]);
+  const questions = useMemo(()=>config?.sections.flatMap(s=>s.questions).filter(q=>q.is_active!==false&&!isChennaiTravelQuestion(q))||[],[config]);
+  const details=useMemo(()=>config?.sections.map(s=>({...s,questions:s.questions.filter(q=>q.is_active!==false&&!isChennaiTravelQuestion(q)&&!CANONICAL.has(q.field_key)&&q.input_type!=='DERIVED')})).filter(s=>s.questions.length) || [],[config]);
   const answerRows=useMemo<AnswerRow[]>(()=>details.flatMap(s=>s.questions.flatMap((q):AnswerRow[]=>{
     if(isPitchDependent(q) && team.investor_pitch_interest!==true)return [];
     const count=(q.answer_scope==='MEMBER')?members.length:(q.answer_scope==='LEADER'?1:0);
@@ -210,13 +219,59 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   const must=(key:string)=>findQuestion(key)?.is_required===true;
   const questionLabel=(key:string,fallback:string)=>cleanLabel(findQuestion(key)?.question_label||fallback);
   const duplicateEmails=new Set(members.map(m=>m.email.trim().toLowerCase())).size!==members.length;
-  const teamValid=!duplicateEmails && team.team_name.trim().length>=2 && (config?.domains.some(d=>d.id===team.domain_id)??false) && members.length>=(config?.edition.min_team_size||4) && members.length<=(config?.edition.max_team_size||4) && members.every(m=>m.full_name.trim().length>=2 && /\S+@\S+\.\S+/.test(m.email) && /^\+?[0-9 ()-]{7,30}$/.test(m.mobile.trim()) && m.mobile.replace(/\D/g,'').length>=7) && team.investor_pitch_interest!==undefined;
+  const duplicateMobiles=new Set(members.map(m=>normalizedMobile(m.mobile)).filter(Boolean)).size!==members.filter(m=>normalizedMobile(m.mobile)).length;
+  function getTeamValidationIssue():ValidationIssue|null {
+    if(team.team_name.trim().length<2)return {key:'team-name',message:'Enter a team name with at least two characters.'};
+    if(!(config?.domains.some(d=>d.id===team.domain_id)??false))return {key:'team-domain',message:'Select a domain for your team.'};
+    const minSize=config?.edition.min_team_size||4,maxSize=config?.edition.max_team_size||4;
+    if(members.length<minSize)return {key:'team-members',message:`Add at least ${minSize} team members, including the leader.`};
+    if(members.length>maxSize)return {key:'team-members',message:`A team can have no more than ${maxSize} members, including the leader.`};
+    for(const [index,member] of members.entries()){
+      if(member.full_name.trim().length<2)return {key:`member-${index}-full_name`,message:'Enter this member’s full name.'};
+      if(!/\S+@\S+\.\S+/.test(member.email))return {key:`member-${index}-email`,message:'Enter a valid email address.'};
+      if(!/^\+?[0-9 ()-]{7,30}$/.test(member.mobile.trim())||member.mobile.replace(/\D/g,'').length<7)return {key:`member-${index}-mobile`,message:'Enter a valid mobile number.'};
+    }
+    if(duplicateEmails){
+      const email=members.findIndex((member,index)=>members.findIndex(other=>other.email.trim().toLowerCase()===member.email.trim().toLowerCase())!==index);
+      return {key:`member-${email}-email`,message:'Each team member must have a different email address.'};
+    }
+    if(duplicateMobiles){
+      const mobile=members.findIndex((member,index)=>normalizedMobile(member.mobile)!==''&&members.findIndex(other=>normalizedMobile(other.mobile)===normalizedMobile(member.mobile))!==index);
+      return {key:`member-${mobile}-mobile`,message:'Each team member must have a different mobile number.'};
+    }
+    if(team.investor_pitch_interest===undefined)return {key:'pitch-interest',message:'Choose Yes or No for the investor pitch question.'};
+    return null;
+  }
   const answersValid=answerRows.every(a=>fieldValid(a.question,a.value));
   const paymentFree=CODE==='MIIH_TEST_48H' && config?.payment?.payment_required===false && config?.payment?.payment_enabled===false;
-  const canSubmit=Boolean(config?.registration_enabled && draft && teamValid && answersValid && (paymentFree || (transactionId.trim().length>=4 && proofFile && paymentRecorded)) && !busy);
-  function setMember(index:number,key:keyof Member,value:string){setMembers(old=>old.map((m,i)=>i===index?{...m,[key]:value}:m));}
+  const validationKeyForAnswer=(row:AnswerRow)=>`question-${fieldKey(row.question,row.member_order)}`;
+  function reportValidation(issue:ValidationIssue){
+    setValidationIssue(issue);
+    requestAnimationFrame(()=>{
+      const target=Array.from(document.querySelectorAll<HTMLElement>('[data-validation-key]')).find(el=>el.dataset.validationKey===issue.key);
+      target?.scrollIntoView({behavior:'smooth',block:'center'});
+      target?.querySelector<HTMLElement>('input:not([type="hidden"]),select,textarea,button')?.focus({preventScroll:true});
+    });
+  }
+  function clearValidation(key:string,valid:boolean){
+    if(valid&&validationIssue?.key===key)setValidationIssue(null);
+  }
+  function setMember(index:number,key:keyof Member,value:string){
+    const updated=members.map((member,i)=>i===index?{...member,[key]:value}:member);
+    setMembers(updated);
+    const member=updated[index];
+    const duplicate=key==='email'&&member.email.trim()!==''&&updated.some((other,i)=>i!==index&&other.email.trim().toLowerCase()===member.email.trim().toLowerCase());
+    const duplicateMobile=key==='mobile'&&normalizedMobile(member.mobile)!==''&&updated.some((other,i)=>i!==index&&normalizedMobile(other.mobile)===normalizedMobile(member.mobile));
+    const valid=key==='full_name'?member.full_name.trim().length>=2:key==='email'?/\S+@\S+\.\S+/.test(member.email)&&!duplicate:validMobile(member.mobile)&&!duplicateMobile;
+    clearValidation(`member-${index}-${key}`,valid);
+    if(key==='email'&&!duplicate)clearValidation(`member-${index}-email`,true);
+    if(key==='mobile'&&!duplicateMobile)clearValidation(`member-${index}-mobile`,validMobile(member.mobile));
+    if(key==='email'&&validationIssue?.message.includes('different email')&&!updated.some((item,i)=>item.email.trim()!==''&&updated.some((other,j)=>j!==i&&other.email.trim().toLowerCase()===item.email.trim().toLowerCase())))setValidationIssue(null);
+    if(key==='mobile'&&validationIssue?.message.includes('different mobile')&&!updated.some((item,i)=>normalizedMobile(item.mobile)!==''&&updated.some((other,j)=>j!==i&&normalizedMobile(other.mobile)===normalizedMobile(item.mobile))))setValidationIssue(null);
+  }
   function selectPitchInterest(value:boolean){
     setTeam(old=>({...old,investor_pitch_interest:value}));
+    clearValidation('pitch-interest',true);
     if(!value){
       const conditional = new Set(questions.filter(isPitchDependent).map(q=>q.id));
       setAnswers(old=>Object.fromEntries(Object.entries(old).filter(([key])=>!conditional.has(key.split('@')[0]))));
@@ -224,7 +279,10 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
     }
     // saveTeam() persists the switch and removes saved pitch answers when No.
   }
-  function setAnswer(q:Question,idx:number|undefined,value:unknown){setAnswers(old=>({...old,[fieldKey(q,idx)]:value}));}
+  function setAnswer(q:Question,idx:number|undefined,value:unknown){
+    setAnswers(old=>({...old,[fieldKey(q,idx)]:value}));
+    clearValidation(`question-${fieldKey(q,idx)}`,fieldValid(q,value));
+  }
   async function uploadAnswer(q:Question,idx:number|undefined,file:File) {
     if(!draft){setMessage('Save the team first to enable uploads.');return;}
     const key=fieldKey(q,idx);
@@ -242,7 +300,8 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   function removeUpload(q:Question,idx?:number){setAnswer(q,idx,undefined);setUploads(old=>{const next={...old};delete next[fieldKey(q,idx)];return next;});}
 
   async function saveTeam(){
-    if(!teamValid){setMessage('Complete all required team details, including all member names, emails and phone numbers.');return;}
+    const issue=getTeamValidationIssue();
+    if(issue){reportValidation(issue);return;}
     setBusy(true);setMessage('');
     try {
       let current=draft;
@@ -254,11 +313,11 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   async function saveAnswers(){
     if(!draft)return;
     if(!answersValid){
-      const missing=answerRows.filter(a=>!fieldValid(a.question,a.value)).slice(0,4).map(a=>`${cleanLabel(a.question.question_label)}${a.member_order?` (Member ${a.member_order})`:''}`);
-      setMessage('Please complete these required answers before payment: '+missing.join('; '));
+      const row=answerRows.find(a=>!fieldValid(a.question,a.value));
+      if(row)reportValidation({key:validationKeyForAnswer(row),message:`${cleanLabel(row.question.question_label)}${row.member_order?` (Member ${row.member_order})`:''}: ${row.value===undefined||row.value===null||row.value===''?'This field is required.':'Please enter a valid answer.'}`});
       return;
     }
-    const rows=answerRows.map(r=>({question_id:r.question.id,...(r.member_order?{member_order:r.member_order}:{}),...((r.value===undefined||r.value===null||r.value==='')?{clear:true}:r.question.input_type==='FILE'?{file_id:r.value}:{value:normalizeValue(r.question,r.value)})}));
+    const rows=answerRows.map(r=>({question_id:r.question.id,...(r.member_order?{member_order:r.member_order}:{}),...((r.value===undefined||r.value===null||r.value==='')?{clear:true}:r.question.input_type==='FILE'||r.question.input_type==='IMAGE'?{file_id:r.value}:{value:normalizeValue(r.question,r.value)})}));
     setBusy(true);setMessage('');
     try {
       // A form may contain only canonical/team fields, with no extra answer rows.
@@ -282,16 +341,54 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
       const result=await upload<{id:string}>(`/registrations/${draft.id}/upload`,file,INTERNAL_TEST,draft.edit_token);
       if(!/^[0-9a-f-]{36}$/i.test(result.id||''))throw new Error('The payment screenshot could not be stored. Please try again.');
       setProofFile(result.id);
+      clearValidation('payment-proof',true);
       setProofUpload({file,status:'success'});
     }catch(e){const error=friendlyError(e);setProofUpload({file,status:'error',error});setMessage(error);}
     finally{setBusy(false);}
   }
   async function saveProof(){if(!draft || !proofFile || transactionId.trim().length<4)return;setBusy(true);setMessage('');
-    try{await registrationRequest(draft.id,draft.edit_token,'/payment-evidence','POST',{transaction_id:transactionId.trim(),proof_file_id:proofFile},INTERNAL_TEST);setPaymentRecorded(true);setMessage('Evidence saved. Your payment is pending administrator verification; submit the registration to finish.');}
+    try{await registrationRequest(draft.id,draft.edit_token,'/payment-evidence','POST',{transaction_id:transactionId.trim(),proof_file_id:proofFile},INTERNAL_TEST);setPaymentRecorded(true);clearValidation('payment-save',true);setMessage('Evidence saved. Your payment is pending administrator verification; submit the registration to finish.');}
     catch(e){setMessage(friendlyError(e));}finally{setBusy(false);}
   }
-  async function submit(e:FormEvent){e.preventDefault();if(!draft||!canSubmit)return;setBusy(true);setMessage('');
-    try {const check=await registrationRequest<{can_submit:boolean;errors:string[]}>(draft.id,draft.edit_token,'/validation','GET',undefined,INTERNAL_TEST);if(!check.can_submit){setMessage('Please review: '+check.errors.join(' • '));return;}const response=await registrationRequest<{team_id:string;registration_code:string;submitted_at:string;payment_status:string}>(draft.id,draft.edit_token,'/submit','POST',undefined,INTERNAL_TEST);setSubmittedTeamId(response.team_id);setConfirmation(response);setSubmitted(true);setStep(3);}
+  async function submit(e:FormEvent){
+    e.preventDefault();
+    if(!draft){setMessage('Save your team details before submitting.');return;}
+    const teamIssue=getTeamValidationIssue();
+    if(teamIssue){setStep(0);reportValidation(teamIssue);return;}
+    const answerIssue=answerRows.find(a=>!fieldValid(a.question,a.value));
+    if(answerIssue){setStep(1);reportValidation({key:validationKeyForAnswer(answerIssue),message:`${cleanLabel(answerIssue.question.question_label)}${answerIssue.member_order?` (Member ${answerIssue.member_order})`:''}: ${answerIssue.value===undefined||answerIssue.value===null||answerIssue.value===''?'This field is required.':'Please enter a valid answer.'}`});return;}
+    if(!paymentFree){
+      if(transactionId.trim().length<4){reportValidation({key:'payment-transaction',message:'Enter the payment or transaction ID (at least four characters).'});return;}
+      if(!proofFile){reportValidation({key:'payment-proof',message:'Upload your payment screenshot before submitting.'});return;}
+      if(!paymentRecorded){reportValidation({key:'payment-save',message:'Save your transaction ID and screenshot before submitting.'});return;}
+    }
+    setBusy(true);setMessage('');setValidationIssue(null);
+    try {
+      const check=await registrationRequest<{can_submit:boolean;errors:string[]}>(draft.id,draft.edit_token,'/validation','GET',undefined,INTERNAL_TEST);
+      if(!check.can_submit){
+        const failedRow=answerRows.find(row=>check.errors.some(error=>{
+          const [fieldKey,questionId]=error.split(':');
+          return fieldKey===row.question.field_key||questionId===String(row.question.id);
+        }));
+        const unmatchedField=check.errors.map(error=>error.split(':')[0]).find(fieldKey=>fieldKey&& !questions.some(question=>question.field_key===fieldKey));
+        if(failedRow){
+          setStep(1);
+          reportValidation({
+            key:validationKeyForAnswer(failedRow),
+            message:`${cleanLabel(failedRow.question.question_label)}${failedRow.member_order?` (Member ${failedRow.member_order})`:''}: The registration service requires this answer. Review it and save your answers again.`,
+          });
+          setMessage('Please review the highlighted registration question, then save your answers again.');
+        }else{
+          setStep(1);
+          setMessage(unmatchedField
+            ? `The registration service still requires “${unmatchedField}”, but that question is not in the current form. Please review the questions or contact the organizer to correct the published form.`
+            : 'Please review the required questions and save your answers again.');
+        }
+        return;
+      }
+      const response=await registrationRequest<{team_id:string;registration_code:string;submitted_at:string;payment_status:string}>(draft.id,draft.edit_token,'/submit','POST',undefined,INTERNAL_TEST);
+      setSubmittedTeamId(response.team_id);setConfirmation(response);setSubmitted(true);setStep(3);
+    }
     catch(e){setMessage(friendlyError(e));}finally{setBusy(false);}
   }
   async function downloadDocument(kind:'confirmation'|'payment-receipt'){
@@ -325,18 +422,19 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
         {!config.registration_enabled && <div className="miih-status-alert"><strong>Registration is not yet open.</strong> You can review the steps, but submissions will be available when the event registration opens.</div>}
         <nav className="miih-progress" aria-label="Registration progress">{['Team','Questions',paymentFree?'Confirm':'Payment','Done'].map((label,i)=><span className={step===i?'active':step>i?'done':''} key={label}><b>{i+1}</b> {label}</span>)}</nav>
         <div className="miih-modal-body">
+        {validationIssue&&<p className="miih-error" role="alert">{validationIssue.message}</p>}
         {step===0 && <div className="miih-reg-section"><h3>Team details</h3><p className="miih-muted">Team size is configured by the organizer ({min}–{max} members, including the leader).</p>
-          <div className="miih-two-col"><div className="miih-form-field"><label>{questionLabel('team_name','Team name')} <span className="miih-required">*</span></label><input value={team.team_name} onChange={e=>setTeam({...team,team_name:e.target.value})} placeholder="Enter your team name"/></div>
-          <div className="miih-form-field"><label>Select domain <span className="miih-required">*</span></label><select value={team.domain_id} onChange={e=>setTeam({...team,domain_id:e.target.value})}><option value="">Select a domain</option>{config.domains.map((d:Domain)=><option key={d.id} value={d.id}>{d.domain_name}</option>)}</select></div>
+          <div className="miih-two-col"><div className="miih-form-field" data-validation-key="team-name" data-invalid={validationIssue?.key==='team-name'||undefined}><label>{questionLabel('team_name','Team name')} <span className="miih-required">*</span></label><input aria-invalid={validationIssue?.key==='team-name'} value={team.team_name} onChange={e=>{const value=e.target.value;setTeam({...team,team_name:value});clearValidation('team-name',value.trim().length>=2);}} placeholder="Enter your team name"/>{validationIssue?.key==='team-name'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}</div>
+          <div className="miih-form-field" data-validation-key="team-domain" data-invalid={validationIssue?.key==='team-domain'||undefined}><label>Select domain <span className="miih-required">*</span></label><select aria-invalid={validationIssue?.key==='team-domain'} value={team.domain_id} onChange={e=>{const value=e.target.value;setTeam({...team,domain_id:value});clearValidation('team-domain',config.domains.some(d=>d.id===value));}}><option value="">Select a domain</option>{config.domains.map((d:Domain)=><option key={d.id} value={d.id}>{d.domain_name}</option>)}</select>{validationIssue?.key==='team-domain'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}</div>
           </div>
-          <div className="miih-form-field"><label>{questionLabel('investor_pitch_interest','Are you interested in an investor pitch?')} {must('investor_pitch_interest')&&<span className="miih-required">*</span>}</label><div className="miih-choice-row"><label><input type="radio" checked={team.investor_pitch_interest===true} onChange={()=>selectPitchInterest(true)}/> Yes</label><label><input type="radio" checked={team.investor_pitch_interest===false} onChange={()=>selectPitchInterest(false)}/> No</label></div></div>
-          <div className="miih-member-heading"><h3>Team members</h3><span>{members.length} members</span></div>
-          {members.map((m,i)=><div className="miih-member-card" key={i}><div className="miih-member-title"><strong>{i===0?'Team Leader':`Member ${i+1}`}</strong>{i>=min&&<button type="button" onClick={()=>setMembers(a=>a.filter((_,j)=>j!==i))}>Remove</button>}</div><div className="miih-three-col">{(['full_name','email','mobile'] as const).map(k=><div key={k} className="miih-form-field"><label>{questionLabel(k,k==='full_name'?'Full name':k==='email'?'Email':'Mobile')} <span className="miih-required">*</span></label><input type={k==='email'?'email':k==='mobile'?'tel':'text'} value={m[k]} onChange={e=>setMember(i,k,e.target.value)} placeholder={k==='full_name'?'Full name':k==='email'?'name@example.com':'Mobile number'}/></div>)}</div></div>)}
-          {duplicateEmails&&<p role="alert" className="miih-error">Each member must have a different email address.</p>}{members.length<max&&<button type="button" className="miih-secondary-btn" onClick={()=>setMembers(m=>m.length<max?[...m,emptyMember()]:m)}>+ Add Member {members.length+1} (optional)</button>}
-          <div className="miih-modal-actions"><span className="miih-muted">* Required fields</span><button disabled={!teamValid||busy||!config.registration_enabled} type="button" className="button button-primary" onClick={saveTeam}>{busy?'Saving…':'Save & continue →'}</button></div>
+          <div className="miih-form-field" data-validation-key="pitch-interest" data-invalid={validationIssue?.key==='pitch-interest'||undefined}><label>{questionLabel('investor_pitch_interest','Are you interested in an investor pitch?')} {must('investor_pitch_interest')&&<span className="miih-required">*</span>}</label><div className="miih-choice-row"><label><input type="radio" aria-invalid={validationIssue?.key==='pitch-interest'} checked={team.investor_pitch_interest===true} onChange={()=>selectPitchInterest(true)}/> Yes</label><label><input type="radio" aria-invalid={validationIssue?.key==='pitch-interest'} checked={team.investor_pitch_interest===false} onChange={()=>selectPitchInterest(false)}/> No</label></div>{validationIssue?.key==='pitch-interest'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}</div>
+          <div className="miih-member-heading" data-invalid={validationIssue?.key==='team-members'||undefined}><h3>Team members</h3><span>{members.length} members</span>{validationIssue?.key==='team-members'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}</div>
+          {members.map((m,i)=><div className="miih-member-card" key={i}><div className="miih-member-title"><strong>{i===0?'Team Leader':`Member ${i+1}`}</strong>{i>=min&&<button type="button" onClick={()=>{setMembers(a=>a.filter((_,j)=>j!==i));setValidationIssue(null);}}>Remove</button>}</div><div className="miih-three-col">{(['full_name','email','mobile'] as const).map(k=>{const key=`member-${i}-${k}`;return <div key={k} className="miih-form-field" data-validation-key={key} data-invalid={validationIssue?.key===key||undefined}><label>{questionLabel(k,k==='full_name'?'Full name':k==='email'?'Email':'Mobile')} <span className="miih-required">*</span></label><input aria-invalid={validationIssue?.key===key} type={k==='email'?'email':k==='mobile'?'tel':'text'} value={m[k]} onChange={e=>setMember(i,k,e.target.value)} placeholder={k==='full_name'?'Full name':k==='email'?'name@example.com':'Mobile number'}/>{validationIssue?.key===key&&<small className="miih-error" role="alert">{validationIssue.message}</small>}</div>;})}</div></div>)}
+          {duplicateEmails&&<p role="alert" className="miih-error">Each member must have a different email address.</p>}{duplicateMobiles&&<p role="alert" className="miih-error">Each team member must have a different mobile number.</p>}{members.length<max&&<button type="button" data-validation-key="team-members" className="miih-secondary-btn" onClick={()=>{setMembers(m=>m.length<max?[...m,emptyMember()]:m);clearValidation('team-members',members.length+1>=min);}}>+ Add Member {members.length+1} ({members.length<min?'required':'optional'})</button>}
+          <div className="miih-modal-actions"><span className="miih-muted">* Required fields</span><button disabled={busy||!config.registration_enabled} type="button" className="button button-primary" onClick={saveTeam}>{busy?'Saving…':'Save & continue →'}</button></div>
         </div>}
         {step===1&&<div className="miih-reg-section"><h3>Registration questions</h3><p className="miih-muted">Questions and required fields are controlled by the hackathon administrator. Each member has their own personal details.</p>
-          {details.map((s:FormSection)=>{const visible=s.questions.filter(q=>!isPitchDependent(q)||team.investor_pitch_interest===true);if(!visible.length)return null;return <section className="miih-question-section" key={s.id}><h4>{s.title}</h4>{s.description&&<p>{s.description}</p>}{visible.map((q:Question)=>(q.answer_scope==='MEMBER'||q.answer_scope==='LEADER')?Array.from({length:q.answer_scope==='LEADER'?1:members.length},(_,i)=><div key={`${q.id}-${i}`}><small className="miih-member-tag">{i===0?'Leader':`Member ${i+1}`}: {members[i]?.full_name||'Participant'}</small><QuestionField question={q} value={answers[fieldKey(q,i+1)]} onChange={v=>setAnswer(q,i+1,v)} onFile={f=>uploadAnswer(q,i+1,f)} busy={busy} uploadState={uploads[fieldKey(q,i+1)]} onRemove={()=>removeUpload(q,i+1)}/></div>):<QuestionField key={q.id} question={q} value={answers[fieldKey(q)]} onChange={v=>setAnswer(q,undefined,v)} onFile={f=>uploadAnswer(q,undefined,f)} busy={busy} uploadState={uploads[fieldKey(q)]} onRemove={()=>removeUpload(q)}/>)}</section>;})}
+          {details.map((s:FormSection)=>{const visible=s.questions.filter(q=>!isPitchDependent(q)||team.investor_pitch_interest===true);if(!visible.length)return null;return <section className="miih-question-section" key={s.id}><h4>{s.title}</h4>{s.description&&<p>{s.description}</p>}{visible.map((q:Question)=>(q.answer_scope==='MEMBER'||q.answer_scope==='LEADER')?Array.from({length:q.answer_scope==='LEADER'?1:members.length},(_,i)=>{const key=`question-${fieldKey(q,i+1)}`;return <div key={`${q.id}-${i}`}><small className="miih-member-tag">{i===0?'Leader':`Member ${i+1}`}: {members[i]?.full_name||'Participant'}</small><QuestionField question={q} value={answers[fieldKey(q,i+1)]} onChange={v=>setAnswer(q,i+1,v)} onFile={f=>uploadAnswer(q,i+1,f)} busy={busy} uploadState={uploads[fieldKey(q,i+1)]} onRemove={()=>removeUpload(q,i+1)} validationKey={key} issue={validationIssue||undefined}/></div>;}):<QuestionField key={q.id} question={q} value={answers[fieldKey(q)]} onChange={v=>setAnswer(q,undefined,v)} onFile={f=>uploadAnswer(q,undefined,f)} busy={busy} uploadState={uploads[fieldKey(q)]} onRemove={()=>removeUpload(q)} validationKey={`question-${fieldKey(q)}`} issue={validationIssue||undefined}/>)}</section>;})}
           <div className="miih-modal-actions"><button type="button" className="miih-secondary-btn" onClick={()=>setStep(0)}>← Back to team</button><button type="button" className="button button-primary" disabled={busy||!config.registration_enabled} onClick={saveAnswers}>{busy?'Saving…':'Save & continue →'}</button></div>
         </div>}
         {step===2&&<form className="miih-reg-section" onSubmit={submit}>
@@ -359,21 +457,23 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
                 <h4>Return from Razorpay? Submit your payment proof</h4>
                 <p className="miih-muted">Payment details are manually reviewed. Uploading evidence does not mean the payment has been verified.</p>
                 <div className="miih-two-col">
-                  <div className="miih-form-field">
+                  <div className="miih-form-field" data-validation-key="payment-transaction" data-invalid={validationIssue?.key==='payment-transaction'||undefined}>
                     <label htmlFor="miih-transaction-id">Razorpay payment / transaction ID <span className="miih-required">*</span></label>
-                    <input id="miih-transaction-id" value={transactionId} disabled={paymentRecorded||busy} onChange={e=>{setTransactionId(e.target.value);setMessage('');}} placeholder="Enter the ID shown on your payment receipt" autoComplete="off" />
+                    <input id="miih-transaction-id" aria-invalid={validationIssue?.key==='payment-transaction'} value={transactionId} disabled={paymentRecorded||busy} onChange={e=>{const value=e.target.value;setTransactionId(value);setMessage('');clearValidation('payment-transaction',value.trim().length>=4);}} placeholder="Enter the ID shown on your payment receipt" autoComplete="off" />
+                    {validationIssue?.key==='payment-transaction'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}
                   </div>
-                  <div className="miih-form-field">
+                  <div className="miih-form-field" data-validation-key="payment-proof" data-invalid={validationIssue?.key==='payment-proof'||undefined}>
                     <label>Payment screenshot <span className="miih-required">*</span></label>
                     <RegistrationUpload state={proofUpload} stored={Boolean(proofFile)} photo purpose="payment" disabled={busy||paymentRecorded} onSelect={f=>void uploadProof(f)} onRemove={()=>{setProofFile('');setProofUpload(undefined);setPaymentRecorded(false);setMessage('');}} />
+                    {validationIssue?.key==='payment-proof'&&<small className="miih-error" role="alert">{validationIssue.message}</small>}
                   </div>
                 </div>
-                {!paymentRecorded&&<button type="button" className="miih-secondary-btn" disabled={!proofFile||transactionId.trim().length<4||busy} onClick={saveProof}>{busy?'Saving…':'Save transaction ID & screenshot'}</button>}
+                {!paymentRecorded&&<button type="button" data-validation-key="payment-save" data-invalid={validationIssue?.key==='payment-save'||undefined} className="miih-secondary-btn" disabled={!proofFile||transactionId.trim().length<4||busy} onClick={saveProof}>{busy?'Saving…':'Save transaction ID & screenshot'}</button>}
                 {paymentRecorded&&<p role="status" className="miih-uploaded">✓ Payment evidence saved — Pending Verification. You can now submit your registration.</p>}
               </section>}
             </>}
           </>}
-          <div className="miih-modal-actions"><button type="button" className="miih-secondary-btn" onClick={()=>{setMessage('');setStep(1);}}>← Back to questions</button><button type="submit" className="button button-primary" disabled={!canSubmit}>{busy?'Submitting…':'Submit team registration →'}</button></div>
+          <div className="miih-modal-actions"><button type="button" className="miih-secondary-btn" onClick={()=>{setMessage('');setStep(1);}}>← Back to questions</button><button type="submit" className="button button-primary" disabled={busy||!config.registration_enabled}>{busy?'Submitting…':'Submit team registration →'}</button></div>
         </form>}
         {step===3&&submitted&&<section className="miih-success" aria-label="Registration confirmation">
           <div className="miih-success-heading">

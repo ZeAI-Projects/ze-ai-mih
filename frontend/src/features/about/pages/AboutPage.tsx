@@ -4,6 +4,7 @@ import { SITE } from '@/constants/app';
 import { HACKATHON_PHOTOS } from '@/features/gallery/data/media';
 import { LabXFocus } from '../components/LabXFocus';
 import { AboutJourney } from '../components/AboutJourney';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import '../styles/about.css';
 
 const VALUES = [
@@ -20,6 +21,7 @@ const STRENGTHS = [
 ];
 
 export function AboutPage({ embedded = false }: { embedded?: boolean }) {
+  const openRegistration = useRegistrationModal();
   const Title = embedded ? 'h2' : 'h1';
   const groupPhoto = HACKATHON_PHOTOS[7];
   return (
@@ -314,7 +316,7 @@ export function AboutPage({ embedded = false }: { embedded?: boolean }) {
             <p>Have a question about Made in India? Start with a hello.</p>
           </div>
           <div className="about-connect-actions">
-            <Link className="button button-primary" to="/#register">
+            <Link className="button button-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>
               Build your next big idea <Icon name="arrow" />
             </Link>
             <a className="text-link" href={`mailto:${SITE.EMAIL}`}>Email the team <Icon name="mail" /></a>

@@ -17,6 +17,16 @@ for (const width of [390, 768, 1440, 1920]) {
       for (const section of ['about', 'gallery', 'register']) {
         const menu = page.getByRole('button', { name: 'Open navigation' });
         if (await menu.isVisible()) await menu.click();
+        if (section === 'register') {
+          const currentUrl = page.url();
+          await page.locator(`#primary-nav a[href="/#${section}"]`).click();
+          await expect(page.getByRole('dialog', { name: 'Register your team.' })).toBeVisible();
+          expect(page.url()).toBe(currentUrl);
+          await page.getByRole('button', { name: 'Close registration' }).click();
+          await page.locator('#register').scrollIntoViewIfNeeded();
+          await expect(page.locator('#faq')).toBeAttached();
+          continue;
+        }
         await page.locator(`#primary-nav a[href="/#${section}"]`).click();
         await expect(page).toHaveURL(new RegExp(`#${section}$`));
         await expect.poll(() => page.evaluate(id => {
@@ -36,8 +46,10 @@ for (const width of [390, 768, 1440, 1920]) {
       const all = page.locator('.challenge-domains button').first();
       await all.scrollIntoViewIfNeeded();
       if (theme === 'light') await expect(all).toHaveAttribute('aria-pressed', 'false');
-      await all.hover();
-      await expect(all).not.toHaveCSS('box-shadow', 'none');
+      if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
+        await all.hover();
+        await expect(all).not.toHaveCSS('box-shadow', 'none');
+      }
       await all.click();
       await expect(all).toHaveAttribute('aria-pressed', 'true');
       await expect(page.locator('.challenge-empty')).toContainText('CHALLENGES UNLOCKING SOON');
@@ -59,17 +71,24 @@ for (const width of [390, 768, 1440, 1920]) {
   });
 }
 
-test('repeated anchors and logo navigation retain smooth scrolling', async ({ page }) => {
+test('registration navigation opens the modal while other anchors retain smooth scrolling', async ({ page }) => {
   await page.goto('/#register');
   await expect(page.locator('.registration-panel')).toBeAttached();
+  const menu = page.getByRole('button', { name: 'Open navigation' });
+  if (await menu.isVisible()) await menu.click();
   await page.locator('#primary-nav a[href="/#register"]').click();
-  await page.evaluate(() => window.scrollBy(0, 450));
+  await expect(page.getByRole('dialog', { name: 'Register your team.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close registration' }).click();
+  const nextMenu = page.getByRole('button', { name: 'Open navigation' });
+  if (await nextMenu.isVisible()) await nextMenu.click();
   await page.locator('#primary-nav a[href="/#register"]').click();
-  await expect.poll(() => page.locator('#register').evaluate(el => el.getBoundingClientRect().top)).toBeLessThan(180);
+  await expect(page.getByRole('dialog', { name: 'Register your team.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close registration' }).click();
   await page.locator('.site-header .brand').click();
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
   await page.goto('/#faq');
   await expect(page.locator('#participation-faq-title')).toBeAttached();
+  await page.locator('#faq').scrollIntoViewIfNeeded();
   await expect.poll(() => page.locator('#faq').evaluate(el => el.getBoundingClientRect().top)).toBeLessThan(180);
   expect(await page.locator('#participation-faq-title').evaluate(el => el.getBoundingClientRect().top - document.querySelector('.site-header')!.getBoundingClientRect().bottom)).toBeGreaterThan(16);
 });

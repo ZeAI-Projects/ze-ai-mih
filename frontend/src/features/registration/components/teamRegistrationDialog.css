@@ -26,6 +26,14 @@
 .miih-modal-body::-webkit-scrollbar-thumb{background:#ad8ad8;border-radius:999px;}
 @media(max-width:680px){.miih-registration-modal{max-height:98dvh;}}
 
+.miih-form-field[data-invalid='true'] input:not([type=radio]):not([type=checkbox]),
+.miih-form-field[data-invalid='true'] select,
+.miih-form-field[data-invalid='true'] textarea { border-color:var(--danger)!important; }
+.miih-form-field[data-invalid='true'] .miih-choice-row { outline:2px solid var(--danger);outline-offset:3px;border-radius:10px; }
+.miih-form-field[data-invalid='true'] .miih-upload-control,
+.miih-secondary-btn[data-invalid='true'] { outline:2px solid var(--danger);outline-offset:3px; }
+.miih-member-heading[data-invalid='true'] h3 { color:var(--danger); }
+
 /* Razorpay hand-off: keep proof entry visible when the registrant returns. */
 .miih-payment-guidance,.miih-payment-evidence{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0;background:var(--surface);}
 .miih-payment-guidance p{margin:0 0 10px;color:var(--body);font-size:14px;}

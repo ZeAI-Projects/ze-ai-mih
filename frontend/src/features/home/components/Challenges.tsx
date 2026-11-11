@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import { api, ApiError, type Domain } from '@/lib/miihApi';
 type Track = { id: string; code: string; name: string; description: string };
 type Challenge = { id: string; title: string; summary: string; domain_name: string; track_name: string; difficulty: string };
@@ -25,6 +26,7 @@ function ChallengeCard({ item }: { item: Challenge }) {
   </article>;
 }
 export function Challenges() {
+  const openRegistration = useRegistrationModal();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [track, setTrack] = useState('RISING_BUILDERS');
@@ -74,6 +76,6 @@ export function Challenges() {
     <div className="challenge-domains" aria-label="Domain filter"><button type="button" aria-pressed={domain === ''} onClick={() => chooseDomain('')}><span className="domain-glyph" aria-hidden="true">✦</span>All enabled domains</button>{domains.map(d => <button type="button" key={d.id} aria-pressed={domain === d.id} onClick={() => chooseDomain(d.id)}><span className="domain-glyph" aria-hidden="true">{domainGlyph(d.domain_name)}</span>{d.domain_name}</button>)}</div>
     <div aria-live="polite" aria-busy={loading}>{loading ? <p>Loading challenges…</p> : error ? <div className="challenge-empty" role="alert"><h3>Challenge catalogue</h3><p>{error}</p><button type="button" onClick={() => setRetry(v => v+1)}>Retry</button></div> : domain === null && result.items.length ? <div className="challenge-empty"><h3>Choose a domain</h3><p>Select a domain to explore its published challenges.</p></div> : result.items.length ? <div className="challenge-grid">{result.items.map(item => <ChallengeCard key={item.id} item={item} />)}</div> : <div className="challenge-empty"><h3>CHALLENGES UNLOCKING SOON</h3><p>Published challenges for this track and domain will appear here.</p></div>}</div>
     {domain !== null && !loading && !error && result.total > 6 && <div className="challenge-pagination"><button type="button" disabled={page === 1} onClick={() => setPage(p => p-1)}>Previous</button><span>Page {page} of {Math.ceil(result.total/6)}</span><button type="button" disabled={page*6 >= result.total} onClick={() => setPage(p => p+1)}>Next</button></div>}
-    <Link className="button button-primary" to="/#register">Choose your challenge &amp; register →</Link>
+    <Link className="button button-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>Choose your challenge &amp; register →</Link>
   </div></section>;
 }

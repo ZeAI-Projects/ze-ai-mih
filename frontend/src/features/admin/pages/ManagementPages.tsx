@@ -1,14 +1,36 @@
 import { ThemedDateTime } from '../ThemedDateTime';
 import { ProblemStatementsPanel } from '../ProblemStatementsPanel';
 import { adminConfirm, adminPrompt, adminFormDialog } from '../AdminDialogs';
+import { Icon } from '@/components/ui/Icon';
 import { applyCmsItem } from '@/features/cms/PublishedContentBridge';
 import {useEffect,useMemo,useRef,useState,type FormEvent} from 'react';
 import {patch,post,put,qs,upload,type CmsSlot,type CmsRevision,type Domain,type Edition,type FormSection,type Question,type JsonRecord} from '@/lib/miihApi';
-import {Badge,DataTable,Empty,ErrorMessage,Loading,PageHeader,Panel,useAdmin,useResource} from '../AdminPortal';
+import {AdminIconButton,Badge,DataTable,Empty,ErrorMessage,Loading,PageHeader,Panel,useAdmin,useResource} from '../AdminPortal';
 
 type Row=Record<string,unknown>;
 const pages=['HOME','ABOUT','GALLERY','REGISTER','GLOBAL'];
 const first=(v:unknown)=>String(v??'');
+const questionTypes=[
+ {value:'TEXT',label:'Short answer'},
+ {value:'TEXTAREA',label:'Long answer'},
+ {value:'EMAIL',label:'Email address'},
+ {value:'PHONE',label:'Phone number'},
+ {value:'URL',label:'Website link'},
+ {value:'DATE',label:'Date'},
+ {value:'NUMBER',label:'Number'},
+ {value:'BOOLEAN',label:'Yes or no'},
+ {value:'SINGLE_SELECT',label:'Choose one option'},
+ {value:'MULTI_SELECT',label:'Choose multiple options'},
+ {value:'IMAGE',label:'Image upload'},
+ {value:'FILE',label:'File upload'},
+ {value:'DERIVED',label:'Calculated value'},
+] as const;
+const answerScopes=[
+ {value:'TEAM',label:'Whole team'},
+ {value:'MEMBER',label:'Each team member'},
+ {value:'LEADER',label:'Team leader'},
+ {value:'PITCH',label:'Pitch details'},
+] as const;
 function localDateTime(value:unknown){if(!value)return '';const date=new Date(String(value));if(Number.isNaN(date.getTime()))return '';return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);}
 function useEditions(){const {data,setData,error,loading,reload}=useResource<Edition[]>('/admin/editions',[]);const [editionId,setEditionId]=useState('');useEffect(()=>{if(!editionId&&data.length)setEditionId((data.find(e=>e.edition_code==='MIIH_UPCOMING')||data[0]).id);},[editionId,data]);return {editions:data,setEditions:setData,editionId,setEditionId,edition:data.find(e=>e.id===editionId),error,loading,reload};}
 function EditionSelect({editions,editionId,onChange}:{editions:Edition[];editionId:string;onChange:(v:string)=>void}){
@@ -86,30 +108,42 @@ function FormVersionPreview({sections}:{sections:FormSection[]}){
      q.input_type==='TEXTAREA'?<textarea placeholder={q.placeholder||'Your answer'} rows={3}/>:
      q.input_type==='SINGLE_SELECT'?<select defaultValue=""><option value="">Select one</option>{q.options?.map(o=><option key={o.option_value} value={o.option_value}>{o.option_label}</option>)}</select>:
      q.input_type==='MULTI_SELECT'?<div className="miih-admin-row">{q.options?.map(o=><label key={o.option_value}><input type="checkbox"/> {o.option_label}</label>)}</div>:
-     <input type={q.input_type==='EMAIL'?'email':q.input_type==='DATE'?'date':q.input_type==='NUMBER'?'number':q.input_type==='URL'?'url':q.input_type==='FILE'?'file':'text'} placeholder={q.placeholder||'Your answer'}/>}
-    <small>{q.answer_scope==='MEMBER'?'Asked separately for every member':q.answer_scope==='LEADER'?'Leader only':'Team question'}</small>
+     <input type={q.input_type==='EMAIL'?'email':q.input_type==='DATE'?'date':q.input_type==='NUMBER'?'number':q.input_type==='URL'?'url':q.input_type==='IMAGE'||q.input_type==='FILE'?'file':'text'} accept={q.input_type==='IMAGE'?'image/*':undefined} placeholder={q.placeholder||'Your answer'}/>}
+    <small>{answerScopes.find(scope=>scope.value===q.answer_scope)?.label||q.answer_scope}</small>
   </div>)}</section>)}</fieldset></div></details>;
 }
-export function FormEditorPage(){const {can,superAdmin,notify}=useAdmin();const {editions,editionId,setEditionId}=useEditions();const versions=useResource<{id:string;status:string;version_number:number;name:string}[]>(editionId?`/admin/forms/editions/${editionId}/versions`:null,[]);const [versionId,setVersionId]=useState('');useEffect(()=>{if(versions.data.length&&!versions.data.some(v=>v.id===versionId))setVersionId(versions.data[0].id);},[versions.data,versionId]);const form=useResource<{id:string;status:string;sections:FormSection[]}>(versionId?`/admin/forms/versions/${versionId}`:null,{id:'',status:'DRAFT',sections:[]});const [selected,setSelected]=useState<Question|null>(null);const [label,setLabel]=useState('');const [placeholder,setPlaceholder]=useState('');const [description,setDescription]=useState('');const [required,setRequired]=useState(true);const [active,setActive]=useState(true);const [order,setOrder]=useState(0);const [busy,setBusy]=useState(false);const [validationJson,setValidationJson]=useState('{}');const [visibilityJson,setVisibilityJson]=useState('{}');const [optionValue,setOptionValue]=useState('');const [optionLabel,setOptionLabel]=useState('');
- useEffect(()=>{if(selected){setLabel(selected.question_label);setPlaceholder(selected.placeholder||'');setDescription(selected.description||'');setRequired(selected.is_required);setActive(selected.is_active!==false);setOrder(selected.display_order);setValidationJson(JSON.stringify(selected.validation_rules||{},null,2));setVisibilityJson(JSON.stringify(selected.visibility_rules||{},null,2));}},[selected]);const editable=form.data.status==='DRAFT';
+export function FormEditorPage(){const {can,superAdmin,notify}=useAdmin();const {editions,editionId,setEditionId}=useEditions();const versions=useResource<{id:string;status:string;version_number:number;name:string}[]>(editionId?`/admin/forms/editions/${editionId}/versions`:null,[]);const [versionId,setVersionId]=useState('');useEffect(()=>{if(versions.data.length&&!versions.data.some(v=>v.id===versionId))setVersionId(versions.data[0].id);},[versions.data,versionId]);const form=useResource<{id:string;status:string;sections:FormSection[]}>(versionId?`/admin/forms/versions/${versionId}`:null,{id:'',status:'DRAFT',sections:[]});const [selected,setSelected]=useState<Question|null>(null);const [label,setLabel]=useState('');const [placeholder,setPlaceholder]=useState('');const [description,setDescription]=useState('');const [inputType,setInputType]=useState<Question['input_type']>('TEXT');const [answerScope,setAnswerScope]=useState<Question['answer_scope']>('TEAM');const [required,setRequired]=useState(true);const [active,setActive]=useState(true);const [order,setOrder]=useState(0);const [busy,setBusy]=useState(false);const [optionLabel,setOptionLabel]=useState('');
+ useEffect(()=>{if(selected){setLabel(selected.question_label);setPlaceholder(selected.placeholder||'');setDescription(selected.description||'');setInputType(selected.input_type);setAnswerScope(selected.answer_scope);setRequired(selected.is_required);setActive(selected.is_active!==false);setOrder(selected.display_order);}},[selected]);const editable=form.data.status==='DRAFT';
  const pendingQuestionKey=useRef<string|null>(null);
  useEffect(()=>{if(form.data.id===versionId&&pendingQuestionKey.current){const question=form.data.sections.flatMap(s=>s.questions).find(q=>q.field_key===pendingQuestionKey.current);if(question){setSelected(question);pendingQuestionKey.current=null;}}},[form.data,versionId]);
  async function clone(){if(!editionId||busy)return;pendingQuestionKey.current=selected?.field_key||null;setBusy(true);try{const r=await post<{id:string;version_number:number;status:string}>(`/admin/forms/editions/${editionId}/clone`,{},true);versions.setData(items=>[{...r,name:`MIIH Form v${r.version_number}`},...items]);setVersionId(r.id);setSelected(null);versions.reload();notify('Editable draft created. Save your question changes, then publish this form.');}catch(e){notify(e instanceof Error?e.message:'Could not clone form');}finally{setBusy(false);}}
  function editQuestions(){const draft=versions.data.find(v=>v.status==='DRAFT');if(draft){pendingQuestionKey.current=selected?.field_key||null;setVersionId(draft.id);setSelected(null);}else void clone();}
- async function saveQuestion(){if(!selected)return;setBusy(true);try{await patch(`/admin/forms/questions/${selected.id}`,{question_label:label,placeholder,description,is_required:required,is_active:active,display_order:order,validation_rules:JSON.parse(validationJson),visibility_rules:JSON.parse(visibilityJson)},true);form.reload();notify('Question saved in draft version.');}catch(e){notify(e instanceof Error?e.message:'Could not edit question');}finally{setBusy(false);}}
- async function addOption(){if(!selected||!optionLabel||!optionValue)return;setBusy(true);try{await put(`/admin/forms/questions/${selected.id}/options`,{option_value:optionValue,option_label:optionLabel,display_order:selected.options?.length||0,is_active:true},true);form.reload();setOptionLabel('');setOptionValue('');notify('Option saved.');}catch(e){notify(e instanceof Error?e.message:'Option save failed');}finally{setBusy(false);}}
- async function changeOption(option:{option_value:string;option_label:string;display_order?:number;is_active?:boolean},enabled:boolean){if(!selected)return;try{await put(`/admin/forms/questions/${selected.id}/options`,{...option,display_order:option.display_order||0,is_active:enabled},true);form.reload();notify('Option updated.');}catch(e){notify(e instanceof Error?e.message:'Option update failed');}}
+ async function saveQuestion(){if(!selected||busy)return;setBusy(true);try{const changes={question_label:label,placeholder,description,input_type:inputType,answer_scope:answerScope,is_required:required,is_active:active,display_order:order};await patch(`/admin/forms/questions/${selected.id}`,changes,true);setSelected(current=>current?{...current,...changes}:current);form.reload();notify('Question saved in draft version.');}catch(e){notify(e instanceof Error?e.message:'Could not edit question');}finally{setBusy(false);}}
+ async function addOption(){if(!selected||!optionLabel.trim()||busy)return;const base=optionLabel.trim().toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,145)||'option';const values=new Set(selected.options.map(option=>option.option_value));let value=base;for(let suffix=2;values.has(value);suffix++)value=`${base.slice(0,145-String(suffix).length)}_${suffix}`;setBusy(true);try{const saved=await put<{option_value:string;option_label:string;display_order:number;is_active:boolean}>(`/admin/forms/questions/${selected.id}/options`,{option_value:value,option_label:optionLabel.trim(),display_order:selected.options?.length||0,is_active:true},true);setSelected(current=>current?{...current,options:[...current.options.filter(option=>option.option_value!==saved.option_value),saved]}:current);form.reload();setOptionLabel('');notify('Answer choice saved.');}catch(e){notify(e instanceof Error?e.message:'Answer choice could not be saved.');}finally{setBusy(false);}}
+ async function changeOption(option:{option_value:string;option_label:string;display_order?:number;is_active?:boolean},enabled:boolean){if(!selected||busy)return;setBusy(true);try{await put(`/admin/forms/questions/${selected.id}/options`,{...option,display_order:option.display_order||0,is_active:enabled},true);setSelected(current=>current?{...current,options:current.options.map(item=>item.option_value===option.option_value?{...item,is_active:enabled}:item)}:current);form.reload();notify('Option updated.');}catch(e){notify(e instanceof Error?e.message:'Option update failed');}finally{setBusy(false);}}
+ async function deleteQuestion(){if(!selected||busy||!await adminConfirm(`Remove “${selected.question_label}” from this draft? It will be hidden after you publish the draft. Existing registrations can still submit without answering it once the updated form is published.`, 'Delete question', true))return;setBusy(true);try{await patch(`/admin/forms/questions/${selected.id}`,{is_active:false},true);form.reload();setSelected(null);notify('Question removed from the draft. Publish the draft to apply this change.');}catch(e){notify(e instanceof Error?e.message:'Could not delete question');}finally{setBusy(false);}}
+ async function deleteOption(option:{option_value:string;option_label:string;display_order?:number;is_active?:boolean}){if(!selected||busy||!await adminConfirm(`Remove “${option.option_label}” from this draft?`, 'Delete option', true))return;setBusy(true);try{await put(`/admin/forms/questions/${selected.id}/options`,{...option,display_order:option.display_order||0,is_active:false},true);setSelected(current=>current?{...current,options:current.options.map(item=>item.option_value===option.option_value?{...item,is_active:false}:item)}:current);form.reload();notify('Option removed from the draft.');}catch(e){notify(e instanceof Error?e.message:'Could not delete option');}finally{setBusy(false);}}
  async function addQuestion(sectionId:string){
-  const values=await adminFormDialog('Add registration question',[
-    {key:'field_key',label:'Unique field key (lowercase, e.g. github_username)',required:true},
-    {key:'question_label',label:'Question label',required:true},
-    {key:'input_type',label:'Input type',value:'TEXT',options:['TEXT','TEXTAREA','EMAIL','PHONE','DATE','NUMBER','URL','SINGLE_SELECT','MULTI_SELECT','BOOLEAN','FILE'],required:true},
-    {key:'answer_scope',label:'Asked for',value:'TEAM',options:['TEAM','MEMBER','LEADER','PITCH'],required:true}
+  const values=await adminFormDialog('Add a registration question',[
+    {key:'question_label',label:'What should participants be asked?',required:true},
+    {key:'description',label:'Help text shown under the question (optional)',multiline:true},
+    {key:'input_type',label:'How should they answer?',value:'Short answer',options:questionTypes.filter(type=>type.value!=='DERIVED').map(type=>type.label),required:true},
+    {key:'answer_scope',label:'Who should answer?',value:'Whole team',options:answerScopes.map(scope=>scope.label),required:true},
+    {key:'required',label:'Is an answer required?',value:'Required',options:['Required','Optional'],required:true},
   ]);
   if(!values)return;
-  if(!/^[a-z][a-z0-9_]*$/.test(values.field_key)){notify('Use a lowercase field key with letters, numbers or underscores.');return;}
-  try{await post(`/admin/forms/sections/${sectionId}/questions`,{...values,is_required:true,display_order:999},true);form.reload();notify('Question added to draft.');}
+  const type=questionTypes.find(item=>item.label===values.input_type);
+  const scope=answerScopes.find(item=>item.label===values.answer_scope);
+  if(!type||!scope){notify('Choose a valid answer format and audience.');return;}
+  const rawKey=values.question_label.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,89);
+  const baseKey=rawKey.length<2?`${rawKey||'question'}_q`:rawKey;
+  const keys=new Set(form.data.sections.flatMap(section=>section.questions.map(question=>question.field_key)));
+  let fieldKey=baseKey;
+  for(let suffix=2;keys.has(fieldKey);suffix++)fieldKey=`${baseKey.slice(0,88-String(suffix).length)}_${suffix}`;
+  setBusy(true);
+  try{await post(`/admin/forms/sections/${sectionId}/questions`,{field_key:fieldKey,question_label:values.question_label,description:values.description||null,input_type:type.value,answer_scope:scope.value,is_required:values.required!=='Optional',display_order:999},true);form.reload();notify('Question added to the draft.');}
   catch(e){notify(e instanceof Error?e.message:'Cannot add question');}
+  finally{setBusy(false);}
  }
   async function renameVersion(){
   const current=versions.data.find(v=>v.id===versionId);
@@ -127,21 +161,85 @@ export function FormEditorPage(){const {can,superAdmin,notify}=useAdmin();const 
   }catch(e){notify(e instanceof Error?e.message:'Version rename failed');}
   finally{setBusy(false);}
  }
-async function publishForm(){if(!versionId||!await adminConfirm('Publish this form version? Existing registrations retain their original version.', 'Publish form'))return;try{await post(`/admin/forms/versions/${versionId}/publish`,{},true);form.reload();versions.reload();notify('Form version published.');}catch(e){notify(e instanceof Error?e.message:'Publish failed');}}
- return <><PageHeader eyebrow="MADE IN INDIA HACKATHON / FORM BUILDER" title="Registration Form" description="One permanent hackathon, with separately named form versions. Authorized admins create and edit drafts; only Super Admin can publish a version."/>
- {versions.data.some(v=>v.status==='DRAFT')&&<Panel title="New form changes are not live yet"><p>The published version is still used for new registrations. Select the prepared draft below, preview its questions, then choose Publish this form. Saving event details does not publish a form.</p><p>{versions.data.filter(v=>v.status==='PUBLISHED').map(v=>`Live: v${v.version_number} - ${v.name}`).join(', ')}</p>{versions.data.filter(v=>v.status==='DRAFT').map(v=><button key={v.id} className="miih-admin-outline" type="button" onClick={()=>{setVersionId(v.id);setSelected(null);}}>Review v{v.version_number} - {v.name}</button>)}</Panel>}
- <Panel toolbar={<div className="miih-admin-row"><EditionSelect editions={editions} editionId={editionId} onChange={v=>{setEditionId(v);setSelected(null);}}/><select aria-label="Select form version" value={versionId} onChange={e=>{setVersionId(e.target.value);setSelected(null);}}>{versions.data.map(v=><option value={v.id} key={v.id}>v{v.version_number} — {v.name} ({v.status.toLowerCase()})</option>)}</select>{can('FORM_EDIT')&&<button className="miih-admin-outline" onClick={clone} disabled={busy||!editionId}>Create new version</button>}{(editable?can('FORM_EDIT'):superAdmin)&&<button className="miih-admin-outline" onClick={renameVersion} disabled={busy||!versionId}>Rename version</button>}{superAdmin&&editable&&<button className="miih-admin-primary" onClick={publishForm}>Publish this form</button>}</div>}/>
- <FormVersionPreview sections={form.data.sections}/>
- <div className="miih-admin-editor-layout"><Panel title="Questions"><ErrorMessage message={form.error}/>{form.loading?<Loading/>:form.data.sections.map(s=><div className="miih-form-section-list" key={s.id}><h3>{s.title} <span>{s.questions.length}</span></h3>{s.questions.map(q=><button className={`miih-slot-row ${selected?.id===q.id?'selected':''}`} type="button" key={q.id} onClick={()=>setSelected(q)}><small>{q.input_type.replaceAll('_',' ').toLowerCase()} · {q.answer_scope==='MEMBER'?'Every team member':q.answer_scope==='LEADER'?'Team leader':'Whole team'}</small><strong>{q.question_label}</strong><span>{q.is_required?'Required':'Optional'}{q.is_active===false?' · Hidden':''}</span></button>)}{editable&&can('FORM_EDIT')&&<button className="miih-admin-inline-add" onClick={()=>addQuestion(s.id)}>+ Add question to {s.title}</button>}</div>)}</Panel>
- <Panel title={selected?`Edit question: ${selected.question_label}`:'Select a question'}>{selected?<div className="miih-editor-form"><p className="miih-muted-admin">{editable?'Edit and save your questions here. Publish this form when the changes are ready.':'This version is read-only. Edit a draft, then publish it. You do not need to archive the live form.'}</p>{!editable&&can('FORM_EDIT')&&<button className="miih-admin-primary" type="button" disabled={busy||form.loading} onClick={editQuestions}>{busy?'Preparing draft...':'Edit questions in draft'}</button>}<Badge value={form.data.status}/><label>Question label<textarea value={label} disabled={!editable} onChange={e=>setLabel(e.target.value)}/></label><label>Description<textarea value={description} disabled={!editable} onChange={e=>setDescription(e.target.value)}/></label><label>Placeholder<input value={placeholder} disabled={!editable} onChange={e=>setPlaceholder(e.target.value)}/></label><label>Display order<input type="number" value={order} disabled={!editable} onChange={e=>setOrder(Number(e.target.value))}/></label><label className="miih-toggle-label"><input type="checkbox" disabled={!editable} checked={required} onChange={e=>setRequired(e.target.checked)}/> Required field</label><label className="miih-toggle-label"><input type="checkbox" disabled={!editable} checked={active} onChange={e=>setActive(e.target.checked)}/> Visible and active</label><p className="miih-muted-admin">Input type: {selected.input_type}. Scope: {selected.answer_scope}. Settings below are enforced again by the backend, not only the browser.</p><details className="miih-studio-advanced"><summary>Advanced question rules — for technical administrators</summary><p className="miih-muted-admin">Most staff only need to change the question text, required status and answer choices above.</p><label>Validation rules (JSON)<textarea rows={5} spellCheck={false} disabled={!editable} value={validationJson} onChange={e=>setValidationJson(e.target.value)}/></label><label>Visibility rules (JSON)<textarea rows={5} spellCheck={false} disabled={!editable} value={visibilityJson} onChange={e=>setVisibilityJson(e.target.value)}/></label></details>
- {selected.options?.length>0&&<div><h3>Options</h3>{selected.options.map(o=><div className="miih-admin-option" key={o.option_value}><span>{o.option_label} ({o.option_value})</span><label><input type="checkbox" disabled={!editable} checked={o.is_active!==false} onChange={e=>changeOption(o,e.target.checked)}/> Active</label></div>)}</div>}
- {editable&&can('FORM_EDIT')&&<><button className="miih-admin-primary" disabled={busy||!label.trim()} onClick={saveQuestion}>Save question changes</button><h3>Add or update an option</h3><div className="miih-admin-form-grid"><label>Option value<input value={optionValue} onChange={e=>setOptionValue(e.target.value)}/></label><label>Display label<input value={optionLabel} onChange={e=>setOptionLabel(e.target.value)}/></label></div><button className="miih-admin-outline" onClick={addOption} disabled={busy||!optionLabel||!optionValue}>Save option</button></>}</div>:<Empty message="Select a question to inspect its required status and available options."/>}</Panel></div></>}
+async function publishForm(){if(!versionId||!await adminConfirm('Publish this form version? New registrations will use it. Existing registrations keep their saved form version, but questions removed or made optional in this version will no longer block their submission.', 'Publish form'))return;try{await post(`/admin/forms/versions/${versionId}/publish`,{},true);form.reload();versions.reload();notify('Form version published. Removed and optional questions will no longer block existing registrations.');}catch(e){notify(e instanceof Error?e.message:'Publish failed');}}
+ return <>
+  <PageHeader eyebrow="MADE IN INDIA HACKATHON / FORM BUILDER" title="Registration Form" description="Build and preview the questions participants see. Changes stay in a draft until a Super Admin publishes them."/>
+  {versions.data.some(v=>v.status==='DRAFT')&&<Panel title="Your draft is not live yet">
+    <p>The published form stays live until you publish this draft. Publishing updates the questions shown to new registrations. Existing registrations keep their saved form version, but questions removed or made optional here will no longer block their submission.</p>
+    <p className="miih-muted-admin">{versions.data.filter(v=>v.status==='PUBLISHED').map(v=>`Live form: v${v.version_number} — ${v.name}`).join(' · ')}</p>
+    <div className="miih-admin-row">{versions.data.filter(v=>v.status==='DRAFT').map(v=><button key={v.id} className="miih-admin-outline" type="button" onClick={()=>{setVersionId(v.id);setSelected(null);}}>Open draft v{v.version_number} — {v.name}</button>)}</div>
+  </Panel>}
+  <Panel title="Form version" toolbar={<div className="miih-admin-row">
+    <EditionSelect editions={editions} editionId={editionId} onChange={value=>{setEditionId(value);setSelected(null);}}/>
+    <label className="miih-admin-inline-label">Version<select aria-label="Select form version" value={versionId} onChange={event=>{setVersionId(event.target.value);setSelected(null);}}>{versions.data.map(version=><option value={version.id} key={version.id}>v{version.version_number} — {version.name} ({version.status==='DRAFT'?'Draft':version.status==='PUBLISHED'?'Live':'Archived'})</option>)}</select></label>
+    {can('FORM_EDIT')&&<AdminIconButton icon="add" label="Create new version" disabled={busy||!editionId} onClick={()=>void clone()}/>}
+    {(editable?can('FORM_EDIT'):superAdmin)&&<AdminIconButton icon="edit" label="Rename version" disabled={busy||!versionId} onClick={()=>void renameVersion()}/>}
+    {superAdmin&&editable&&<button className="miih-admin-primary" type="button" disabled={busy||form.loading} onClick={()=>void publishForm()}>Publish form</button>}
+  </div>}>
+    <p className="miih-muted-admin">Choose the version to review. A draft can be edited; the live version is read-only and can be copied into a new draft.</p>
+  </Panel>
+  <FormVersionPreview sections={form.data.sections}/>
+  <div className="miih-admin-editor-layout miih-form-editor">
+    <div className="miih-form-index">
+    <Panel title="Questions and sections">
+      <p className="miih-muted-admin">Select a question to edit it. Use the plus button to add a question to its section.</p>
+      <ErrorMessage message={form.error}/>
+      <div className="miih-form-question-index">
+      {form.loading?<Loading/>:form.data.sections.map(section=><section className="miih-form-section-list" key={section.id}>
+        <div className="miih-form-section-heading"><div><h3>{section.title}</h3><span>{section.questions.length} {section.questions.length===1?'question':'questions'}</span></div>
+          {editable&&can('FORM_EDIT')&&<AdminIconButton icon="add" label={`Add question to ${section.title}`} disabled={busy} onClick={()=>void addQuestion(section.id)}/>}
+        </div>
+        {section.questions.map(question=><button className={`miih-slot-row ${selected?.id===question.id?'selected':''}`} type="button" key={question.id} onClick={()=>setSelected(question)}>
+          <small>{questionTypes.find(type=>type.value===question.input_type)?.label||question.input_type} · {answerScopes.find(scope=>scope.value===question.answer_scope)?.label||question.answer_scope}</small>
+          <strong>{question.question_label}</strong>
+          <span>{question.is_required?'Required':'Optional'}{question.is_active===false?' · Hidden':''}</span>
+        </button>)}
+      </section>)}
+      </div>
+    </Panel>
+    </div>
+    <div className="miih-form-detail">
+    <Panel title={selected?`Question details`:'Edit a question'}>
+      {selected?<div className="miih-editor-form">
+        <div className="miih-form-editor-heading"><div><p className="miih-muted-admin">{selected.question_label}</p><Badge value={form.data.status}/></div>{editable&&can('FORM_EDIT')&&active&&<AdminIconButton icon="delete" label="Delete question" disabled={busy} onClick={()=>void deleteQuestion()}/>}</div>
+        {!editable&&<p className="miih-muted-admin">This form version is read-only. Create or select a draft to make changes.</p>}
+        {!editable&&can('FORM_EDIT')&&<button className="miih-admin-outline" type="button" disabled={busy||form.loading} onClick={editQuestions}>Create or open an editable draft</button>}
+        <div className="miih-form-question-grid">
+          <label className="miih-admin-wide">Question text<textarea value={label} disabled={!editable||busy} onChange={event=>setLabel(event.target.value)}/></label>
+          <label>Answer format<select value={inputType} disabled={!editable||busy} onChange={event=>setInputType(event.target.value)}>{questionTypes.map(type=><option value={type.value} key={type.value}>{type.label}</option>)}</select></label>
+          <label>Who answers?<select value={answerScope} disabled={!editable||busy} onChange={event=>setAnswerScope(event.target.value as Question['answer_scope'])}>{answerScopes.map(scope=><option value={scope.value} key={scope.value}>{scope.label}</option>)}</select></label>
+          <label className="miih-admin-wide">Help text (optional)<textarea value={description} disabled={!editable||busy} onChange={event=>setDescription(event.target.value)} placeholder="Explain what a useful answer should include."/></label>
+          <label>Placeholder text<input value={placeholder} disabled={!editable||busy} onChange={event=>setPlaceholder(event.target.value)} placeholder="Optional hint inside the answer box"/></label>
+          <label>Display position<input type="number" min="0" value={order} disabled={!editable||busy} onChange={event=>setOrder(Number(event.target.value))}/></label>
+          <label className="miih-toggle-label"><input type="checkbox" disabled={!editable||busy} checked={required} onChange={event=>setRequired(event.target.checked)}/> Require an answer</label>
+          <label className="miih-toggle-label"><input type="checkbox" disabled={!editable||busy} checked={active} onChange={event=>setActive(event.target.checked)}/> Show on registration form</label>
+        </div>
+        {(inputType==='IMAGE'||inputType==='FILE')&&<p className="miih-muted-admin">{inputType==='IMAGE'?'Participants can upload a JPG, PNG or WebP image.':'Participants can upload a JPG, PNG, WebP image or PDF file.'} Uploads are stored securely with the registration.</p>}
+        {editable&&can('FORM_EDIT')&&<div className="miih-form-editor-actions"><button className="miih-admin-primary" type="button" disabled={busy||!label.trim()} onClick={()=>void saveQuestion()}><Icon name="save"/> Save question</button></div>}
+        {(inputType==='SINGLE_SELECT'||inputType==='MULTI_SELECT'||selected.options.length>0)&&<section className="miih-form-options">
+          <div className="miih-form-section-heading"><div><h3>Answer choices</h3><span>Choices are shown in the order listed.</span></div></div>
+          {selected.options.map(option=><div className="miih-admin-option" key={option.option_value}>
+            <span>{option.option_label}{option.is_active===false?' · Removed':''}</span>
+            <div className="miih-admin-row"><label className="miih-toggle-label"><input type="checkbox" disabled={!editable||busy} checked={option.is_active!==false} onChange={event=>void changeOption(option,event.target.checked)}/> Available</label>
+              {editable&&can('FORM_EDIT')&&option.is_active!==false&&<AdminIconButton icon="delete" label={`Delete choice: ${option.option_label}`} disabled={busy} onClick={()=>void deleteOption(option)}/>}
+            </div>
+          </div>)}
+          {editable&&can('FORM_EDIT')&&(inputType==='SINGLE_SELECT'||inputType==='MULTI_SELECT')&&<div className="miih-form-add-option">
+            <label>New choice<input value={optionLabel} onChange={event=>setOptionLabel(event.target.value)} placeholder="For example: Artificial Intelligence"/></label>
+            <AdminIconButton icon="add" label="Add answer choice" disabled={busy||!optionLabel.trim()} onClick={()=>void addOption()}/>
+          </div>}
+        </section>}
+      </div>:<Empty message="Choose a question on the left to review or edit it."/>}
+    </Panel>
+    </div>
+  </div>
+ </>}
 type ReadinessCheck = {key:string;label:string;ok:boolean;fix:string};
 type Readiness = {edition_code:string;is_internal_test:boolean;ready:boolean;checks:ReadinessCheck[];enabled_domains:number;published_form_version:number|null;note:string};
 function RegistrationReadiness({editionId,refresh}:{editionId:string;refresh:number}){
  const {data,loading,error,reload}=useResource<Readiness>(editionId?`/admin/editions/${editionId}/readiness`:null,{edition_code:'',is_internal_test:false,ready:false,checks:[],enabled_domains:0,published_form_version:null,note:''},[refresh]);
  const url=data.is_internal_test?'/register?miih_test=1':'/register';
- return <Panel title="Registration readiness" toolbar={<div className="miih-admin-row"><Badge value={data.ready?'READY':'NEEDS ATTENTION'}/><button className="miih-admin-outline" type="button" onClick={reload}>Recheck</button></div>}>
+ return <Panel title="Registration readiness" toolbar={<div className="miih-admin-row"><Badge value={data.ready?'READY':'NEEDS ATTENTION'}/><AdminIconButton icon="refresh" label="Recheck registration readiness" disabled={loading} onClick={reload}/></div>}>
    <p className="miih-muted-admin">Follow the checklist to open registration. Publishing the event alone does not publish the registration form or activate payments.</p>
    {error&&<ErrorMessage message={error}/>}{loading&&!data.checks.length&&<Loading/>}
    <div className="miih-readiness-list">{data.checks.map(c=><div className={`miih-readiness-item ${c.ok?'ok':'issue'}`} key={c.key}><span aria-hidden="true">{c.ok?'✓':'!'}</span><div><b>{c.label}</b>{!c.ok&&<small>{c.fix}</small>}</div></div>)}</div>
@@ -171,12 +269,23 @@ export function SettingsPage(){const {can,superAdmin,notify}=useAdmin();const {e
      notify(err instanceof Error?err.message:'Domain update failed.');
    }finally{setChangingDomains(old=>old.filter(id=>id!==d.id));}
  }
- const update=(k:keyof Edition,v:unknown)=>{setFormDirty(true);setFields(old=>({...old,[k]:v}));};const inputFields:[keyof Edition,string,string][]=[['title','Event title','text'],['tagline','Tagline','text'],['venue','Venue','text'],['location','Location','text'],['event_mode','Event mode','text'],['starts_at','Event starts','datetime-local'],['ends_at','Event ends','datetime-local'],['registration_opens_at','Registration opens','datetime-local'],['registration_closes_at','Registration closes','datetime-local'],['min_team_size','Minimum team size','number'],['max_team_size','Maximum team size','number'],['default_team_size','Default team size','number']];
+ const update=(k:keyof Edition,v:unknown)=>{setFormDirty(true);setFields(old=>({...old,[k]:v}));};
+ const inputGroups:{title:string;description:string;fields:[keyof Edition,string,string][]}[]=[
+  {title:'Event information',description:'The event name, format and location shown to participants.',fields:[['title','Event title','text'],['tagline','Tagline','text'],['venue','Venue','text'],['location','City or location','text'],['event_mode','Event format','text']]},
+  {title:'Dates and registration window',description:'Set when the event happens and when participants can register.',fields:[['starts_at','Event starts','datetime-local'],['ends_at','Event ends','datetime-local'],['registration_opens_at','Registration opens','datetime-local'],['registration_closes_at','Registration closes','datetime-local']]},
+  {title:'Team size',description:'Choose the allowed team size and the suggested starting size.',fields:[['min_team_size','Minimum members','number'],['max_team_size','Maximum members','number'],['default_team_size','Suggested members','number']]},
+ ];
  return <><PageHeader eyebrow="EVENT CONFIGURATION" title="Hackathon Settings" description="Edit the event title, dates, venue and eligibility shown to visitors. Save to update the registration page without reloading." actions={<EditionSelect editions={editions} editionId={editionId} onChange={value=>{setFormDirty(false);setEditionId(value);}}/>}/>
  <p className="miih-muted-admin">{isInternalTest?'You are editing the private test event. These changes appear only in the private test preview.':'You are editing the public event shown on the registration page.'} <a href={isInternalTest?'/register?miih_test=1':'/register'} target="_blank" rel="noopener noreferrer">View this event</a></p>
  <RegistrationReadiness editionId={editionId} refresh={readinessRefresh}/>
  <ProblemStatementsPanel key={editionId} editionId={editionId}/>
- <Panel title={isInternalTest?'Private Test Event Details':'Public Registration Page Details'} toolbar={<Badge value={edition?.status||'DRAFT'}/>}><p role="status"><strong>{edition?.edition_code}</strong> - {isInternalTest?'These fields belong to the private test event. They do not appear on /register.':'These fields appear on /register after saving.'} <a href={isInternalTest?'/register?miih_test=1':'/register'} target="_blank" rel="noopener noreferrer">View saved details</a></p>{isInternalTest&&<button className="miih-admin-outline" type="button" disabled={busy} onClick={()=>{const publicEdition=editions.find(e=>e.edition_code==='MIIH_UPCOMING');if(publicEdition){setFormDirty(false);setEditionId(publicEdition.id);}}}>Edit public event instead</button>}<div className="miih-admin-form-grid">{inputFields.map(([k,label,type])=><label key={k}>{label}{type==='datetime-local'?<ThemedDateTime withTime disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={localDateTime(fields[k])} onChange={v=>update(k,v?new Date(v).toISOString():null)}/>:<input type={type} disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={first(fields[k])} onChange={e=>update(k,type==='number'?Number(e.target.value):e.target.value)}/>}</label>)}{(['description','eligibility_text','guidelines_text'] as const).map(k=><label className="miih-admin-wide" key={k}>{k.replace(/_/g,' ')}<textarea rows={3} disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={first(fields[k])} onChange={e=>update(k,e.target.value)}/></label>)}</div><div className="miih-admin-row">{can('EVENT_EDIT')&&<button className="miih-admin-primary" disabled={busy||!editionId||fieldsEditionId!==editionId} onClick={saveEdition}>Save event details</button>}{superAdmin&&<><button className="miih-admin-outline" disabled={busy||!editionId||fieldsEditionId!==editionId} onClick={()=>publishEdition(false)}>Publish event info</button><button className="miih-admin-outline" disabled={busy||!editionId||fieldsEditionId!==editionId} onClick={()=>publishEdition(true)}>Open registration</button></>}</div><p className="miih-muted-admin">Saving {edition?.edition_code}: {isInternalTest?'private test preview only':'public /register page'}. Publishing a registration form is managed separately under Registration Form.</p></Panel>
+ <Panel title={isInternalTest?'Private Test Event Details':'Public Registration Page Details'} toolbar={<Badge value={edition?.status||'DRAFT'}/>}><p role="status"><strong>{edition?.edition_code}</strong> - {isInternalTest?'These fields belong to the private test event. They do not appear on /register.':'These fields appear on /register after saving.'} <a href={isInternalTest?'/register?miih_test=1':'/register'} target="_blank" rel="noopener noreferrer">View saved details</a></p>
+ {isInternalTest&&<AdminIconButton icon="edit" label="Switch to public event" disabled={busy} onClick={()=>{const publicEdition=editions.find(e=>e.edition_code==='MIIH_UPCOMING');if(publicEdition){setFormDirty(false);setEditionId(publicEdition.id);}}}/>}
+ <div className="miih-settings-sections">{inputGroups.map(group=><section className="miih-settings-section" key={group.title}><div><h3>{group.title}</h3><p className="miih-muted-admin">{group.description}</p></div><div className="miih-admin-form-grid">{group.fields.map(([key,label,type])=><label key={key}>{label}{type==='datetime-local'?<ThemedDateTime withTime disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={localDateTime(fields[key])} onChange={value=>update(key,value?new Date(value).toISOString():null)}/>:<input type={type} disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={first(fields[key])} onChange={event=>update(key,type==='number'?Number(event.target.value):event.target.value)}/>}</label>)}</div></section>)}
+  <section className="miih-settings-section"><div><h3>Information for participants</h3><p className="miih-muted-admin">These details explain the event, who can join, and the participation guidelines.</p></div><div className="miih-admin-form-grid">{(['description','eligibility_text','guidelines_text'] as const).map(key=><label className="miih-admin-wide" key={key}>{key==='description'?'Event description':key==='eligibility_text'?'Who can participate?':'Participation guidelines'}<textarea rows={3} disabled={!can('EVENT_EDIT')||busy||!editionId||fieldsEditionId!==editionId} value={first(fields[key])} onChange={event=>update(key,event.target.value)}/></label>)}</div></section>
+ </div>
+ <div className="miih-settings-actions">{can('EVENT_EDIT')&&<button className="miih-admin-primary" disabled={busy||!editionId||fieldsEditionId!==editionId||!formDirty} onClick={saveEdition}><Icon name="save"/>{busy?'Saving…':'Save event details'}</button>}{superAdmin&&<><button className="miih-admin-outline" disabled={busy||!editionId||fieldsEditionId!==editionId} onClick={()=>publishEdition(false)}>Publish event information</button><button className="miih-admin-outline" disabled={busy||!editionId||fieldsEditionId!==editionId} onClick={()=>publishEdition(true)}>Open registration</button></>}</div>
+ <p className="miih-muted-admin">Saving {edition?.edition_code}: {isInternalTest?'private test preview only':'public /register page'}. Publishing a registration form is managed separately under Registration Form.</p></Panel>
  <Panel title="Hackathon domains"><p className="miih-muted-admin">Click a domain to enable or disable it for the selected event. Changes save immediately; no page refresh needed.</p><ErrorMessage message={domains.error}/><div className="miih-domain-grid">{domains.data.map(d=>{
     const enabled=domainOverrides[`${editionId}:${d.id}`]??(d.is_enabled!==false);
     return <label className={`miih-domain-toggle miih-domain-card ${enabled?'enabled':'disabled'}`} key={d.id}>

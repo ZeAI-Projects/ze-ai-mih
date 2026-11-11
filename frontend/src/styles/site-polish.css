@@ -6,6 +6,7 @@ html { scroll-padding-top: calc(var(--header-height, 88px) + 20px); }
 .site-header .brand { width: auto; max-width: calc(100% - 60px); }
 .site-header .season-brand { gap: 12px; }
 .site-header .primary-nav > a { padding-inline: 8px; border-radius: 8px; }
+.site-header .theme-toggle { border-radius: 8px; }
 .site-header .primary-nav > a[aria-current] { background: var(--lavender); text-decoration-thickness: 2px; }
 .site-header .menu-toggle { flex: 0 0 44px; background: var(--lavender); }
 .site-header .labx-original { flex-shrink: 0; width: 76px; height: 38px; }
@@ -13,15 +14,15 @@ html { scroll-padding-top: calc(var(--header-height, 88px) + 20px); }
 .zeai-crop, .india-crop { background: transparent; }
 .site-footer .brand-image--footer img { filter: none; opacity: 1; }
 .site-footer .brand-image { background: transparent; }
-@media (prefers-color-scheme: light) {
-  .site-header .labx-original { background: transparent; }
-  .site-header .labx-original img { filter: url(#labx-light-ink); }
-  .zeai-crop img, .india-crop img, .site-footer .brand-image img { mix-blend-mode: multiply; }
-}
-@media (prefers-color-scheme: dark) {
-  .labx-original img { filter: none; }
-  .zeai-crop img, .india-crop img, .site-footer .brand-image img { filter: brightness(1.25); }
-}
+:root[data-theme='light'] .site-header .labx-original { background: transparent; }
+:root[data-theme='light'] .site-header .labx-original img { filter: url(#labx-light-ink); }
+:root[data-theme='light'] .zeai-crop img,
+:root[data-theme='light'] .india-crop img,
+:root[data-theme='light'] .site-footer .brand-image img { mix-blend-mode: multiply; }
+:root[data-theme='dark'] .labx-original img { filter: none; }
+:root[data-theme='dark'] .zeai-crop img,
+:root[data-theme='dark'] .india-crop img,
+:root[data-theme='dark'] .site-footer .brand-image img { filter: brightness(1.25); }
 
 /* Consistent public cards, type and controls. */
 main .section { padding-block: var(--section-space); }
@@ -104,7 +105,8 @@ main .season-rewards .reward-card:first-child p { color: var(--purple-dark); }
 .site-footer a { transition: color 160ms ease, transform 160ms ease, background-color 160ms ease; }
 .site-footer a:focus-visible { outline-color: var(--purple); }
 @media (hover: hover) {
-  .site-header .primary-nav > a:hover { background: var(--lavender); color: var(--purple-dark); }
+  .site-header .primary-nav > a:hover,
+  .site-header .theme-toggle:hover { background: var(--lavender); color: var(--purple-dark); }
   main .button-primary:hover { background: var(--control-hover); }
   main .button-secondary:hover { background: var(--lavender); border-color: var(--purple); }
   .domain-section .challenge-domains button:hover { transform: translateY(-3px); border-color: var(--purple); box-shadow: var(--shadow-hover); }
@@ -125,6 +127,8 @@ main .season-rewards .reward-card:first-child p { color: var(--purple-dark); }
   .site-header .labx-original { width: 44px; height: 28px; }
   .site-header .zeai-hash { font-size: 12px; }
   .site-header .brand-divider { height: 16px; }
+  .site-header .header-inner { gap: 6px; }
+  .site-header .header-controls { gap: 8px; }
   .season-next .season-next-pool, #replay .flight-experience.flight-ready .destination-copy { padding: 22px 20px; }
   #register .participation-faqs summary { padding: 18px; font-size: 15px; }
   #register .participation-faqs p { padding: 0 18px 20px; }

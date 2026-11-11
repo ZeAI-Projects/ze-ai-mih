@@ -1,12 +1,34 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode, type FormEvent } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { get, getSession, post, setSession, type AdminProfile, type Session } from '@/lib/miihApi';
+import { Icon } from '@/components/ui/Icon';
 import './styles/admin.css';
 import { AdminDialogHost } from './AdminDialogs';
+import type { Theme } from '@/hooks/use_theme';
 
 export type AdminContextValue = { profile:AdminProfile;permissions:Set<string>;superAdmin:boolean;can:(permission:string)=>boolean;logout:()=>void;notify:(message:string)=>void;updateProfile:(name:string)=>void };
 const Context=createContext<AdminContextValue|null>(null);
 export function useAdmin(){const ctx=useContext(Context);if(!ctx)throw new Error('Missing AdminContext');return ctx;}
+export function AdminIconButton({label,onClick,disabled=false,icon}:{label:string;onClick:()=>void;disabled?:boolean;icon:'add'|'edit'|'delete'|'refresh'|'save'}) {
+  return <button type="button" className="miih-admin-icon-button" aria-label={label} title={label} disabled={disabled} onClick={onClick}><Icon name={icon}/></button>;
+}
+const ADMIN_THEME_KEY='miih.admin.theme';
+function getSavedAdminTheme():Theme|null {
+  try {
+    const saved=window.localStorage.getItem(ADMIN_THEME_KEY);
+    return saved==='light'||saved==='dark'?saved:null;
+  } catch(error) {
+    console.warn('Unable to read the saved admin theme preference.',error);
+    return null;
+  }
+}
+function getSystemAdminTheme():Theme {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function getInitialAdminTheme() {
+  const saved=getSavedAdminTheme();
+  return {theme:saved??getSystemAdminTheme(),hasPreference:saved!==null};
+}
 function unwrap<T>(value:unknown):T {if(value && typeof value==='object' && 'data' in value)return (value as {data:T}).data;return value as T;}
 export function useResource<T>(path:string|null,initial:T,watch:unknown[]=[]){
   const [data,setData]=useState<T>(initial);
@@ -65,6 +87,8 @@ export function AdminPortal(){
   const [profile,setProfile]=useState<AdminProfile|null>(null);
   const [permissions,setPermissions]=useState<Set<string>>(new Set());
   const [authState,setAuthState]=useState<'loading'|'guest'|'pending'|'ready'>('loading');
+  const [adminThemeState,setAdminThemeState]=useState(getInitialAdminTheme);
+  const {theme:adminTheme,hasPreference:hasAdminThemePreference}=adminThemeState;
   const [notice,setNotice]=useState('');
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const location=useLocation();const navigate=useNavigate();
@@ -77,6 +101,22 @@ export function AdminPortal(){
     }catch(err){if(err instanceof Error && ('status' in err) && (err as {status:number}).status===403){setAuthState('pending');}else{setAuthState('guest');setSession(null);}}
   }
   useEffect(()=>{void bootstrap();},[]);
+  useEffect(()=>{
+    if(!hasAdminThemePreference)return;
+    try {
+      window.localStorage.setItem(ADMIN_THEME_KEY,adminTheme);
+    } catch(error) {
+      console.warn('Unable to save the admin theme preference.',error);
+    }
+  },[adminTheme,hasAdminThemePreference]);
+  useEffect(()=>{
+    const preference=window.matchMedia('(prefers-color-scheme: dark)');
+    const onPreferenceChange=(event:MediaQueryListEvent)=>{
+      if(!hasAdminThemePreference)setAdminThemeState(current=>({...current,theme:event.matches?'dark':'light'}));
+    };
+    preference.addEventListener('change',onPreferenceChange);
+    return()=>preference.removeEventListener('change',onPreferenceChange);
+  },[hasAdminThemePreference]);
   useEffect(()=>{setSidebarOpen(false);},[location.pathname]);
   useEffect(()=>{
     if(authState!=='ready')return;
@@ -107,24 +147,36 @@ export function AdminPortal(){
 
   useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),4500);return()=>window.clearTimeout(timer);},[notice]);
   const ctx=useMemo<AdminContextValue|null>(()=> profile?({profile,permissions,superAdmin:profile.role==='SUPER_ADMIN',can:(perm:string)=>profile.role==='SUPER_ADMIN'||perm==='ANY'||permissions.has(perm),logout,notify:setNotice,updateProfile:(name:string)=>setProfile(current=>current?{...current,full_name:name}:current)}):null,[profile,permissions]);
-  if(authState==='loading')return <div className="miih-admin miih-admin-loading">Loading secure admin workspace…</div>;
-  if(authState==='guest'||authState==='pending'||!ctx)return <AdminAuth pending={authState==='pending'} onAuthenticated={bootstrap}/>;
+  if(authState==='loading')return <div className="miih-admin miih-admin-loading" data-admin-theme={adminTheme}>Loading secure admin workspace…</div>;
+  if(authState==='guest'||authState==='pending'||!ctx)return <AdminAuth pending={authState==='pending'} onAuthenticated={bootstrap} theme={adminTheme}/>;
   const approvedProfile = ctx.profile;
   const sections=[navigation.slice(0,6),navigation.slice(6,-1),navigation.slice(-1)];
-  return <Context.Provider value={ctx}><div className="miih-admin">
+  return <Context.Provider value={ctx}><div className="miih-admin" data-admin-theme={adminTheme}>
     <aside className={`miih-admin-sidebar ${sidebarOpen?'is-open':''}`} aria-label="Admin navigation">
       <NavLink className="miih-admin-brand" to="/admin/dashboard"><span className="miih-admin-logo">#</span><span><b>Made in India</b><small>Hackathon administration</small></span></NavLink>
       <div className="miih-side-divider"/>
-      {sections.map((group,i)=><div className="miih-sidebar-group" key={i}><span className="miih-sidebar-caption">{['OPERATIONS','MANAGEMENT','ACCOUNT'][i]}</span>{group.filter(item=>ctx.can(item.permission)).map(item=><NavLink key={item.slug} to={`/admin/${item.slug}`} className={({isActive})=>`miih-side-link ${isActive?'selected':''}`}><span>{item.symbol}</span>{item.name}</NavLink>)}</div>)}
-      <div className="miih-sidebar-bottom"><div className="miih-sidebar-avatar">{approvedProfile.full_name.slice(0,1).toUpperCase()}</div><div><b>{approvedProfile.full_name}</b><small>{approvedProfile.role==='SUPER_ADMIN'?'Super Admin':'Admin'}</small></div><button type="button" onClick={logout} title="Sign out">⇥</button></div>
+      <nav className="miih-sidebar-navigation" aria-label="Admin pages">
+        {sections.map((group,i)=><div className="miih-sidebar-group" key={i}><span className="miih-sidebar-caption">{['OPERATIONS','MANAGEMENT','ACCOUNT'][i]}</span>{group.filter(item=>ctx.can(item.permission)).map(item=><NavLink key={item.slug} to={`/admin/${item.slug}`} className={({isActive})=>`miih-side-link ${isActive?'selected':''}`}><span>{item.symbol}</span>{item.name}</NavLink>)}</div>)}
+      </nav>
+      <div className="miih-sidebar-bottom">
+        <div className="miih-sidebar-avatar" aria-hidden="true">{approvedProfile.full_name.slice(0,1).toUpperCase()}</div>
+        <div className="miih-sidebar-account-details"><b title={approvedProfile.full_name}>{approvedProfile.full_name}</b><small>{approvedProfile.role==='SUPER_ADMIN'?'Super Admin':'Admin'}</small></div>
+        <button type="button" onClick={logout} aria-label="Sign out" title="Sign out">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H5v14h5m5-4 4-3-4-3m4 3H9" /></svg>
+        </button>
+      </div>
     </aside>
-    <div className="miih-admin-main"><header className="miih-admin-topbar"><button className="miih-mobile-toggle" type="button" onClick={()=>setSidebarOpen(v=>!v)}>☰ Menu</button><span className="miih-admin-top-label">ZeAI / Made in India <b>· Admin workspace</b></span><span className="miih-admin-top-status"><i/> {approvedProfile.role==='SUPER_ADMIN'?'Super Admin':'Approved Admin'}</span><a href="/register" target="_blank" rel="noopener noreferrer">View public site ↗</a></header>
+    <div className="miih-admin-main"><header className="miih-admin-topbar"><button className="miih-mobile-toggle" type="button" onClick={()=>setSidebarOpen(v=>!v)}>☰ Menu</button><span className="miih-admin-top-label">ZeAI / Made in India <b>· Admin workspace</b></span><span className="miih-admin-top-status"><i/> {approvedProfile.role==='SUPER_ADMIN'?'Super Admin':'Approved Admin'}</span><a href="/register" target="_blank" rel="noopener noreferrer">View public site ↗</a><button type="button" className="miih-admin-theme-toggle" aria-label={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} title={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} onClick={()=>setAdminThemeState(current=>({theme:current.theme==='dark'?'light':'dark',hasPreference:true}))}>
+      {adminTheme==='dark'
+        ? <svg data-theme-icon="sun" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
+        : <svg data-theme-icon="moon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z" /></svg>}
+    </button></header>
       <div className="miih-admin-content"><Outlet/></div>
     </div>
     {notice&&<div className="miih-admin-toast" role="status">{notice}<button type="button" onClick={()=>setNotice('')} aria-label="Dismiss">×</button></div>}
-  </div><AdminDialogHost /></Context.Provider>;
+  </div><AdminDialogHost theme={adminTheme}/></Context.Provider>;
 }
-function AdminAuth({pending,onAuthenticated}:{pending:boolean;onAuthenticated:()=>Promise<void>}){
+function AdminAuth({pending,onAuthenticated,theme}:{pending:boolean;onAuthenticated:()=>Promise<void>;theme:Theme}){
   const [mode,setMode]=useState<'login'|'signup'|'apply'|'pending'>(pending?'pending':'login');
   const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [name,setName]=useState('');const [error,setError]=useState('');const [info,setInfo]=useState('');const [busy,setBusy]=useState(false);
   useEffect(()=>{if(!pending)return;let active=true;void get<unknown>('/admin/application-status',true).then(value=>{if(!active)return;const result=unwrap<{approval_status:string}>(value);setMode(result.approval_status==='NOT_APPLIED'?'apply':'pending');setInfo(result.approval_status==='NOT_APPLIED'?'Enter your name and submit to appear in the Super Admin approval list.':`Application status: ${result.approval_status}.`);}).catch(error=>{if(active)setError(error instanceof Error?error.message:'Unable to load application status');});return()=>{active=false;};},[pending]);
@@ -136,7 +188,7 @@ function AdminAuth({pending,onAuthenticated}:{pending:boolean;onAuthenticated:()
       else {const result=unwrap<{approval_status:string}>(await get<unknown>('/admin/application-status',true));if(result.approval_status==='APPROVED')await onAuthenticated();else if(result.approval_status==='NOT_APPLIED')setMode('apply');else setInfo(`Application status: ${result.approval_status}.`);}
     }catch(e){setError(e instanceof Error?e.message:'Request failed');}finally{setBusy(false);}
   }
-  return <div className="miih-admin miih-auth-screen"><div className="miih-auth-intro"><div className="miih-auth-symbol">#</div><p>ZEAI SOFT / MADE IN INDIA</p><h1>Manage every detail.<br/><em>Protect every entry.</em></h1><span>Secure hackathon administration, editable content, team registrations and permission-based workflows.</span></div>
+  return <div className="miih-admin miih-auth-screen" data-admin-theme={theme}><div className="miih-auth-intro"><div className="miih-auth-symbol">#</div><p>ZEAI SOFT / MADE IN INDIA</p><h1>Manage every detail.<br/><em>Protect every entry.</em></h1><span>Secure hackathon administration, editable content, team registrations and permission-based workflows.</span></div>
     <form className="miih-auth-card" onSubmit={action}><p className="miih-kicker">ADMIN PORTAL</p><h2>{mode==='login'?'Administrator sign in':mode==='signup'?'Request admin access':mode==='apply'?'Complete access request':'Waiting for approval'}</h2><p>{mode==='login'?'Sign in to manage the hackathon. New staff can request access for Super Admin approval.':mode==='signup'?'Create an account to request access. You cannot enter the dashboard until a Super Admin approves you.':'Your request is subject to Super Admin approval.'}</p>
       {(mode==='login'||mode==='signup')&&<><label>Email address<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@zeaisoft.com"/></label><label>Password<input required minLength={8} type="password" autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)}/></label></>}
       {mode==='apply'&&<label>Full name<input required minLength={2} value={name} onChange={e=>setName(e.target.value)} /></label>}

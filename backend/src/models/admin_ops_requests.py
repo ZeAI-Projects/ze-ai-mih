@@ -36,6 +36,8 @@ class QuestionUpdate(Strict):
     question_label:str|None=None
     description:str|None=None
     placeholder:str|None=None
+    input_type:str|None=None
+    answer_scope:str|None=None
     is_required:bool|None=None
     is_active:bool|None=None
     display_order:int|None=None

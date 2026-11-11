@@ -1,17 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { get, type Edition, type RegistrationConfig } from '@/lib/miihApi';
-import { TeamRegistrationDialog } from '../components/TeamRegistrationDialog';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
 import { ROUTES } from '@/constants/routes';
 import { SITE } from '@/constants/app';
 import { PARTICIPATION_FAQS } from '@/constants/hackathon';
 import { HackathonBenefits } from '@/components/common/HackathonBenefits';
+import { useRegistrationModal } from '../RegistrationModalContext';
 import '../styles/registration.css';
 
 export function RegisterPage({ embedded = false }: { embedded?: boolean }) {
-  const [registrationOpen, setRegistrationOpen] = useState(false);
-  const closeRegistration=useCallback(()=>setRegistrationOpen(false),[]);
+  const openRegistration = useRegistrationModal();
   const [edition,setEdition] = useState<Edition|null>(null);
   const [loadError,setLoadError]=useState('');
   const [blocks,setBlocks]=useState<Array<{block_key:string;block_type:string;title:string;body:string}>>([]);
@@ -133,7 +132,7 @@ export function RegisterPage({ embedded = false }: { embedded?: boolean }) {
               type="button"
               data-registration-status=""
               disabled={!open}
-              onClick={() => setRegistrationOpen(true)}
+              onClick={openRegistration}
             >
               Register here <Icon name="arrow" />
             </button>
@@ -225,7 +224,6 @@ export function RegisterPage({ embedded = false }: { embedded?: boolean }) {
         </div>
       </section>
 
-      <TeamRegistrationDialog open={registrationOpen} onClose={closeRegistration} />
     </>
   );
 }

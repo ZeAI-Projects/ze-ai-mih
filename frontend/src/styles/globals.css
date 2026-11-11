@@ -113,6 +113,11 @@ main:focus {
   justify-content: space-between;
   gap: 40px;
 }
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
 .brand {
   display: block;
   width: 340px;
@@ -151,7 +156,31 @@ main:focus {
   padding-block: 15px;
   transition: color 0.2s;
 }
+.site-header .theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.site-header .theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .primary-nav > a:hover,
+.site-header .theme-toggle:hover,
 .primary-nav > a[aria-current] {
   color: var(--purple-deep);
 }
@@ -1045,6 +1074,9 @@ main:focus {
     gap: 25px;
     min-height: 96px;
   }
+  .header-controls {
+    gap: 16px;
+  }
   .brand {
     width: 300px;
   }
@@ -1165,6 +1197,9 @@ main:focus {
   }
   .primary-nav > a {
     padding: 15px 7px;
+  }
+  .site-header .theme-toggle {
+    padding: 8px;
   }
   .primary-nav > a[aria-current]::after {
     left: 7px;

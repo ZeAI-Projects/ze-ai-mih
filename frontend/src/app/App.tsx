@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -6,14 +6,67 @@ import { PublishedContentBridge } from '@/features/cms/PublishedContentBridge';
 import { MobileActionBar } from '@/components/layout/MobileActionBar';
 import { useReducedMotion } from '@/hooks/use_reduced_motion';
 import { PAGE_METADATA, NOT_FOUND_METADATA } from '@/constants/routes';
+import { RegistrationModalContext } from '@/features/registration/RegistrationModalContext';
+import { ThemeContext, type Theme } from '@/hooks/use_theme';
+
+const TeamRegistrationDialog = lazy(() =>
+  import('@/features/registration/components/TeamRegistrationDialog').then((module) => ({
+    default: module.TeamRegistrationDialog,
+  })),
+);
+
+function getThemePreference(): Theme | null {
+  try {
+    const saved = window.localStorage.getItem('miih.theme');
+    return saved === 'light' || saved === 'dark' ? saved : null;
+  } catch (error) {
+    console.warn('Unable to read the saved theme preference.', error);
+    return null;
+  }
+}
+
+function getInitialTheme(): Theme {
+  return getThemePreference() ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
 
 export function App() {
   const location = useLocation();
   const reducedMotion = useReducedMotion();
   const mainRef = useRef<HTMLElement>(null);
   const previousPath = useRef(location.pathname);
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [hasThemePreference, setHasThemePreference] = useState(() => getThemePreference() !== null);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [registrationMounted, setRegistrationMounted] = useState(false);
   const path = location.pathname.replace(/\/$/, '') || '/';
   const metadata = PAGE_METADATA[path] ?? NOT_FOUND_METADATA;
+  const openRegistration = useCallback(() => {
+    setRegistrationMounted(true);
+    setRegistrationOpen(true);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    window.dispatchEvent(new Event('miih:theme-change'));
+    if (hasThemePreference) {
+      try {
+        window.localStorage.setItem('miih.theme', theme);
+      } catch (error) {
+        console.warn('Unable to save the theme preference.', error);
+      }
+    }
+  }, [theme, hasThemePreference]);
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-color-scheme: dark)');
+    const onPreferenceChange = (event: MediaQueryListEvent) => {
+      if (!hasThemePreference) setTheme(event.matches ? 'dark' : 'light');
+    };
+    preference.addEventListener('change', onPreferenceChange);
+    return () => preference.removeEventListener('change', onPreferenceChange);
+  }, [hasThemePreference]);
 
   useEffect(() => {
     document.title = metadata.title;
@@ -75,14 +128,24 @@ export function App() {
   }, [location.pathname, reducedMotion]);
 
   return (
-    <>
+    <ThemeContext.Provider value={theme}>
+    <RegistrationModalContext.Provider value={openRegistration}>
       <PublishedContentBridge />
-      <Header />
+      <Header theme={theme} onThemeChange={() => {
+        setHasThemePreference(true);
+        setTheme((current) => current === 'dark' ? 'light' : 'dark');
+      }} />
       <main id="main" ref={mainRef} tabIndex={-1}>
         <Outlet />
       </main>
       <Footer />
       <MobileActionBar />
-    </>
+      {registrationMounted && (
+        <Suspense fallback={null}>
+          <TeamRegistrationDialog open={registrationOpen} onClose={() => setRegistrationOpen(false)} />
+        </Suspense>
+      )}
+    </RegistrationModalContext.Provider>
+    </ThemeContext.Provider>
   );
 }

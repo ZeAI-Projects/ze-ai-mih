@@ -8,6 +8,7 @@ import { MediaViewer, type MediaSelection } from '../components/MediaViewer';
 import { PhotoRail } from '../components/PhotoRail';
 import { GallerySpotlight } from '../components/GallerySpotlight';
 import { AutoplayVideoCard } from '../components/AutoplayVideoCard';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import '../styles/gallery.css';
 
 const IDEA_SPARKS = [
@@ -19,6 +20,7 @@ const IDEA_SPARKS = [
 ];
 
 export function GalleryPage() {
+  const openRegistration = useRegistrationModal();
   const reducedMotion = useReducedMotion();
   const [selection, setSelection] = useState<MediaSelection>(null);
   const [newMedia,setNewMedia]=useState<Array<{key:string;url:string;kind:'IMAGE'|'VIDEO';label:string;category:string;alt_text?:string}>>([]);
@@ -189,7 +191,7 @@ export function GalleryPage() {
               <h2 id="gallery-next-title">Ready to make your own moment?</h2>
               <p>Bring your curiosity. Find your people. Build something that matters.</p>
             </div>
-            <Link className="button button-primary" to="/#register">
+            <Link className="button button-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>
               Create your 2027 moment <Icon name="arrow" />
             </Link>
           </aside>

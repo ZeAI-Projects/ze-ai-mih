@@ -49,6 +49,21 @@ const icons = {
   ),
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   close: <path d="m6 6 12 12M6 18 18 6" />,
+  add: <path d="M12 5v14m-7-7h14" />,
+  edit: <path d="m14 5 5 5M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" />,
+  delete: <path d="M4 7h16m-10 4v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" />,
+  refresh: (
+    <>
+      <path d="M20 7v5h-5M4 17v-5h5" />
+      <path d="M5.6 9A7 7 0 0 1 18 6l2 2M4 16l2 2a7 7 0 0 0 12.4-3" />
+    </>
+  ),
+  save: (
+    <>
+      <path d="M5 3h12l4 4v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+      <path d="M7 3v6h10V3M8 21v-8h8v8" />
+    </>
+  ),
 };
 
 interface IconProps extends SVGProps<SVGSVGElement> {
