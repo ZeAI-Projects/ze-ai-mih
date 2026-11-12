@@ -107,6 +107,11 @@ async def question_update(db,admin,qid,payload):
       WHERE q.id=:qid''',{'qid':qid})
     if not q:raise HTTPException(404,'Question not found')
     if q['status']!='DRAFT':raise HTTPException(409,'Clone a new draft version to edit a published form')
+    allowed_input_types={'TEXT','TEXTAREA','EMAIL','PHONE','DATE','NUMBER','URL','SINGLE_SELECT','MULTI_SELECT','BOOLEAN','IMAGE','FILE','DERIVED'}
+    if 'input_type' in changes and changes['input_type'] not in allowed_input_types:
+        raise HTTPException(422,'Unsupported input type')
+    if 'answer_scope' in changes and changes['answer_scope'] not in {'TEAM','MEMBER','LEADER','PITCH'}:
+        raise HTTPException(422,'Unsupported answer scope')
     import json
     for key in ('validation_rules','visibility_rules'):
         if key in changes:changes[key]=json.dumps(changes[key])
@@ -124,7 +129,7 @@ async def add_question(db,admin,section_id,payload):
      JOIN public.form_versions v ON v.id=s.form_version_id WHERE s.id=:id''',{'id':section_id})
     if not sec:raise HTTPException(404,'Section not found')
     if sec['status']!='DRAFT':raise HTTPException(409,'Only draft forms can be edited')
-    if payload.input_type not in {'TEXT','TEXTAREA','EMAIL','PHONE','DATE','NUMBER','URL','SINGLE_SELECT','MULTI_SELECT','BOOLEAN','FILE','DERIVED'} or payload.answer_scope not in {'TEAM','MEMBER','LEADER','PITCH'}:
+    if payload.input_type not in {'TEXT','TEXTAREA','EMAIL','PHONE','DATE','NUMBER','URL','SINGLE_SELECT','MULTI_SELECT','BOOLEAN','IMAGE','FILE','DERIVED'} or payload.answer_scope not in {'TEAM','MEMBER','LEADER','PITCH'}:
         raise HTTPException(422,'Unsupported input type or answer scope')
     row=await one(db,'''INSERT INTO public.form_questions
       (section_id,field_key,question_label,input_type,answer_scope,is_required,display_order,created_by)

@@ -6,19 +6,23 @@ import type { FlightController, FlightPhase } from './flight3d';
 import './flight_experience.css';
 
 import { useFlightEnvironment } from './flightEnvironment';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 const labels: Record<FlightPhase, string> = {
   entry: 'Your journey to Malaysia has begun.',
   cruise: 'Cruising toward Kuala Lumpur.',
   flyover: 'Flying above Kuala Lumpur.',
   exit: 'Arriving in Malaysia.',
 };
+const launchCopy = 'SWIPE TO TAKE OFF →';
 
 export default function FlightExperience() {
+  const openRegistration = useRegistrationModal();
   const reduced = useReducedMotion();
   const { environment, prepare } = useFlightEnvironment();
   const [state, setState] = useState<'ready' | 'flying' | 'arrived'>('ready');
   const [phase, setPhase] = useState<FlightPhase | 'loading'>('loading');
   const [progress, setProgress] = useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [run, setRun] = useState(0);
@@ -128,7 +132,7 @@ export default function FlightExperience() {
       {!reduced && <div className="prize-burst" aria-hidden="true"><span className="prize-ring" />{Array.from({length:12},(_,i)=><i key={i} style={{'--burst-angle': `${i*30}deg`} as CSSProperties} />)}</div>}
       <span className="season-tag">MALAYSIA UNLOCKED</span><strong>₹20,00,000</strong><span>TOTAL PRIZE POOL — 2027</span>
       <p>₹10,00,000 GRAND WINNER</p><small>Malaysia trip for three grand-winning members.</small>
-      <Link className="button button-primary" to="/#register">REGISTER FOR 2027 →</Link>
+      <Link className="button button-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>REGISTER FOR 2027 →</Link>
       <button className="text-link" type="button" onClick={launch}>Replay flight ↻</button>
     </div>;
 
@@ -173,6 +177,7 @@ export default function FlightExperience() {
           style={{ '--launch-progress': progress / 100 } as CSSProperties}
           onPointerDown={event => {
             if (!event.isPrimary || event.button !== 0 || locked.current) return;
+            setTrackWidth(event.currentTarget.clientWidth);
             start.current = { x: event.clientX, id: event.pointerId }; amount.current = 0;
             setDragging(true); event.currentTarget.setPointerCapture(event.pointerId);
           }}
@@ -187,7 +192,13 @@ export default function FlightExperience() {
             start.current = null; amount.current = 0; setDragging(false); if (!locked.current) setProgress(0);
           }}
           onPointerCancel={() => { start.current = null; amount.current = 0; setDragging(false); if (!locked.current) setProgress(0); }}>
-          <span className="swipe-fill" /><span className="launch-track-copy">SWIPE TO TAKE OFF →</span>
+          <span className="swipe-fill" />
+          <span className="launch-track-copy" aria-hidden="true">{Array.from(launchCopy).map((letter, index) => {
+            const letterPosition = trackWidth
+              ? (36 + ((index + 0.5) / launchCopy.length) * (trackWidth - 144)) / (trackWidth - 72)
+              : 0.5;
+            return <span key={index} style={{ '--letter-progress': letterPosition } as CSSProperties}>{letter}</span>;
+          })}</span>
           <span className="launch-handle" aria-hidden="true">✈</span>
           <span className="launch-markers" aria-hidden="true">{[20, 40, 60, 80].map(value => <i key={value} className={progress >= value ? 'active' : ''} />)}</span>
           <progress max="100" value={progress} aria-label="Flight launch progress" />

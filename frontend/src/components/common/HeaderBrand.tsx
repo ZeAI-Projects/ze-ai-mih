@@ -1,13 +1,16 @@
 import logo from '@/assets/images/header-brand.webp';
 import darkLogo from '@/assets/images/made-in-india-logo-footer.png';
 import labx from '@/assets/images/labx-transparent.png';
+import { useTheme } from '@/hooks/use_theme';
 
 export function ZeaiMark() {
-  return <span className="zeai-crop"><picture><source media="(prefers-color-scheme: dark)" srcSet={darkLogo} /><img src={logo} alt="ZeAI Soft" width="2170" height="725" /></picture></span>;
+  const theme = useTheme();
+  return <span className="zeai-crop"><img src={theme === 'dark' ? darkLogo : logo} alt="ZeAI Soft" width="2170" height="725" /></span>;
 }
 
 export function MadeInIndiaMark() {
-  return <span className="india-crop"><picture><source media="(prefers-color-scheme: dark)" srcSet={darkLogo} /><img src={logo} alt="#MadeInIndia" width="2170" height="725" /></picture></span>;
+  const theme = useTheme();
+  return <span className="india-crop"><img src={theme === 'dark' ? darkLogo : logo} alt="#MadeInIndia" width="2170" height="725" /></span>;
 }
 
 export function HeaderBrand() {

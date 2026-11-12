@@ -5,7 +5,7 @@ const sources = {
   dark: '/media/flight/tower1.webp',
 };
 type Theme = keyof typeof sources;
-const systemTheme = (): Theme => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+const systemTheme = (): Theme => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
 const decoded = new Map<string, Promise<void>>();
 function preload(src: string) {
   if (!decoded.has(src)) {
@@ -35,7 +35,8 @@ export function useFlightEnvironment() {
     const query = window.matchMedia('(prefers-color-scheme: dark)');
     const change = () => { void prepare().catch(() => { /* Retain the last usable image. */ }); };
     change(); query.addEventListener('change', change);
-    return () => { invalidate(); query.removeEventListener('change', change); };
+    window.addEventListener('miih:theme-change', change);
+    return () => { invalidate(); query.removeEventListener('change', change); window.removeEventListener('miih:theme-change', change); };
   }, [prepare, invalidate]);
   return { environment, prepare };
 }

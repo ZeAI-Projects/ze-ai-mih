@@ -1,7 +1,8 @@
 import { DashboardInsights } from '../DashboardInsights';
 import { AdminExportButton } from '../AdminExportButton';
 import { AdminVisualExportButton } from '../AdminVisualExportButton';
-import { adminConfirm, adminPrompt } from '../AdminDialogs';
+import { adminConfirm, adminFormDialog, adminPrompt } from '../AdminDialogs';
+import { Icon } from '@/components/ui/Icon';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { patch, post, qs } from '@/lib/miihApi';
@@ -41,12 +42,6 @@ export function DashboardPage(){
         <StatCard name="Registered Teams" value={str(data.registered_teams||0)} foot="Submitted registrations"/>
         <StatCard name="Total Participants" value={str(data.participants||0)} foot="Members of submitted teams"/>
         {superAdmin&&<StatCard name="Verified Revenue" value={formatMoney(data.verified_revenue)} foot="Approved teams · verified payments minus refunds"/>}
-        <div className="miih-stat-card miih-pending-summary" aria-label="Pending team approvals">
-          <small>Pending Team Approvals</small>
-          <strong>{str(data.pending_approvals||0)}</strong>
-          <span>Submitted teams awaiting an admin decision</span>
-          {can('TEAMS_VIEW')&&<a className="miih-pending-link" href="/admin/teams?status=PENDING_APPROVAL">Review submissions →</a>}
-        </div>
       </div>
       <Panel title="Teams awaiting approval" toolbar={can('TEAMS_VIEW')?<a className="miih-admin-outline" href="/admin/teams?status=PENDING_APPROVAL">Open Teams →</a>:undefined}>
         {queue.length? <div className="miih-pending-queue">{queue.map(team=><div className="miih-pending-team" key={team.id}>
@@ -59,7 +54,16 @@ export function DashboardPage(){
       </Panel>
       <div className="miih-admin-grid2">
         <Panel title="Quick actions"><div className="miih-quick-links"><a href="/admin/teams">Manage teams →</a>{can('FORM_VIEW')&&<a href="/admin/form">Manage registration form →</a>}{can('SITE_PREVIEW')&&<a href="/admin/studio">Manage website media →</a>}{superAdmin&&<a href="/admin/admins">Manage administrator access →</a>}</div></Panel>
-        <Panel title="Workspace overview"><p className="miih-muted-admin">Team reviews, registrations, exports and event settings are available from the sidebar according to each administrator's permissions.</p></Panel>
+        <Panel title="Workspace overview">
+          <p className="miih-muted-admin">Use this checklist to take the event from setup through registration and review. Available actions depend on your administrator permissions.</p>
+          <ol className="miih-workflow-steps">
+            <li><span><b>1</b></span><div><strong>Set up the event</strong><p>Confirm event dates, team sizes, participant guidance and offered domains.</p></div>{can('EVENT_VIEW')&&<a href="/admin/settings">Settings <span aria-hidden="true">→</span></a>}</li>
+            <li><span><b>2</b></span><div><strong>Prepare the registration form</strong><p>Review the questions, test the participant preview, then publish the draft when it is ready.</p></div>{can('FORM_VIEW')&&<a href="/admin/form">Form <span aria-hidden="true">→</span></a>}</li>
+            <li><span><b>3</b></span><div><strong>Check readiness and open registration</strong><p>Resolve each readiness item before enabling public registration.</p></div>{can('EVENT_VIEW')&&<a href="/admin/settings">Readiness <span aria-hidden="true">→</span></a>}</li>
+            <li><span><b>4</b></span><div><strong>Review submissions and payments</strong><p>Check team details, required files and payment evidence before making a decision.</p></div>{can('TEAMS_VIEW')&&<a href="/admin/teams">Teams <span aria-hidden="true">→</span></a>}</li>
+          </ol>
+          <p className="miih-workflow-note">Use Statistics and Exports for reporting. Website updates and media are managed in Studio.</p>
+        </Panel>
       </div>
       <DashboardInsights/>
     </>}</div>}
@@ -82,8 +86,8 @@ export function TeamsPage(){const [params,setParams]=useSearchParams();const [se
   return <><PageHeader eyebrow="OPERATIONS / TEAMS" title="Registered Teams" description="Filter teams, review registrations and export exactly the records you need." actions={<AdminExportButton datasets={['TEAMS','ANSWERS']} defaultStatus={status}/>}/>
     <Panel toolbar={<FilterBar search={search} onSearch={setSearch} submittedOnly status={status} onStatus={next=>{setStatus(next);setParams(next?{status:next}:{})}} extra={<select aria-label="Filter domain" value={domainId} onChange={e=>setDomainId(e.target.value)}><option value="">All domains</option>{domains.data.map(d=><option key={d.id} value={d.id}>{d.domain_name}</option>)}</select>}/>}>
       <ErrorMessage message={error}/>{loading?<Loading/>:<DataTable rows={data} onSelect={setSelected} columns={[{key:'team_id',label:'Team ID'},{key:'registration_code',label:'Registration reference'},{key:'team_name',label:'Team'},{key:'domain_name',label:'Domain'},{key:'edition',label:'Edition'},{key:'member_count',label:'Members'},{key:'status',label:'Status',render:v=><Badge value={v}/>},{key:'submitted_at',label:'Submitted',render:formatDate}]}/>}</Panel>
-    {selected&&<div className="miih-admin-drawer-backdrop" onClick={()=>setSelected(null)}><aside className="miih-admin-drawer" onClick={e=>e.stopPropagation()}><header><h2>Team details</h2><button onClick={()=>setSelected(null)} aria-label="Close">×</button></header>{detail.loading?<Loading/>:<><h3>{str(detail.data.team_name||selected.team_name)}</h3><p>Registration: {str(detail.data.registration_code||selected.registration_code)}</p><Badge value={detail.data.status||selected.status}/><h4>Team members</h4>{Array.isArray(detail.data.members)&&(detail.data.members as Row[]).map(m=><div className="miih-detail-card" key={str(m.id)}><strong>{str(m.full_name)}</strong><small>{str(m.role)} • {str(m.email)}</small><small>{str(m.mobile)}</small></div>)}{detail.data.private_data_hidden&&<p>Member details are restricted.</p>}<h4>Submitted answers</h4>{Array.isArray(detail.data.answers)&&(detail.data.answers as Row[]).map((a,i)=><div className="miih-answer-detail" key={i}><strong>{str(a.question_label)}</strong><span>{str(a.answer_json)}</span></div>)}{superAdmin&&String(detail.data.status||selected.status)!=='DRAFT'&&<><h4>Payment evidence</h4>{payment.data.map(p=><div key={str(p.id)} className="miih-detail-card"><strong>Transaction: {str(p.transaction_id)}</strong><small>{formatMoney(p.claimed_amount)} · {str(p.status)}</small>{Boolean(p.proof_file_id)&&<PaymentProof id={str(p.proof_file_id)}/>}{p.status==='PENDING'&&<div className="miih-admin-row"><button type="button" onClick={()=>void verifyTeamPayment(p,'VERIFIED')}>Verify payment</button><button type="button" onClick={()=>void verifyTeamPayment(p,'REJECTED')}>Reject proof</button></div>}</div>)}</>}
- {can('REGISTRATION_REVIEW')&&['SUBMITTED','REVIEW'].includes(str(detail.data.status||selected.status))&&<div className="miih-admin-row"><button type="button" onClick={()=>review('APPROVED')}>Approve team</button><button type="button" onClick={()=>review('REVIEW')}>Mark review</button><button type="button" onClick={()=>review('REJECTED')}>Reject team</button></div>}
+    {selected&&<div className="miih-admin-drawer-backdrop" onClick={()=>setSelected(null)}><aside className="miih-admin-drawer" onClick={e=>e.stopPropagation()}><header><h2>Team details</h2><button onClick={()=>setSelected(null)} aria-label="Close">×</button></header>{detail.loading?<Loading/>:<><h3>{str(detail.data.team_name||selected.team_name)}</h3><p>Registration: {str(detail.data.registration_code||selected.registration_code)}</p><Badge value={detail.data.status||selected.status}/><h4>Team members</h4>{Array.isArray(detail.data.members)&&(detail.data.members as Row[]).map(m=><div className="miih-detail-card" key={str(m.id)}><strong>{str(m.full_name)}</strong><small>{str(m.role)} • {str(m.email)}</small><small>{str(m.mobile)}</small></div>)}{detail.data.private_data_hidden&&<p>Member details are restricted.</p>}<h4>Submitted answers</h4>{Array.isArray(detail.data.answers)&&(detail.data.answers as Row[]).map((a,i)=><div className="miih-answer-detail" key={i}><strong>{str(a.question_label)}</strong><span>{str(a.answer_json)}</span></div>)}{superAdmin&&String(detail.data.status||selected.status)!=='DRAFT'&&<><h4>Payment evidence</h4>{payment.data.map(p=><div key={str(p.id)} className="miih-detail-card"><strong>Transaction: {str(p.transaction_id)}</strong><small>{formatMoney(p.claimed_amount)} · {str(p.status)}</small>{Boolean(p.proof_file_id)&&<PaymentProof id={str(p.proof_file_id)}/>}{p.status==='PENDING'&&<div className="miih-admin-row"><button className="miih-admin-primary" type="button" onClick={()=>void verifyTeamPayment(p,'VERIFIED')}>Verify payment</button><button className="miih-admin-outline" type="button" onClick={()=>void verifyTeamPayment(p,'REJECTED')}>Reject proof</button></div>}</div>)}</>}
+ {can('REGISTRATION_REVIEW')&&['SUBMITTED','REVIEW'].includes(str(detail.data.status||selected.status))&&<div className="miih-admin-row"><button className="miih-admin-primary" type="button" onClick={()=>review('APPROVED')}>Approve team</button><button className="miih-admin-outline" type="button" onClick={()=>review('REVIEW')}>Mark review</button><button className="miih-admin-danger" type="button" onClick={()=>review('REJECTED')}>Reject team</button></div>}
  {String(detail.data.status||selected.status)==='DRAFT'&&<p className="miih-muted-admin">Draft registration – no approval actions until the Team Leader submits.</p>}</>}</aside></div>}
   </>}
 export function ParticipantsPage(){const [search,setSearch]=useState('');const [status,setStatus]=useState('');const [selected,setSelected]=useState<Row|null>(null);const {data,error,loading}=useResource<Row[]>(`/admin/participants${qs({search,status,limit:500})}`,[]);const detail=useResource<Row>(selected?`/admin/participants/${selected.id}`:null,{});return <><PageHeader eyebrow="OPERATIONS / PEOPLE" title="Participants" description="Search registered participants, review their teams and export filtered data." actions={<AdminExportButton datasets={['MEMBERS','ANSWERS']} defaultStatus={status}/>}/><Panel toolbar={<FilterBar search={search} onSearch={setSearch} status={status} onStatus={setStatus}/>}><ErrorMessage message={error}/>{loading?<Loading/>:<DataTable rows={data} onSelect={setSelected} columns={[{key:'full_name',label:'Participant'},{key:'role',label:'Team role'},{key:'team_name',label:'Team'},{key:'email',label:'Email'},{key:'mobile',label:'Phone'},{key:'status',label:'Status',render:v=><Badge value={v}/>}]}/>}</Panel>{selected&&<div className="miih-admin-drawer-backdrop" onClick={()=>setSelected(null)}><aside className="miih-admin-drawer" onClick={e=>e.stopPropagation()}><header><h2>Participant profile</h2><button onClick={()=>setSelected(null)}>×</button></header>{detail.loading?<Loading/>:<div>{Object.entries(detail.data).map(([k,v])=><p key={k}><b>{k.replace(/_/g,' ')}</b> : {str(v)}</p>)}</div>}</aside></div>}</>}
@@ -177,38 +181,41 @@ export function ExportsPage(){const {notify,superAdmin}=useAdmin();const [datase
   return <><PageHeader eyebrow="REPORTING / DOWNLOADS" title="Export Sheets" description="Filter each dataset and export clean XLSX or CSV reports. Excel headers are purple with frozen rows and AutoFilter."/><Panel title="Build your export"><div className="miih-admin-form-grid"><label>Dataset<select value={dataset} onChange={e=>{setDataset(e.target.value);setSelectedCols(exportFields[e.target.value]);}}>{['TEAMS','MEMBERS','ANSWERS',...(superAdmin?['PAYMENTS']:[])].map(k=><option key={k}>{k}</option>)}</select></label><label>Format<select value={fileFormat} onChange={e=>setFileFormat(e.target.value)}><option>XLSX</option><option>CSV</option></select></label><label>Status<select value={status} onChange={e=>setStatus(e.target.value)}>{statusOptions.map(s=><option key={s} value={s}>{s||'All statuses'}</option>)}</select></label><label>Domain<select value={domainId} onChange={e=>setDomainId(e.target.value)}><option value="">All domains</option>{domains.data.map(d=><option key={d.id} value={d.id}>{d.domain_name}</option>)}</select></label><label>From<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}/></label><label>Until<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}/></label></div><details className="miih-export-columns"><summary>Choose Excel columns ({selectedCols.length} selected)</summary><div className="miih-export-grid">{(exportFields[dataset]||[]).map(col=><label key={col}><input type="checkbox" checked={selectedCols.includes(col)} onChange={e=>setSelectedCols(cols=>e.target.checked?[...cols,col]:cols.filter(c=>c!==col))}/>{col.replaceAll('_',' ')}</label>)}</div><button className="miih-admin-outline" type="button" onClick={()=>setSelectedCols(exportFields[dataset])}>Select all columns</button></details><button className="miih-admin-primary" type="button" disabled={busy||!selectedCols.length||!can('EXPORT_CREATE')} onClick={exportNow}>{busy?'Preparing…':'Generate & download sheet ⇩'}</button></Panel><Panel title="Recent exports"><ErrorMessage message={error}/><DataTable rows={data} columns={[{key:'dataset',label:'Dataset'},{key:'file_format',label:'Format'},{key:'row_count',label:'Rows'},{key:'status',label:'Status',render:v=><Badge value={v}/>},{key:'completed_at',label:'Completed',render:formatDate}]}/></Panel></>}
 export function ProfilePage(){
   const {profile,notify,updateProfile,logout}=useAdmin();
-  const [name,setName]=useState(profile.full_name);
   const [busy,setBusy]=useState(false);
-  const [error,setError]=useState('');
-  const changed=name.trim()!==profile.full_name;
-  async function save(){
-    if(name.trim().length<2||!changed||busy)return;
-    setBusy(true);setError('');
+  async function editProfile(){
+    if(busy)return;
+    const values=await adminFormDialog('Edit profile',[
+      {key:'full_name',label:'Full Name',value:profile.full_name,required:true,minLength:2,maxLength:200},
+      {key:'email',label:'Email Address',value:profile.email,readonly:true},
+    ],'Update your display name. Your sidebar name changes as soon as you save.');
+    if(!values)return;
+    const updatedName=values.full_name.trim();
+    if(updatedName.length<2||updatedName===profile.full_name)return;
+    setBusy(true);
     try{
-      await patch('/auth/admin/profile',{full_name:name.trim()},true);
-      updateProfile(name.trim());
+      await patch('/auth/admin/profile',{full_name:updatedName},true);
+      updateProfile(updatedName);
       notify('Your profile changes were saved.');
-    }catch(err){setError(err instanceof Error?err.message:'Profile could not be saved.');}
+    }catch(err){notify(err instanceof Error?err.message:'Profile could not be saved.');}
     finally{setBusy(false);}
   }
-  return <div className="miih-friendly-profile">
+  return <div className="miih-profile-page">
     <PageHeader eyebrow="MY ACCOUNT" title="My Profile" description="Your personal information in the Made in India admin workspace." />
-    <div className="miih-friendly-profile-cover">
-      <div className="miih-friendly-profile-avatar" aria-hidden="true">{profile.full_name.slice(0,1).toUpperCase()}</div>
-      <div className="miih-friendly-profile-heading"><small>ZEAI · MADE IN INDIA</small><h2>{profile.full_name}</h2><p>{profile.email}</p></div>
-      <span className="miih-friendly-profile-status">✓ Account active</span>
-    </div>
-    <div className="miih-friendly-profile-content">
-      <Panel title="Personal details">
-        <p className="miih-muted-admin">Update your display name here. Your sidebar name changes as soon as you save.</p>
-        <form className="miih-editor-form" onSubmit={e=>{e.preventDefault();void save();}}>
-          <label>Full name<input required minLength={2} maxLength={200} value={name} autoComplete="name" onChange={e=>setName(e.target.value)} /></label>
-          <label>Email address<input value={profile.email} readOnly aria-readonly="true" /></label>
-          {error&&<p className="miih-admin-error" role="alert">{error}</p>}
-          <div className="miih-admin-row"><button type="submit" className="miih-admin-primary" disabled={!changed||busy||name.trim().length<2}>{busy?'Saving…':changed?'Save profile':'Up to date ✓'}</button>{changed&&<button type="button" className="miih-admin-outline" onClick={()=>setName(profile.full_name)}>Discard</button>}</div>
-        </form>
-      </Panel>
-      <Panel title="Account actions"><p className="miih-muted-admin">You're signed in to the ZeAI admin workspace. For account changes, contact your organization administrator.</p><button type="button" className="miih-admin-outline" onClick={logout}>Sign out →</button></Panel>
-    </div>
+    <section className="miih-profile-overview" aria-label="Profile overview">
+      <div className="miih-profile-overview-avatar" aria-hidden="true">{profile.full_name.slice(0,1).toUpperCase()}</div>
+      <div className="miih-profile-overview-info">
+        <p className="miih-profile-organization">ZEAI – MADE IN INDIA</p>
+        <h2>{profile.full_name}</h2>
+        <p className="miih-profile-email">{profile.email}</p>
+      </div>
+      <div className="miih-profile-overview-badges">
+        <span className="miih-profile-role">{profile.role==='SUPER_ADMIN'?'Super Admin':'Admin'}</span>
+        <span className="miih-profile-status"><i aria-hidden="true" />{profile.approval_status==='APPROVED'?'Active':profile.approval_status.replaceAll('_',' ')}</span>
+      </div>
+      <div className="miih-profile-overview-actions">
+        <button type="button" className="miih-admin-outline" onClick={()=>void editProfile()} disabled={busy}><Icon name="edit"/>{busy?'Saving…':'Edit profile'}</button>
+        <button type="button" className="miih-profile-signout" onClick={logout}>Sign out →</button>
+      </div>
+    </section>
   </div>;
 }

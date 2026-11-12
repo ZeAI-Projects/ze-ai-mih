@@ -3,8 +3,10 @@ import { BrandLogo } from '@/components/common/BrandLogo';
 import { Icon } from '@/components/ui/Icon';
 import { SITE } from '@/constants/app';
 import { ROUTES } from '@/constants/routes';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 
 export function Footer() {
+  const openRegistration = useRegistrationModal();
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
@@ -56,7 +58,7 @@ export function Footer() {
             <Link to={ROUTES.HOME}>Home</Link>
             <Link to={ROUTES.ABOUT}>About Us</Link>
             <Link to={ROUTES.GALLERY}>Gallery</Link>
-            <Link to={ROUTES.REGISTER}>Register</Link>
+            <Link to={ROUTES.REGISTER} onClick={(event) => { event.preventDefault(); openRegistration(); }}>Register</Link>
             <a href={SITE.OFFICIAL_URL} target="_blank" rel="noopener noreferrer">
               Visit {SITE.ORGANISER} <Icon name="external" />
               <span className="sr-only"> (opens in a new tab)</span>

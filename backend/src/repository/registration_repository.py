@@ -12,7 +12,10 @@ class RegistrationRepository:
     async def questions(self,version):
         return await many(self.db,'''SELECT q.*,s.section_key FROM public.form_questions q
           JOIN public.form_sections s ON s.id=q.section_id
-          WHERE s.form_version_id=:version AND q.is_active AND s.is_active''',{'version':version})
+          WHERE s.form_version_id=:version AND q.is_active AND s.is_active
+            AND lower(regexp_replace(trim(q.question_label), '[[:space:]]+', ' ', 'g'))
+                <> 'will you be travelling to chennai for the final arena?'
+          ''',{'version':version})
 
     async def members(self,rid):
         return await many(self.db,'''SELECT id,member_order,role,full_name,email,mobile

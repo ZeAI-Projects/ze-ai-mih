@@ -12,7 +12,7 @@ const navigationItems = [
   { label: 'Register', to: '/#register' },
 ];
 
-export function Header() {
+export function Header({ theme, onThemeChange }: { theme: 'light' | 'dark'; onThemeChange: () => void }) {
   const { hash, pathname, key } = useLocation();
   const reducedMotion = useReducedMotion();
   const homeScroll = useRef<'smooth' | 'instant' | null>(null);
@@ -60,29 +60,43 @@ export function Header() {
           >
             <HeaderBrand />
           </Link>
-          <button
-            type="button"
-            ref={toggleRef}
-            className="menu-toggle"
-            aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
-            aria-expanded={isOpen}
-            aria-controls="primary-nav"
-            onClick={toggleMenu}
-          >
-            <Icon name="menu" />
-            <Icon name="close" />
-          </button>
-          <nav
-            id="primary-nav"
-            className={`primary-nav${isOpen ? ' is-open' : ''}`}
-            aria-label="Main navigation"
-          >
-            {navigationItems.map((item) => (
-              <Link key={item.to} to={item.to} aria-current={item.to.endsWith(hash) && hash ? 'location' : undefined} onClick={closeMenu}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="header-controls">
+            <button
+              type="button"
+              ref={toggleRef}
+              className="menu-toggle"
+              aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={isOpen}
+              aria-controls="primary-nav"
+              onClick={toggleMenu}
+            >
+              <Icon name="menu" />
+              <Icon name="close" />
+            </button>
+            <nav
+              id="primary-nav"
+              className={`primary-nav${isOpen ? ' is-open' : ''}`}
+              aria-label="Main navigation"
+            >
+              {navigationItems.map((item) => (
+                <Link key={item.to} to={item.to} aria-current={item.to.endsWith(hash) && hash ? 'location' : undefined} onClick={closeMenu}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <button type="button" className="theme-toggle" aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} aria-pressed={theme === 'dark'} onClick={onThemeChange}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                {theme === 'dark' ? (
+                  <>
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+                  </>
+                ) : (
+                  <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z" />
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
     </>

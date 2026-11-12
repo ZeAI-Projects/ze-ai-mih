@@ -18,6 +18,24 @@
     />
     <meta property="og:type" content="website" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      const root = document.documentElement;
+      const preference = matchMedia('(prefers-color-scheme: dark)');
+      const savedTheme = () => {
+        try {
+          const value = localStorage.getItem('miih.theme');
+          return value === 'light' || value === 'dark' ? value : null;
+        } catch {
+          return null;
+        }
+      };
+      root.dataset.theme = savedTheme() || (preference.matches ? 'dark' : 'light');
+      preference.addEventListener('change', event => {
+        if (savedTheme()) return;
+        root.dataset.theme = event.matches ? 'dark' : 'light';
+        window.dispatchEvent(new Event('miih:theme-change'));
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </head>
   <body>

@@ -8,6 +8,7 @@ import { SeasonReplay } from '../components/SeasonReplay';
 import { Challenges } from '../components/Challenges';
 import { MadeInIndiaMark, ZeaiMark } from '@/components/common/HeaderBrand';
 import { SeasonRewards } from '../components/SeasonRewards';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 import '@/features/about/styles/about.css';
 import '../styles/home.css';
 import '../styles/season.css';
@@ -18,6 +19,7 @@ const RegisterPage = lazy(() => import('@/features/registration/pages/RegisterPa
 export function HomePage() {
   const brandRow = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const openRegistration = useRegistrationModal();
   const [yearEntry, setYearEntry] = useState({ locationKey: location.key, run: 0, started: false });
   // Track every navigation so Back and repeated Home-logo clicks replay,
   // while section links and ordinary renders preserve the current animation.
@@ -52,7 +54,7 @@ export function HomePage() {
         </div>
         <h1 className="hero-title">Your ideas.<br /><span>India’s next chapter.</span></h1>
         <p className="hero-description">Big problems. Bold builders. Bring your team, find your challenge, and build what comes next.</p>
-        <div className="button-row"><Link className="button button-primary" to="/#register">Unlock your 2027 journey →</Link><Link className="text-link" to="/#replay">Replay the journey ↓</Link></div>
+        <div className="button-row"><Link className="button button-primary" to="/#register" onClick={(event) => { event.preventDefault(); openRegistration(); }}>Unlock your 2027 journey →</Link><Link className="text-link" to="/#replay">Replay the journey ↓</Link></div>
         <p className="hero-meta"><span className="status-dot" aria-hidden="true" />2027 · The next level starts with you.</p>
       </div><HeroVisual /></div>
     </section>

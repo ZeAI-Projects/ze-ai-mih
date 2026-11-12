@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAdmin } from './AdminPortal';
 
 type Props = {
@@ -61,34 +62,58 @@ function buildPrintMarkup(node: HTMLElement, title: string, description?: string
 
 export function AdminVisualExportButton({ targetId, title, label = 'Export PDF', description }: Props) {
   const { can, notify } = useAdmin();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   if (!can('EXPORT_CREATE')) return null;
 
-  function exportPdf() {
-    const target = document.getElementById(targetId);
-    if (!target) {
-      notify('This page section could not be prepared for export.');
-      return;
-    }
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=900');
-    if (!printWindow) {
-      notify('Please allow pop-ups to export this page as PDF.');
-      return;
-    }
-    const markup = buildPrintMarkup(target, title, description);
-    printWindow.document.open();
-    printWindow.document.write(markup);
-    printWindow.document.close();
-    const doPrint = () => {
+  async function exportPdf() {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    setSuccess('');
+    let printWindow: Window | null = null;
+    try {
+      const target = document.getElementById(targetId);
+      if (!target) throw new Error('This page section could not be prepared for export.');
+      printWindow = window.open('', '_blank', 'width=1200,height=900');
+      if (!printWindow) throw new Error('Please allow pop-ups to export this page as PDF.');
+
+      const loaded = new Promise<void>((resolve, reject) => {
+        const timer = window.setTimeout(() => reject(new Error('The PDF print view took too long to load.')), 15000);
+        const finish = () => {
+          window.clearTimeout(timer);
+          resolve();
+        };
+        printWindow?.addEventListener('load', finish, { once: true });
+        if (printWindow?.document.readyState === 'complete') window.setTimeout(finish, 0);
+      });
+      printWindow.document.open();
+      printWindow.document.write(buildPrintMarkup(target, title, description));
+      printWindow.document.close();
+      await loaded;
+      await printWindow.document.fonts.ready;
+      await Promise.all(Array.from(printWindow.document.images, image => image.decode()));
       printWindow.focus();
       printWindow.print();
-    };
-    printWindow.addEventListener('load', doPrint, { once: true });
-    window.setTimeout(doPrint, 500);
+      setSuccess('PDF print view is ready. Choose “Save as PDF” in the print dialog to download it.');
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not prepare the PDF export.';
+      setError(message);
+      notify(message);
+      printWindow?.close();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <button type="button" className="miih-admin-primary" onClick={exportPdf}>
-      <span aria-hidden="true">⇩</span> {label}
-    </button>
+    <>
+      <button type="button" className="miih-admin-primary" disabled={busy} onClick={() => void exportPdf()}>
+        <span aria-hidden="true">⇩</span> {busy ? 'Preparing PDF…' : label}
+      </button>
+      {error && <p className="miih-admin-error" role="alert">{error}</p>}
+      {success && <p className="miih-admin-good" role="status">{success}</p>}
+    </>
   );
 }

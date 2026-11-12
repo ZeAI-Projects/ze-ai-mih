@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useRegistrationModal } from '@/features/registration/RegistrationModalContext';
 const Flight = lazy(() => import('./FlightExperience'));
 
 export function SeasonReplay() {
+  const openRegistration = useRegistrationModal();
   const ref = useRef<HTMLElement>(null);
   const [near, setNear] = useState(false);
   useEffect(() => { const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setNear(true); observer.disconnect(); } }, { rootMargin: '250px' }); if (ref.current) observer.observe(ref.current); return () => observer.disconnect(); }, []);
@@ -14,7 +16,7 @@ export function SeasonReplay() {
       </article><article className="season-card season-next">
         <p className="season-next-pool"><strong>₹20,00,000</strong><span>2027 TOTAL PRIZE POOL</span></p>
         <div className="flight-slot">{near && <Suspense fallback={<p>Preparing your flight…</p>}><Flight /></Suspense>}</div>
-        <Link to="/#register" className="button button-primary">Unlock your next level →</Link>
+        <Link to="/#register" className="button button-primary" onClick={(event) => { event.preventDefault(); openRegistration(); }}>Unlock your next level →</Link>
       </article></div>
     </div>
   </section>;

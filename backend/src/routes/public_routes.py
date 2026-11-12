@@ -52,7 +52,11 @@ async def _load_config(code:str,db:AsyncSession):
             qs=await many(db,'''SELECT id,field_key,legacy_question_number,question_label,description,
               placeholder,input_type,answer_scope,is_required,display_order,validation_rules,
               visibility_rules,default_value
-              FROM public.form_questions WHERE section_id=:s AND is_active ORDER BY display_order''',{'s':s['id']})
+              FROM public.form_questions
+              WHERE section_id=:s AND is_active
+                AND lower(regexp_replace(trim(question_label), '[[:space:]]+', ' ', 'g'))
+                    <> 'will you be travelling to chennai for the final arena?'
+              ORDER BY display_order''',{'s':s['id']})
             for q in qs:
                 q['options']=await many(db,'''SELECT option_value,option_label FROM public.form_question_options
                    WHERE question_id=:id AND is_active ORDER BY display_order''',{'id':q['id']})
