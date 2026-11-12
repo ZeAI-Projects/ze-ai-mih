@@ -56,10 +56,9 @@ class OptionUpdate(Strict):
     display_order:int=0
     is_active:bool=True
 class TeamSizePaymentRule(Strict):
-    min_members:int=Field(ge=1)
-    max_members:int|None=Field(default=None,ge=1)
-    fee_amount:float=Field(gt=0)
-    razorpay_payment_url:str=Field(min_length=1,max_length=2048)
+    min_members:int=Field(strict=True,gt=0)
+    fee_amount:float=Field(gt=0,allow_inf_nan=False)
+    razorpay_payment_url:str=Field(min_length=1,max_length=2048,strict=True)
 class PaymentSettingsUpdate(Strict):
     button_label:str=Field(min_length=2,max_length=100)
     razorpay_payment_url:str|None=None

@@ -245,7 +245,10 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   const answersValid=answerRows.every(a=>fieldValid(a.question,a.value));
   const paymentFree=CODE==='MIIH_TEST_48H' && config?.payment?.payment_required===false && config?.payment?.payment_enabled===false;
   const paymentRules=config?.payment.team_size_pricing||[];
-  const paymentRule=paymentRules.find(rule=>members.length>=rule.min_members&&(rule.max_members===null||members.length<=rule.max_members));
+  const paymentRule=paymentRules.reduce<(typeof paymentRules)[number]|undefined>(
+    (selected,rule)=>rule.min_members<=members.length&&(!selected||rule.min_members>selected.min_members)?rule:selected,
+    undefined,
+  );
   const paymentFee=paymentRules.length?paymentRule?.fee_amount:config?.payment.fee_amount;
   const paymentUrl=paymentRules.length?paymentRule?.razorpay_payment_url:config?.payment.payment_url;
   const paymentReady=Boolean(config?.payment.payment_enabled&&paymentUrl);

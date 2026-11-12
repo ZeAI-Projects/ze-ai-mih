@@ -2423,15 +2423,8 @@ components:
       properties:
         min_members:
           type: integer
-          minimum: 1
+          exclusiveMinimum: 0
           title: Min Members
-        max_members:
-          anyOf:
-          - type: integer
-            minimum: 1
-          - type: 'null'
-          title: Max Members
-          default: null
         fee_amount:
           type: number
           exclusiveMinimum: 0.0

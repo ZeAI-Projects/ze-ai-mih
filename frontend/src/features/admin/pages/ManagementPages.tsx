@@ -3,7 +3,7 @@ import { ProblemStatementsPanel } from '../ProblemStatementsPanel';
 import { adminConfirm, adminPrompt, adminFormDialog } from '../AdminDialogs';
 import { Icon } from '@/components/ui/Icon';
 import { applyCmsItem } from '@/features/cms/PublishedContentBridge';
-import {useEffect,useMemo,useRef,useState,type FormEvent} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type FormEvent} from 'react';
 import {patch,post,put,qs,upload,type CmsSlot,type CmsRevision,type Domain,type Edition,type FormSection,type Question,type JsonRecord,type PaymentPricingRule} from '@/lib/miihApi';
 import {AdminIconButton,Badge,DataTable,Empty,ErrorMessage,Loading,PageHeader,Panel,useAdmin,useResource} from '../AdminPortal';
 
@@ -11,52 +11,51 @@ type Row=Record<string,unknown>;
 const pages=['HOME','ABOUT','GALLERY','REGISTER','GLOBAL'];
 const first=(v:unknown)=>String(v??'');
 const DEFAULT_PAYMENT_URL='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view';
+type PaymentPricingRuleDraft=PaymentPricingRule & {draftId:number};
 const DEFAULT_PAYMENT_PRICING:PaymentPricingRule[]=[
- {min_members:1,max_members:1,fee_amount:1000,razorpay_payment_url:'https://rzp.io/rzp/pG1DOFl'},
- {min_members:2,max_members:2,fee_amount:2000,razorpay_payment_url:'https://rzp.io/rzp/MVb6HKp'},
- {min_members:3,max_members:null,fee_amount:3000,razorpay_payment_url:DEFAULT_PAYMENT_URL},
+ {min_members:1,fee_amount:3000,razorpay_payment_url:DEFAULT_PAYMENT_URL},
 ];
-function paymentPricingError(rules:PaymentPricingRule[],maxTeamSize?:number){
- if(!rules.length)return 'Add at least one team-size pricing range.';
- let next=1;
- for(let index=0;index<rules.length;index++){
-  const rule=rules[index];
-  if(!Number.isInteger(rule.min_members)||rule.min_members!==next)return 'Ranges must start at 1 and be contiguous without overlaps.';
-  if(maxTeamSize&&rule.min_members>maxTeamSize)return `Pricing ranges cannot exceed the event maximum of ${maxTeamSize} members.`;
-  if(!Number.isFinite(rule.fee_amount)||rule.fee_amount<=0)return 'Each pricing range needs a positive fee.';
-  if(!rule.razorpay_payment_url.trim())return 'Each pricing range needs a Razorpay payment URL.';
-  if(rule.max_members===null){
-   if(index!==rules.length-1)return 'Only the last pricing range can be unlimited.';
-  }else{
-   if(!Number.isInteger(rule.max_members)||rule.max_members<rule.min_members)return 'Each range must end at or after its starting member count.';
-   if(maxTeamSize&&rule.max_members>maxTeamSize)return `Pricing ranges cannot exceed the event maximum of ${maxTeamSize} members.`;
-   next=rule.max_members+1;
-  }
- }
- const finalRange=rules[rules.length-1];
- if(maxTeamSize)return finalRange.max_members===maxTeamSize?null:`The final pricing range must end at ${maxTeamSize} members.`;
- return finalRange.max_members===null?null:'The last pricing range must cover all larger teams.';
+function sortPaymentPricing(rules:PaymentPricingRule[]){
+ return [...rules].sort((left,right)=>left.min_members-right.min_members);
 }
-function fitPaymentPricingToTeamSize(rules:PaymentPricingRule[],maxTeamSize?:number):PaymentPricingRule[]{
- if(!maxTeamSize)return rules.map(rule=>({...rule}));
- return rules.flatMap(rule=>{
-  if(rule.min_members>maxTeamSize)return [];
-  if(rule.max_members===null){
-   return Array.from({length:maxTeamSize-rule.min_members+1},(_,offset)=>({
-    ...rule,min_members:rule.min_members+offset,max_members:rule.min_members+offset,
-   }));
-  }
-  return [{...rule,max_members:Math.min(rule.max_members,maxTeamSize)}];
+function isRazorpayPaymentUrl(value:string){
+ try{
+  const url=new URL(value.trim());
+  const hostname=url.hostname.toLowerCase();
+  return url.protocol==='https:'&&(hostname==='rzp.io'||hostname==='rzp.link'||hostname==='razorpay.com'||hostname.endsWith('.razorpay.com'));
+ }catch{return false;}
+}
+function normalizePaymentPricing(value:unknown):PaymentPricingRule[]{
+ if(!Array.isArray(value))return [];
+ const rules=value.map(item=>{
+  const rule=item&&typeof item==='object'&&!Array.isArray(item)?item as Record<string,unknown>:{};
+  return {
+   min_members:Number(rule.min_members),
+   fee_amount:Number(rule.fee_amount),
+   razorpay_payment_url:typeof rule.razorpay_payment_url==='string'?rule.razorpay_payment_url:'',
+  };
  });
+ return sortPaymentPricing(rules);
 }
-function defaultPaymentPricing(fee:unknown,url:unknown,maxTeamSize?:number):PaymentPricingRule[]{
+function paymentPricingError(rules:PaymentPricingRule[]){
+ if(!rules.length)return 'Add at least one team-size pricing range.';
+ const thresholds=new Set<number>();
+ for(const rule of rules){
+  if(!Number.isInteger(rule.min_members)||rule.min_members<1)return 'Members from must be a positive whole number.';
+  if(thresholds.has(rule.min_members))return 'Members from values must be unique.';
+  thresholds.add(rule.min_members);
+  if(!Number.isFinite(rule.fee_amount)||rule.fee_amount<=0)return 'Each pricing range needs a positive fee.';
+  if(!isRazorpayPaymentUrl(rule.razorpay_payment_url))return 'Each pricing range needs a valid HTTPS Razorpay payment URL.';
+ }
+ return null;
+}
+function defaultPaymentPricing(fee?:unknown,url?:unknown):PaymentPricingRule[]{
  const existingUrl=first(url);
- const safeUrl=existingUrl.startsWith('https://')&&!existingUrl.includes('example.com')?existingUrl:DEFAULT_PAYMENT_URL;
  const existingFee=Number(fee);
- const rules=DEFAULT_PAYMENT_PRICING.map((rule,index)=>index===2
-  ?{...rule,fee_amount:Number.isFinite(existingFee)&&existingFee>0?existingFee:rule.fee_amount,razorpay_payment_url:safeUrl}
-  :{...rule});
- return fitPaymentPricingToTeamSize(rules,maxTeamSize);
+ if(fee!==undefined||url!==undefined){
+  return [{min_members:1,fee_amount:Number.isFinite(existingFee)&&existingFee>0?existingFee:0,razorpay_payment_url:existingUrl}];
+ }
+ return DEFAULT_PAYMENT_PRICING.map(rule=>({...rule}));
 }
 const questionTypes=[
  {value:'TEXT',label:'Short answer'},
@@ -166,7 +165,10 @@ export function FormEditorPage(){const {can,superAdmin,notify}=useAdmin();const 
  useEffect(()=>{if(form.data.id===versionId&&pendingQuestionKey.current){const question=form.data.sections.flatMap(s=>s.questions).find(q=>q.field_key===pendingQuestionKey.current);if(question){setSelected(question);pendingQuestionKey.current=null;}}},[form.data,versionId]);
  async function clone(){if(!editionId||busy)return;pendingQuestionKey.current=selected?.field_key||null;setBusy(true);try{const r=await post<{id:string;version_number:number;status:string}>(`/admin/forms/editions/${editionId}/clone`,{},true);versions.setData(items=>[{...r,name:`MIIH Form v${r.version_number}`},...items]);setVersionId(r.id);setSelected(null);versions.reload();notify('Editable draft created. Save your question changes, then publish this form.');}catch(e){notify(e instanceof Error?e.message:'Could not clone form');}finally{setBusy(false);}}
  function editQuestions(){const draft=versions.data.find(v=>v.status==='DRAFT');if(draft){pendingQuestionKey.current=selected?.field_key||null;setVersionId(draft.id);setSelected(null);}else void clone();}
- async function saveQuestion(){if(!selected||busy)return;setBusy(true);try{const changes={question_label:label,placeholder,description,input_type:inputType,answer_scope:answerScope,is_required:required,is_active:active,display_order:order};await patch(`/admin/forms/questions/${selected.id}`,changes,true);setSelected(current=>current?{...current,...changes}:current);form.reload();notify('Question saved in draft version.');}catch(e){notify(e instanceof Error?e.message:'Could not edit question');}finally{setBusy(false);}}
+ const questionDirty=Boolean(selected&&(label!==selected.question_label||placeholder!==(selected.placeholder||'')||description!==(selected.description||'')||inputType!==selected.input_type||answerScope!==selected.answer_scope||required!==selected.is_required||active!==(selected.is_active!==false)||order!==selected.display_order));
+ const closeQuestionEditor=useCallback(async()=>{if(questionDirty&&!await adminConfirm('Discard unsaved question changes?','Unsaved question changes'))return;setSelected(null);},[questionDirty]);
+ useEffect(()=>{if(!selected)return;const modal=document.querySelector<HTMLElement>('.miih-form-question-modal');const firstFocusable=modal?.querySelector<HTMLElement>('textarea:not([disabled]),input:not([disabled]),select:not([disabled]),button:not([disabled])');firstFocusable?.focus({preventScroll:true});const onKeyDown=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();void closeQuestionEditor();return;}if(event.key!=='Tab'||!modal)return;const focusable=Array.from(modal.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])'));if(!focusable.length)return;const first=focusable[0];const last=focusable[focusable.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}};window.addEventListener('keydown',onKeyDown);return()=>window.removeEventListener('keydown',onKeyDown);},[selected,closeQuestionEditor]);
+ async function saveQuestion(){if(!selected||busy)return;setBusy(true);try{const changes={question_label:label,placeholder,description,input_type:inputType,answer_scope:answerScope,is_required:required,is_active:active,display_order:order};await patch(`/admin/forms/questions/${selected.id}`,changes,true);form.reload();setSelected(null);notify('Question saved in draft version.');}catch(e){notify(e instanceof Error?e.message:'Could not edit question');}finally{setBusy(false);}}
  async function addOption(){if(!selected||!optionLabel.trim()||busy)return;const base=optionLabel.trim().toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,145)||'option';const values=new Set(selected.options.map(option=>option.option_value));let value=base;for(let suffix=2;values.has(value);suffix++)value=`${base.slice(0,145-String(suffix).length)}_${suffix}`;setBusy(true);try{const saved=await put<{option_value:string;option_label:string;display_order:number;is_active:boolean}>(`/admin/forms/questions/${selected.id}/options`,{option_value:value,option_label:optionLabel.trim(),display_order:selected.options?.length||0,is_active:true},true);setSelected(current=>current?{...current,options:[...current.options.filter(option=>option.option_value!==saved.option_value),saved]}:current);form.reload();setOptionLabel('');notify('Answer choice saved.');}catch(e){notify(e instanceof Error?e.message:'Answer choice could not be saved.');}finally{setBusy(false);}}
  async function changeOption(option:{option_value:string;option_label:string;display_order?:number;is_active?:boolean},enabled:boolean){if(!selected||busy)return;setBusy(true);try{await put(`/admin/forms/questions/${selected.id}/options`,{...option,display_order:option.display_order||0,is_active:enabled},true);setSelected(current=>current?{...current,options:current.options.map(item=>item.option_value===option.option_value?{...item,is_active:enabled}:item)}:current);form.reload();notify('Option updated.');}catch(e){notify(e instanceof Error?e.message:'Option update failed');}finally{setBusy(false);}}
  async function deleteQuestion(){if(!selected||busy||!await adminConfirm(`Remove “${selected.question_label}” from this draft? It will be hidden after you publish the draft. Existing registrations can still submit without answering it once the updated form is published.`, 'Delete question', true))return;setBusy(true);try{await patch(`/admin/forms/questions/${selected.id}`,{is_active:false},true);form.reload();setSelected(null);notify('Question removed from the draft. Publish the draft to apply this change.');}catch(e){notify(e instanceof Error?e.message:'Could not delete question');}finally{setBusy(false);}}
@@ -212,11 +214,6 @@ export function FormEditorPage(){const {can,superAdmin,notify}=useAdmin();const 
 async function publishForm(){if(!versionId||!await adminConfirm('Publish this form version? New registrations will use it. Existing registrations keep their saved form version, but questions removed or made optional in this version will no longer block their submission.', 'Publish form'))return;try{await post(`/admin/forms/versions/${versionId}/publish`,{},true);form.reload();versions.reload();notify('Form version published. Removed and optional questions will no longer block existing registrations.');}catch(e){notify(e instanceof Error?e.message:'Publish failed');}}
  return <>
   <PageHeader eyebrow="MADE IN INDIA HACKATHON / FORM BUILDER" title="Registration Form" description="Build and preview the questions participants see. Changes stay in a draft until a Super Admin publishes them."/>
-  {versions.data.some(v=>v.status==='DRAFT')&&<Panel title="Your draft is not live yet">
-    <p>The published form stays live until you publish this draft. Publishing updates the questions shown to new registrations. Existing registrations keep their saved form version, but questions removed or made optional here will no longer block their submission.</p>
-    <p className="miih-muted-admin">{versions.data.filter(v=>v.status==='PUBLISHED').map(v=>`Live form: v${v.version_number} — ${v.name}`).join(' · ')}</p>
-    <div className="miih-admin-row">{versions.data.filter(v=>v.status==='DRAFT').map(v=><button key={v.id} className="miih-admin-outline" type="button" onClick={()=>{setVersionId(v.id);setSelected(null);}}>Open draft v{v.version_number} — {v.name}</button>)}</div>
-  </Panel>}
   <Panel title="Form version" toolbar={<div className="miih-admin-row">
     <EditionSelect editions={editions} editionId={editionId} onChange={value=>{setEditionId(value);setSelected(null);}}/>
     <label className="miih-admin-inline-label">Version<select aria-label="Select form version" value={versionId} onChange={event=>{setVersionId(event.target.value);setSelected(null);}}>{versions.data.map(version=><option value={version.id} key={version.id}>v{version.version_number} — {version.name} ({version.status==='DRAFT'?'Draft':version.status==='PUBLISHED'?'Live':'Archived'})</option>)}</select></label>
@@ -227,21 +224,11 @@ async function publishForm(){if(!versionId||!await adminConfirm('Publish this fo
     <p className="miih-muted-admin">Choose the version to review. A draft can be edited; the live version is read-only and can be copied into a new draft.</p>
   </Panel>
   <FormVersionPreview sections={form.data.sections}/>
-  <div className="miih-admin-editor-layout miih-form-editor">
-    <div className="miih-form-index">
-    <Panel title="Sections">
-      <p className="miih-muted-admin">Registration questions are organized into these sections.</p>
-      <div className="miih-form-section-picker">
-      {form.loading?<Loading/>:form.data.sections.map(section=><div className="miih-form-section-card" key={section.id}>
-        <strong>{section.title}</strong><small>{section.questions.length} {section.questions.length===1?'question':'questions'}</small>
-      </div>)}
-      </div>
-    </Panel>
-    <Panel title="Questions">
-      <p className="miih-muted-admin">Select a question to edit it. Use the plus button to add a question to its section.</p>
+  <Panel title="Questions & Sections" toolbar={<Badge value={`${form.data.sections.reduce((total,section)=>total+section.questions.length,0)} questions`}/>}>
+      <p className="miih-muted-admin">Questions are grouped by section. Select any question to edit it, or use the plus button to add one.</p>
       <ErrorMessage message={form.error}/>
-      <div className="miih-form-question-index">
-      {form.loading?<Loading/>:form.data.sections.map(section=><section className="miih-form-section-list" key={section.id}>
+      <div className="miih-form-question-index miih-form-unified-index">
+      {form.loading?<Loading/>:form.data.sections.length?form.data.sections.map(section=><section className="miih-form-section-list" key={section.id}>
         <div className="miih-form-section-heading"><div><h3>{section.title}</h3><span>{section.questions.length} {section.questions.length===1?'question':'questions'}</span></div>
           {editable&&can('FORM_EDIT')&&<AdminIconButton icon="add" label={`Add question to ${section.title}`} disabled={busy} onClick={()=>void addQuestion(section.id)}/>}
         </div>
@@ -250,12 +237,15 @@ async function publishForm(){if(!versionId||!await adminConfirm('Publish this fo
           <strong>{question.question_label}</strong>
           <span>{question.is_required?'Required':'Optional'}{question.is_active===false?' · Hidden':''}</span>
         </button>)}
-      </section>)}
+      </section>):<Empty message="No sections are available in this form version."/>}
       </div>
-    </Panel>
-    </div>
-    <div className="miih-form-detail">
-    <Panel title={selected?`Question details`:'Edit a question'}>
+  </Panel>
+  {selected&&<div className="miih-form-question-overlay" onMouseDown={event=>{if(event.target===event.currentTarget)void closeQuestionEditor();}}>
+    <section className="miih-form-question-modal" role="dialog" aria-modal="true" aria-labelledby="miih-question-editor-title">
+      <header className="miih-form-question-modal-header">
+        <div><p className="miih-kicker">QUESTION EDITOR</p><h2 id="miih-question-editor-title">Edit question</h2></div>
+        <button type="button" className="miih-admin-outline miih-form-modal-close" aria-label="Close question editor" onClick={()=>void closeQuestionEditor()}>×</button>
+      </header>
       {selected?<div className="miih-editor-form">
         <div className="miih-form-editor-heading"><div><p className="miih-muted-admin">{selected.question_label}</p><Badge value={form.data.status}/></div>{editable&&can('FORM_EDIT')&&active&&<AdminIconButton icon="delete" label="Delete question" disabled={busy} onClick={()=>void deleteQuestion()}/>}</div>
         {!editable&&<p className="miih-muted-admin">This form version is read-only. Create or select a draft to make changes.</p>}
@@ -271,7 +261,6 @@ async function publishForm(){if(!versionId||!await adminConfirm('Publish this fo
           <label className="miih-toggle-label"><input type="checkbox" disabled={!editable||busy} checked={active} onChange={event=>setActive(event.target.checked)}/> Show on registration form</label>
         </div>
         {(inputType==='IMAGE'||inputType==='FILE')&&<p className="miih-muted-admin">{inputType==='IMAGE'?'Participants can upload a JPG, PNG or WebP image.':'Participants can upload a JPG, PNG, WebP image or PDF file.'} Uploads are stored securely with the registration.</p>}
-        {editable&&can('FORM_EDIT')&&<div className="miih-form-editor-actions"><button className="miih-admin-primary" type="button" disabled={busy||!label.trim()} onClick={()=>void saveQuestion()}><Icon name="save"/> Save question</button></div>}
         {(inputType==='SINGLE_SELECT'||inputType==='MULTI_SELECT'||selected.options.length>0)&&<section className="miih-form-options">
           <div className="miih-form-section-heading"><div><h3>Answer choices</h3><span>Choices are shown in the order listed.</span></div></div>
           {selected.options.map(option=><div className="miih-admin-option" key={option.option_value}>
@@ -286,9 +275,12 @@ async function publishForm(){if(!versionId||!await adminConfirm('Publish this fo
           </div>}
         </section>}
       </div>:<Empty message="Choose a question on the left to review or edit it."/>}
-    </Panel>
-    </div>
-  </div>
+      <footer className="miih-form-question-modal-footer">
+        <button type="button" className="miih-admin-outline" disabled={busy} onClick={()=>void closeQuestionEditor()}>Cancel</button>
+        {editable&&can('FORM_EDIT')&&<button className="miih-admin-primary" type="button" disabled={busy||!label.trim()} onClick={()=>void saveQuestion()}><Icon name="save"/> {busy?'Saving…':'Save question'}</button>}
+      </footer>
+    </section>
+  </div>}
  </>}
 type ReadinessCheck = {key:string;label:string;ok:boolean;fix:string};
 type Readiness = {edition_code:string;is_internal_test:boolean;ready:boolean;checks:ReadinessCheck[];enabled_domains:number;published_form_version:number|null;note:string};
@@ -391,112 +383,105 @@ function RazorpayAdminConfiguration(){
  const {superAdmin,notify}=useAdmin();
  const {data:editions}=useResource<Edition[]>('/admin/editions',[]);
  const [editionId,setEditionId]=useState('');
+ const [paymentConfigOpen,setPaymentConfigOpen]=useState(false);
  useEffect(()=>{if(!editions.length)return;if(!editions.some(e=>e.id===editionId))setEditionId((editions.find(e=>e.edition_code==='MIIH_UPCOMING')||editions[0]).id);},[editions,editionId]);
- const edition=editions.find(e=>e.id===editionId);
  const payment=useResource<Row[]>(superAdmin&&editionId?`/admin/editions/${editionId}/payments/config`:null,[]);
  const [label,setLabel]=useState('Secure Your Spot - Pay Now');
- const [teamSizePricing,setTeamSizePricing]=useState<PaymentPricingRule[]>(DEFAULT_PAYMENT_PRICING);
+ const nextPricingDraftId=useRef(0);
+ const [teamSizePricing,setTeamSizePricing]=useState<PaymentPricingRuleDraft[]>(()=>DEFAULT_PAYMENT_PRICING.map(rule=>({...rule,draftId:++nextPricingDraftId.current})));
  const [paymentFormDirty,setPaymentFormDirty]=useState(false);
  const [enabled,setEnabled]=useState(false);
  const [saving,setSaving]=useState(false);
- const isTest=edition?.edition_code==='MIIH_TEST_48H';
- const maxTeamSize=Number(edition?.max_team_size)||undefined;
+ const sortedTeamSizePricing=useMemo(
+   ()=>[...teamSizePricing].sort((left,right)=>left.min_members-right.min_members||left.draftId-right.draftId),
+   [teamSizePricing],
+ );
+ const edition=editions.find(e=>e.id===editionId);
+ const isTestEdition=edition?.edition_code==='MIIH_TEST_48H';
  useEffect(()=>{
    if(paymentFormDirty)return;
    const p=payment.data[0];
-   if(!p){setTeamSizePricing(defaultPaymentPricing(undefined,undefined,maxTeamSize));setLabel('Secure Your Spot - Pay Now');setEnabled(false);return;}
+   if(!p){
+     setTeamSizePricing(DEFAULT_PAYMENT_PRICING.map(rule=>({...rule,draftId:++nextPricingDraftId.current})));
+     setLabel('Secure Your Spot - Pay Now');setEnabled(false);return;
+   }
    const stored=first(p.razorpay_payment_url);
    const storedRules=p.team_size_pricing;
    if(Array.isArray(storedRules)&&storedRules.length){
-     const parsed=storedRules.flatMap(value=>{
-       if(!value||typeof value!=='object'||Array.isArray(value))return [];
-       const rule=value as Record<string,unknown>;
-       const min=Number(rule.min_members),max=rule.max_members==null?null:Number(rule.max_members);
-       const amount=Number(rule.fee_amount),paymentUrl=first(rule.razorpay_payment_url);
-       return Number.isInteger(min)&&min>=1&&(max===null||Number.isInteger(max)&&max>=min)
-         &&Number.isFinite(amount)&&amount>0&&paymentUrl
-         ?[{min_members:min,max_members:max,fee_amount:amount,razorpay_payment_url:paymentUrl}]
-         :[];
-     });
-     setTeamSizePricing(fitPaymentPricingToTeamSize(
-       parsed.length===storedRules.length?parsed:defaultPaymentPricing(p.fee_amount,stored),
-       maxTeamSize,
-     ));
-   }else setTeamSizePricing(defaultPaymentPricing(p.fee_amount,stored,maxTeamSize));
+     setTeamSizePricing(normalizePaymentPricing(storedRules).map(rule=>({...rule,draftId:++nextPricingDraftId.current})));
+   }else{
+     setTeamSizePricing(defaultPaymentPricing(p.fee_amount,stored).map(rule=>({...rule,draftId:++nextPricingDraftId.current})));
+   }
    setLabel(first(p.button_label)||'Secure Your Spot - Pay Now');
    setEnabled(p.is_active===true);
- },[editionId,payment.data,paymentFormDirty,maxTeamSize]);
- function updatePricingRule(index:number,key:keyof PaymentPricingRule,value:string){
+ },[editionId,payment.data,paymentFormDirty]);
+ function updatePricingRule(draftId:number,key:keyof PaymentPricingRule,value:string){
    setPaymentFormDirty(true);
-   setTeamSizePricing(current=>current.map((rule,i)=>i!==index?rule:{
+   setTeamSizePricing(current=>current.map(rule=>rule.draftId!==draftId?rule:{
      ...rule,
-     [key]:key==='razorpay_payment_url'?value:key==='max_members'?value===''?null:Number(value):Number(value),
+     [key]:key==='razorpay_payment_url'?value:Number(value),
    }));
  }
  function addPricingRule(){
    setPaymentFormDirty(true);
    setTeamSizePricing(current=>{
-     const previous=current[current.length-1];
+     const previous=[...current].sort((left,right)=>left.min_members-right.min_members).at(-1);
      const template=previous||DEFAULT_PAYMENT_PRICING[0];
-     const min=previous?(previous.max_members??previous.min_members)+1:1;
-     return [...current.map((rule,index)=>index===current.length-1&&rule.max_members===null?{...rule,max_members:min-1}:rule),
-       {min_members:min,max_members:maxTeamSize?min:null,fee_amount:template.fee_amount,razorpay_payment_url:template.razorpay_payment_url}];
+     const min=previous&&Number.isInteger(previous.min_members)&&previous.min_members>0?previous.min_members+1:1;
+     return [...current,{min_members:min,fee_amount:template.fee_amount,razorpay_payment_url:template.razorpay_payment_url,draftId:++nextPricingDraftId.current}];
    });
  }
  async function save(event:FormEvent){
    event.preventDefault();if(!superAdmin||!editionId||saving)return;
-   const pricingError=!isTest?paymentPricingError(teamSizePricing,maxTeamSize):null;
+   const pricingError=!isTestEdition?paymentPricingError(sortedTeamSizePricing):null;
    if(pricingError){notify(pricingError);return;}
-   if(!isTest&&teamSizePricing.some(rule=>!/^https:\/\/(?:[a-z0-9-]+\.)*(?:razorpay\.com|rzp\.io|rzp\.link)\//i.test(rule.razorpay_payment_url.trim()))){notify('Every range must use a genuine HTTPS Razorpay payment URL.');return;}
-   if(!await adminConfirm(isTest?'Save the private payment-free test configuration?':enabled?'Activate real Razorpay payments for this edition?':'Save the Razorpay URL without activating payments?', 'Confirm payment configuration'))return;
+   if(!await adminConfirm(isTestEdition?'Save the private payment-free test configuration?':enabled?'Activate real Razorpay payments for this edition?':'Save the Razorpay URL without activating payments?', 'Confirm payment configuration'))return;
    setSaving(true);
    try{
-     const lastRule=teamSizePricing[teamSizePricing.length-1];
+     const apiPricing=sortedTeamSizePricing.map(({min_members,fee_amount,razorpay_payment_url})=>({min_members,fee_amount,razorpay_payment_url}));
+     const lastRule=apiPricing[apiPricing.length-1];
      const saved=await post<Row>(`/admin/editions/${editionId}/payments/config`,{
-       button_label:isTest?'Complete test registration':label.trim(),
-       razorpay_payment_url:isTest?null:lastRule?.razorpay_payment_url.trim()||null,
-       fee_amount:isTest?0:lastRule?.fee_amount||0,
-       team_size_pricing:isTest?[]:teamSizePricing,
-       payment_required:!isTest,proof_required:!isTest,
-       activate:isTest?true:enabled,
-       instructions:isTest?'Test Hackathon: registration testing only, with no payment.':'Use the official hosted Razorpay page, then submit transaction ID and screenshot to complete registration.'
+       button_label:isTestEdition?'Complete test registration':label.trim(),
+       razorpay_payment_url:isTestEdition?null:lastRule?.razorpay_payment_url.trim()||null,
+       fee_amount:isTestEdition?0:lastRule?.fee_amount||0,
+       team_size_pricing:isTestEdition?[]:apiPricing,
+       payment_required:!isTestEdition,proof_required:!isTestEdition,
+       activate:isTestEdition?true:enabled,
+       instructions:isTestEdition?'Test Hackathon: registration testing only, with no payment.':'Use the official hosted Razorpay page, then submit transaction ID and screenshot to complete registration.'
      },true);
      payment.setData([saved]);
      setPaymentFormDirty(false);
-     payment.reload();notify(isTest?'Test payment-free configuration saved.':'Razorpay configuration saved.');
+     payment.reload();notify(isTestEdition?'Test payment-free configuration saved.':'Razorpay configuration saved.');
    }catch(error){notify(error instanceof Error?error.message:'Unable to save Razorpay configuration');}
    finally{setSaving(false);}
  }
  if(!superAdmin)return null;
- const pricingError=!isTest?paymentPricingError(teamSizePricing,maxTeamSize):null;
- const lastRule=teamSizePricing[teamSizePricing.length-1];
- const nextMember=lastRule?(lastRule.max_members??lastRule.min_members)+1:1;
- const canAddPricingRange=!maxTeamSize||nextMember<=maxTeamSize;
- return <div id="payment"><Panel title="Razorpay & payment configuration">
-  <p className="miih-muted-admin">Set a fee and Razorpay URL for each allowed team size. Ranges must cover every member count through the event maximum; when no maximum is set, the last range covers larger teams. A private test event never needs Razorpay.</p>
+ const pricingError=!isTestEdition?paymentPricingError(sortedTeamSizePricing):null;
+ const lastRule=sortedTeamSizePricing[sortedTeamSizePricing.length-1];
+ return <div id="payment"><Panel title="Razorpay & payment configuration" toolbar={<button type="button" className="miih-admin-outline miih-payment-config-toggle" aria-expanded={paymentConfigOpen} onClick={()=>setPaymentConfigOpen(open=>!open)}>{paymentConfigOpen?'Hide':'Show'} configuration <span aria-hidden="true">{paymentConfigOpen?'▴':'▾'}</span></button>}>
+  {paymentConfigOpen&&<><p className="miih-muted-admin">Set a Members from threshold, fee and Razorpay URL for each rule. The final rule applies to that team size and above. A private test event never needs Razorpay.</p>
   <form className="miih-editor-form" onSubmit={save}>
    <div className="miih-admin-form-grid">
     <EditionSelect editions={editions} editionId={editionId} onChange={value=>{setPaymentFormDirty(false);payment.setData([]);setEditionId(value);}}/>
-    <label>Payment button text<input value={isTest?'Complete test registration':label} disabled={isTest} onChange={e=>{setPaymentFormDirty(true);setLabel(e.target.value);}} required /></label>
+    <label>Payment button text<input value={isTestEdition?'Complete test registration':label} disabled={isTestEdition} onChange={e=>{setPaymentFormDirty(true);setLabel(e.target.value);}} required /></label>
    </div>
-   {!isTest&&<fieldset className="miih-payment-pricing-rules" disabled={saving||payment.loading}>
+   {!isTestEdition&&<fieldset className="miih-payment-pricing-rules" disabled={saving||payment.loading}>
     <legend>Team-size pricing rules</legend>
-    {teamSizePricing.map((rule,index)=><div className="miih-payment-pricing-rule" key={`pricing-${index}`}>
-     <div className="miih-payment-pricing-rule-heading"><strong>Range {index+1}</strong><button type="button" className="miih-admin-link" disabled={teamSizePricing.length===1} onClick={()=>{setPaymentFormDirty(true);setTeamSizePricing(current=>current.filter((_,i)=>i!==index));}}>Remove range</button></div>
+    {sortedTeamSizePricing.map((rule,index)=><div className="miih-payment-pricing-rule" key={rule.draftId}>
+     <div className="miih-payment-pricing-rule-heading"><strong>Pricing rule {index+1}</strong><button type="button" className="miih-admin-link" disabled={teamSizePricing.length===1} onClick={()=>{setPaymentFormDirty(true);setTeamSizePricing(current=>current.filter(item=>item.draftId!==rule.draftId));}}>Remove rule</button></div>
      <div className="miih-admin-form-grid">
-      <label>Members from<input type="number" min="1" step="1" value={rule.min_members} onChange={event=>updatePricingRule(index,'min_members',event.target.value)}/></label>
-      <label>Members through (blank means and above)<input type="number" min={rule.min_members} step="1" value={rule.max_members??''} onChange={event=>updatePricingRule(index,'max_members',event.target.value)}/></label>
-      <label>Team fee (₹)<input type="number" min="0.01" step="0.01" value={rule.fee_amount} onChange={event=>updatePricingRule(index,'fee_amount',event.target.value)}/></label>
-      <label className="miih-admin-wide">Razorpay Payment Page URL<input type="url" value={rule.razorpay_payment_url} onChange={event=>updatePricingRule(index,'razorpay_payment_url',event.target.value)} required /></label>
+      <label>Members from<input type="number" min="1" step="1" required value={Number.isFinite(rule.min_members)?rule.min_members:''} onChange={event=>updatePricingRule(rule.draftId,'min_members',event.target.value)}/></label>
+      <label>Team fee (₹)<input type="number" min="0.01" step="0.01" required value={Number.isFinite(rule.fee_amount)?rule.fee_amount:''} onChange={event=>updatePricingRule(rule.draftId,'fee_amount',event.target.value)}/></label>
+      <label className="miih-admin-wide">Razorpay Payment Page URL<input type="url" value={rule.razorpay_payment_url} onChange={event=>updatePricingRule(rule.draftId,'razorpay_payment_url',event.target.value)} required /></label>
      </div>
     </div>)}
-    <button type="button" className="miih-admin-outline" disabled={!canAddPricingRange} onClick={addPricingRule}>Add team-size range</button>
-    <small className="miih-muted-admin">A new range copies the last range's fee and payment URL. Update them if this team size needs a different price or Razorpay page.</small>
+    <button type="button" className="miih-admin-outline" onClick={addPricingRule}>Add pricing rule</button>
+    <small className="miih-muted-admin">A new rule copies the highest threshold's fee and payment URL. Update them if this threshold needs different payment details.</small>
    </fieldset>}
    {pricingError&&<p className="miih-admin-error" role="alert">{pricingError}</p>}
-   <label className="miih-toggle-label"><input type="checkbox" checked={isTest||enabled} disabled={isTest} onChange={e=>{setPaymentFormDirty(true);setEnabled(e.target.checked);}} />{isTest?'Test Hackathon — ₹0, no payment':'Activate real payments for this edition'}</label>
-   <div className="miih-admin-row"><button type="submit" className="miih-admin-primary" disabled={saving||!editionId||Boolean(pricingError)}>{saving?'Saving…':'Save payment configuration'}</button><Badge value={isTest?'TEST HACKATHON':enabled?'ACTIVE':'INACTIVE'}/>{!isTest&&<a href={lastRule?.razorpay_payment_url||DEFAULT_PAYMENT_URL} target="_blank" rel="noopener noreferrer" className="miih-admin-outline">Review final tier payment page ↗</a>}</div>
-  </form>
+   <label className="miih-toggle-label"><input type="checkbox" checked={isTestEdition||enabled} disabled={isTestEdition} onChange={e=>{setPaymentFormDirty(true);setEnabled(e.target.checked);}} />{isTestEdition?'Test Hackathon — ₹0, no payment':'Activate real payments for this edition'}</label>
+   <div className="miih-admin-row"><button type="submit" className="miih-admin-primary" disabled={saving||!editionId||Boolean(pricingError)}>{saving?'Saving…':'Save payment configuration'}</button><Badge value={isTestEdition?'TEST HACKATHON':enabled?'ACTIVE':'INACTIVE'}/>{!isTestEdition&&<a href={lastRule?.razorpay_payment_url||DEFAULT_PAYMENT_URL} target="_blank" rel="noopener noreferrer" className="miih-admin-outline">Review final tier payment page ↗</a>}</div>
+  </form></>}
  </Panel></div>;
 }
 

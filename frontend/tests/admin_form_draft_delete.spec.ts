@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test('admin form layout stays within the viewport at narrow desktop widths', async ({ page }) => {
+test('admin form layout keeps Sections and Questions together at narrow desktop widths', async ({ page }) => {
   await page.setViewportSize({ width: 862, height: 700 });
-  await page.addInitScript(() => sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' })));
+  await page.addInitScript(() => {
+    sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' }));
+    localStorage.setItem('miih.admin.theme', 'light');
+  });
   await page.route('**/api/v1/**', async route => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/admin/me')) {
@@ -15,9 +18,8 @@ test('admin form layout stays within the viewport at narrow desktop widths', asy
   });
 
   await page.goto('/admin/form');
-  await expect(page.getByRole('heading', { name: 'Sections', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Questions', exact: true })).toBeVisible();
-  await expect(page.locator('.miih-form-index')).toHaveCSS('display', 'grid');
+  await expect(page.getByRole('heading', { name: 'Questions & Sections' })).toBeVisible();
+  await expect(page.locator('.miih-form-unified-index')).toBeVisible();
   const sidebar = page.locator('.miih-admin-sidebar');
   const menu = page.getByRole('button', { name: /Menu/ });
   await expect(menu).toBeVisible();
@@ -52,7 +54,10 @@ test('draft editor can remove an individual option and question', async ({ page 
     sections: [{ id: 'section-id', section_key: 'team', title: 'Team details', display_order: 0, questions: [question] }],
   };
   const mutations: Array<{ method: string; path: string; body: Record<string, unknown> }> = [];
-  await page.addInitScript(() => sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' })));
+  await page.addInitScript(() => {
+    sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' }));
+    localStorage.setItem('miih.admin.theme', 'light');
+  });
   await page.route('**/api/v1/**', async route => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -105,30 +110,62 @@ test('draft editor can remove an individual option and question', async ({ page 
   });
 
   await page.goto('/admin/form');
-  await expect(page.locator('.miih-form-editor')).toHaveCSS('grid-template-columns', /.+/);
-  await expect(page.locator('.miih-form-question-index')).toHaveCSS('overflow-y', 'auto');
+  await expect(page.getByRole('heading', { name: 'Questions & Sections' })).toBeVisible();
+  await expect(page.locator('.miih-form-unified-index')).toHaveCSS('overflow-y', 'auto');
   const questionRow = page.getByRole('button', { name: /Which challenge category\?/i });
   await expect(questionRow).toBeVisible();
+  await questionRow.scrollIntoViewIfNeeded();
+  const main = page.locator('.miih-admin-main');
+  const beforeOpenScroll = await main.evaluate(element => element.scrollTop);
   await questionRow.click();
+  const editor = page.getByRole('dialog', { name: 'Edit question' });
+  await expect(editor).toBeVisible();
+  const editorBounds = await editor.boundingBox();
+  const viewport = page.viewportSize();
+  expect(editorBounds).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(editorBounds!.y).toBeGreaterThanOrEqual(0);
+  expect(editorBounds!.y + editorBounds!.height).toBeLessThanOrEqual(viewport!.height);
+  await expect(main).toHaveJSProperty('scrollTop', beforeOpenScroll);
+  await expect(editor).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+
+  const questionText = editor.getByLabel('Question text');
+  await questionText.fill('Temporary unsaved question');
+  await editor.getByRole('button', { name: 'Cancel' }).click();
+  const discardDialog = page.getByRole('dialog', { name: 'Unsaved question changes' });
+  await expect(discardDialog).toBeVisible();
+  await discardDialog.locator('form').getByRole('button', { name: 'Cancel' }).click();
+  await expect(editor).toBeVisible();
+  await questionText.fill('Which challenge category?');
   await expect(page.getByText('Advanced rules (optional)')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Delete choice: Artificial Intelligence' }).click();
+  await editor.getByRole('button', { name: 'Delete choice: Artificial Intelligence' }).click();
   const optionDialog = page.getByRole('dialog', { name: 'Delete option' });
   await expect(optionDialog).toContainText('Artificial Intelligence');
   await optionDialog.getByRole('button', { name: 'Confirm' }).click();
   await expect(page.locator('.miih-admin-option')).toContainText('Removed');
   expect(mutations[0]).toMatchObject({ method: 'PUT', body: { option_value: 'ai', is_active: false } });
 
-  await page.getByRole('button', { name: /Which challenge category\?/i }).click();
-  await page.getByLabel('Answer format').selectOption('IMAGE');
-  await page.getByRole('button', { name: 'Save question' }).click();
+  await editor.getByLabel('Answer format').selectOption('IMAGE');
+  await editor.getByLabel('Display position').fill('7');
+  await expect(editor.getByText('Participants can upload a JPG, PNG or WebP image.')).toBeVisible();
+  await editor.getByRole('button', { name: 'Save question' }).click();
   await expect.poll(() => mutations.some(mutation => mutation.method === 'PATCH' && mutation.body.input_type === 'IMAGE')).toBe(true);
+  await expect(editor).toHaveCount(0);
   const savedQuestion = mutations.find(mutation => mutation.method === 'PATCH');
+  expect(savedQuestion?.body.display_order).toBe(7);
   expect(savedQuestion?.body).not.toHaveProperty('validation_rules');
   expect(savedQuestion?.body).not.toHaveProperty('visibility_rules');
 
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click();
   await page.getByRole('button', { name: /Which challenge category\?/i }).click();
-  await page.getByRole('button', { name: 'Delete question' }).click();
+  const darkEditor = page.getByRole('dialog', { name: 'Edit question' });
+  await expect(darkEditor).toHaveCSS('background-color', 'rgb(17, 18, 35)');
+  await darkEditor.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('button', { name: 'Switch to light mode' }).click();
+
+  await page.getByRole('button', { name: /Which challenge category\?/i }).click();
+  await page.getByRole('dialog', { name: 'Edit question' }).getByRole('button', { name: 'Delete question' }).click();
   const questionDialog = page.getByRole('dialog', { name: 'Delete question' });
   await questionDialog.getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByRole('button', { name: /Which challenge category\?/i })).toContainText('Hidden');
@@ -147,4 +184,8 @@ test('draft editor can remove an individual option and question', async ({ page 
     method: 'POST',
     body: { field_key: 'upload_your_project_image', input_type: 'IMAGE', answer_scope: 'MEMBER', is_required: false },
   });
+
+  await page.getByRole('button', { name: 'Publish form' }).click();
+  await page.getByRole('dialog', { name: 'Publish form' }).locator('form').getByRole('button', { name: 'Confirm' }).click();
+  await expect(page.getByRole('status')).toContainText('Form version published.');
 });

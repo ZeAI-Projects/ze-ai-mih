@@ -1,4 +1,5 @@
 import hashlib
+import math
 import re
 import secrets
 from uuid import UUID
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from src.repository.query_utils import one, many, scalar
 from src.repository.registration_repository import RegistrationRepository
 from src.service.pitch_conditions import is_pitch_dependent
+from src.service.payment_pricing import payment_rule_for_team_size, payment_rules_from_config, safe_payment_link
 
 def verify_draft_token(reg:dict|None,token:str|None):
     if not reg: raise HTTPException(404,'Registration not found')
@@ -27,11 +29,6 @@ def validate_unique_member_contacts(members):
     mobiles=[normalize_member_mobile(member.mobile) for member in members]
     if len(set(mobiles))!=len(mobiles):
         raise HTTPException(422,'Team member mobile numbers must be unique')
-
-def payment_rule_for_team_size(rules,team_size:int):
-    return next((rule for rule in rules
-                 if int(rule['min_members'])<=team_size
-                 and (rule.get('max_members') is None or team_size<=int(rule['max_members']))),None)
 
 async def _submission_errors(db,rid,registration):
     current=await scalar(db,'SELECT public.miih_submission_errors(:id)',{'id':rid})
@@ -291,14 +288,19 @@ async def record_payment(db,rid,token,payload):
     if not pay:
         raise HTTPException(409,'Payment is not configured yet')
     team_size=await scalar(db,'''SELECT count(*) FROM public.team_members WHERE registration_id=:rid''',{'rid':rid})
-    pricing=pay.get('team_size_pricing') or []
+    try:
+        pricing=payment_rules_from_config(pay.get('team_size_pricing'),pay.get('fee_amount'),pay.get('razorpay_payment_url'))
+    except ValueError as error:
+        raise HTTPException(409,'Payment pricing configuration is invalid. Please contact the organizer.') from error
     rule=payment_rule_for_team_size(pricing,team_size)
-    if pricing and not rule:
-        raise HTTPException(409,'Payment is not configured for this team size')
-    payment_url=rule['razorpay_payment_url'] if rule else pay.get('razorpay_payment_url')
-    fee_amount=rule['fee_amount'] if rule else pay['fee_amount']
-    if not payment_url or 'example.com' in payment_url:
-        raise HTTPException(409,'Payment is not configured yet')
+    if not rule:
+        raise HTTPException(409,f'Payment is not configured for a team of {team_size} members')
+    payment_url=rule['razorpay_payment_url']
+    fee_amount=rule['fee_amount']
+    if not isinstance(fee_amount,(int,float)) or not math.isfinite(float(fee_amount)) or fee_amount<=0:
+        raise HTTPException(409,'Payment fee is not configured for this team size')
+    if not safe_payment_link(payment_url,True):
+        raise HTTPException(409,'Payment link is not configured for this team size')
     asset=await one(db,'''SELECT id FROM public.file_assets WHERE id=:id
        AND registration_id=:rid AND storage_bucket='miih-registration-private'
        AND mime_type LIKE 'image/%' ''',{'id':payload.proof_file_id,'rid':rid})

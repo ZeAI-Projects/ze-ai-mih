@@ -49,22 +49,32 @@ test('team payment and review actions match light and dark admin themes', async 
   }
 });
 
-test('admin can edit contiguous payment ranges with separate amounts and Razorpay links', async ({ page }) => {
+test('admin normalizes, edits, removes, saves and reloads threshold-only payment rules', async ({ page }) => {
   await page.addInitScript(() => {
     sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' }));
     localStorage.setItem('miih.admin.theme', 'light');
   });
-  const savedConfigs: Record<string, unknown>[] = [];
+  const legacyRules = [
+    { min_members: 5, max_members: null, fee_amount: 5000, razorpay_payment_url: 'https://rzp.io/rzp/five' },
+    { min_members: 1, max_members: 2, fee_amount: 1000, razorpay_payment_url: 'https://rzp.io/rzp/one' },
+    { min_members: 3, max_members: 4, fee_amount: 3000, razorpay_payment_url: 'https://rzp.io/rzp/three' },
+  ];
+  let persisted: Record<string, unknown> | undefined;
   await page.route('**/api/v1/**', async route => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/payments/config')) {
       if (route.request().method() === 'POST') {
-        const savedConfig = route.request().postDataJSON() as Record<string, unknown>;
-        savedConfigs.push(savedConfig);
-        return route.fulfill({ json: { ...savedConfig, id: 'payment-config-id', is_active: false } });
+        persisted = { ...route.request().postDataJSON() as Record<string, unknown>, id: 'payment-config-id', is_active: false };
+        return route.fulfill({ json: persisted });
       }
-      const savedConfig = savedConfigs.at(-1);
-      return route.fulfill({ json: savedConfig ? [{ ...savedConfig, id: 'payment-config-id', is_active: false }] : [] });
+      return route.fulfill({ json: [persisted || {
+        id: 'payment-config-id',
+        button_label: 'Pay',
+        fee_amount: 5000,
+        razorpay_payment_url: 'https://rzp.io/rzp/five',
+        team_size_pricing: legacyRules,
+        is_active: false,
+      }] });
     }
     if (path.endsWith('/admin/me')) {
       return route.fulfill({ json: { id: 'ui-test', full_name: 'UI Test Admin', email: 'admin@example.invalid', role: 'SUPER_ADMIN', approval_status: 'APPROVED' } });
@@ -79,57 +89,67 @@ test('admin can edit contiguous payment ranges with separate amounts and Razorpa
   });
 
   await page.goto('/admin/admins');
+  const paymentToggle = page.getByRole('button', { name: 'Show configuration' });
+  await expect(paymentToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByLabel('Members from')).toHaveCount(0);
+  await paymentToggle.click();
+  await expect(page.getByRole('button', { name: 'Hide configuration' })).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText('Team-size pricing rules')).toBeVisible();
   const ranges = page.locator('.miih-payment-pricing-rule');
   await expect(ranges).toHaveCount(3);
   const starts = page.getByLabel('Members from');
-  const ends = page.getByLabel('Members through (blank means and above)');
   const fees = page.getByLabel('Team fee (₹)');
   const urls = page.getByLabel('Razorpay Payment Page URL');
-  await expect(starts.nth(0)).toHaveValue('1');
-  await expect(starts.nth(1)).toHaveValue('2');
-  await expect(starts.nth(2)).toHaveValue('3');
-  await expect(fees.nth(0)).toHaveValue('1000');
-  await expect(fees.nth(1)).toHaveValue('2000');
-  await expect(fees.nth(2)).toHaveValue('3000');
-  await expect(urls.nth(0)).toHaveValue('https://rzp.io/rzp/pG1DOFl');
-  await expect(urls.nth(1)).toHaveValue('https://rzp.io/rzp/MVb6HKp');
-  await expect(urls.nth(2)).toHaveValue('https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view');
-
-  await page.getByRole('button', { name: 'Add team-size range' }).click();
-  const paymentRefresh = page.waitForResponse(response => response.url().includes('/payments/config') && response.request().method() === 'GET');
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await paymentRefresh;
-  await expect(ranges).toHaveCount(4);
-  await expect(ends.nth(2)).toHaveValue('3');
-  await expect(starts.nth(3)).toHaveValue('4');
-  await expect(ends.nth(3)).toHaveValue('');
-  await expect(fees.nth(3)).toHaveValue('3000');
-  await expect(urls.nth(3)).toHaveValue('https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view');
+  await expect.poll(async () => await starts.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1', '3', '5']);
+  await expect.poll(async () => await fees.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1000', '3000', '5000']);
+  await expect.poll(async () => await urls.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual([
+    'https://rzp.io/rzp/one',
+    'https://rzp.io/rzp/three',
+    'https://rzp.io/rzp/five',
+  ]);
+  await fees.nth(1).fill('3333');
+  await page.getByRole('button', { name: 'Hide configuration' }).click();
+  await expect(page.getByLabel('Members from')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Show configuration' }).click();
+  await expect(fees.nth(1)).toHaveValue('3333');
+  await fees.nth(1).fill('3000');
+  await starts.nth(1).fill('4');
+  await fees.nth(1).fill('4200');
+  await urls.nth(1).fill('https://rzp.io/rzp/four');
+  await page.getByRole('button', { name: 'Add pricing rule' }).click();
+  await expect.poll(async () => await starts.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1', '4', '5', '6']);
+  await ranges.nth(2).getByRole('button', { name: 'Remove rule' }).click();
+  await expect.poll(async () => await starts.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1', '4', '6']);
   const saveButton = page.getByRole('button', { name: 'Save payment configuration' });
   await expect(saveButton).toBeEnabled();
   await saveButton.click();
   await page.getByRole('dialog', { name: 'Confirm payment configuration' }).getByRole('button', { name: 'Confirm' }).click();
   await expect(page.getByRole('status')).toContainText('Razorpay configuration saved.');
-  expect(savedConfigs.at(-1)?.team_size_pricing).toEqual([
-    { min_members: 1, max_members: 1, fee_amount: 1000, razorpay_payment_url: 'https://rzp.io/rzp/pG1DOFl' },
-    { min_members: 2, max_members: 2, fee_amount: 2000, razorpay_payment_url: 'https://rzp.io/rzp/MVb6HKp' },
-    { min_members: 3, max_members: 3, fee_amount: 3000, razorpay_payment_url: 'https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view' },
-    { min_members: 4, max_members: null, fee_amount: 3000, razorpay_payment_url: 'https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view' },
+  expect(persisted?.team_size_pricing).toEqual([
+    { min_members: 1, fee_amount: 1000, razorpay_payment_url: 'https://rzp.io/rzp/one' },
+    { min_members: 4, fee_amount: 4200, razorpay_payment_url: 'https://rzp.io/rzp/four' },
+    { min_members: 6, fee_amount: 5000, razorpay_payment_url: 'https://rzp.io/rzp/five' },
+  ]);
+  const savedRules=persisted?.team_size_pricing as Record<string,unknown>[];
+  expect(savedRules.every(rule=>!Object.prototype.hasOwnProperty.call(rule,'max_members'))).toBe(true);
+
+  await page.reload();
+  await page.getByRole('button', { name: 'Show configuration' }).click();
+  await expect(ranges).toHaveCount(3);
+  await expect.poll(async () => await starts.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1', '4', '6']);
+  await expect.poll(async () => await fees.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual(['1000', '4200', '5000']);
+  await expect.poll(async () => await urls.evaluateAll(elements => elements.map(element => (element as HTMLInputElement).value))).toEqual([
+    'https://rzp.io/rzp/one',
+    'https://rzp.io/rzp/four',
+    'https://rzp.io/rzp/five',
   ]);
 });
 
-test('four-member editions use exact ranges and keep unsaved edits after a refresh', async ({ page }) => {
+test('admin blocks duplicate thresholds, invalid amounts and non-Razorpay URLs', async ({ page }) => {
   await page.addInitScript(() => {
     sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' }));
     localStorage.setItem('miih.admin.theme', 'light');
   });
-  const savedConfigs: Record<string, unknown>[] = [];
-  const existingRules = [
-    { min_members: 1, max_members: 1, fee_amount: 1000, razorpay_payment_url: 'https://rzp.io/rzp/pG1DOFl' },
-    { min_members: 2, max_members: 2, fee_amount: 2000, razorpay_payment_url: 'https://rzp.io/rzp/MVb6HKp' },
-    { min_members: 3, max_members: null, fee_amount: 3000, razorpay_payment_url: 'https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view' },
-  ];
   await page.route('**/api/v1/**', async route => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/admin/me')) {
@@ -138,57 +158,32 @@ test('four-member editions use exact ranges and keep unsaved edits after a refre
     if (path.endsWith('/admin/permissions')) {
       return route.fulfill({ json: { role: 'SUPER_ADMIN', permissions: [] } });
     }
-    if (path.endsWith('/admin/editions')) {
-      return route.fulfill({ json: [{ id: 'edition-id', edition_code: 'MIIH_UPCOMING', title: 'Hackathon', max_team_size: 4 }] });
-    }
     if (path.endsWith('/payments/config')) {
-      if (route.request().method() === 'POST') {
-        const saved = route.request().postDataJSON() as Record<string, unknown>;
-        savedConfigs.push(saved);
-        return route.fulfill({ json: { ...saved, id: 'payment-config-id', is_active: false } });
-      }
-      const current = savedConfigs.at(-1) || {
-        button_label: 'Pay now',
-        fee_amount: 3000,
-        razorpay_payment_url: 'https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view',
-        team_size_pricing: existingRules,
-        is_active: false,
-      };
-      return route.fulfill({ json: [{ ...current, id: 'payment-config-id' }] });
+      return route.fulfill({ json: [] });
     }
     return route.fulfill({ json: [] });
   });
 
   await page.goto('/admin/admins');
-  const ranges = page.locator('.miih-payment-pricing-rule');
-  await expect(ranges).toHaveCount(4);
-  const ends = page.getByLabel('Members through (blank means and above)');
-  const fees = page.getByLabel('Team fee (₹)');
-  await expect(ends.nth(2)).toHaveValue('3');
-  await expect(ends.nth(3)).toHaveValue('4');
-  await expect(page.getByRole('button', { name: 'Add team-size range' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Show configuration' }).click();
+  await expect(page.locator('.miih-payment-pricing-rule')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Add pricing rule' }).click();
+  const starts=page.getByLabel('Members from');
+  const fees=page.getByLabel('Team fee (₹)');
+  const urls=page.getByLabel('Razorpay Payment Page URL');
+  const saveButton=page.getByRole('button', { name: 'Save payment configuration' });
 
-  await fees.nth(3).fill('4200');
-  const paymentRefresh = page.waitForResponse(response => response.url().includes('/payments/config') && response.request().method() === 'GET');
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await paymentRefresh;
-  await expect(fees.nth(3)).toHaveValue('4200');
+  await starts.nth(1).fill('1');
+  await expect(page.getByRole('alert')).toContainText('Members from values must be unique.');
+  await expect(saveButton).toBeDisabled();
+  await starts.nth(1).fill('2');
 
-  const formValidity = await page.locator('#payment form').evaluate(form => ({
-    valid: (form as HTMLFormElement).checkValidity(),
-    invalid: Array.from(form.querySelectorAll<HTMLInputElement>(':invalid')).map(input => ({
-      value: input.value,
-      type: input.type,
-      label: input.labels?.[0]?.textContent,
-    })),
-  }));
-  expect(formValidity).toEqual({ valid: true, invalid: [] });
-  await page.getByRole('button', { name: 'Save payment configuration' }).click();
-  await page.getByRole('dialog', { name: 'Confirm payment configuration' }).getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByRole('status')).toContainText('Razorpay configuration saved.');
-  expect(savedConfigs.at(-1)?.team_size_pricing).toEqual([
-    ...existingRules.slice(0, 2),
-    { ...existingRules[2], max_members: 3 },
-    { ...existingRules[2], min_members: 4, max_members: 4, fee_amount: 4200 },
-  ]);
+  await fees.nth(1).fill('0');
+  await expect(page.getByRole('alert')).toContainText('Each pricing range needs a positive fee.');
+  await expect(saveButton).toBeDisabled();
+  await fees.nth(1).fill('2000');
+
+  await urls.nth(1).fill('https://checkout.example/second-tier');
+  await expect(page.getByRole('alert')).toContainText('valid HTTPS Razorpay payment URL');
+  await expect(saveButton).toBeDisabled();
 });

@@ -1,20 +1,10 @@
-from urllib.parse import urlsplit
 import json
 from fastapi import HTTPException
 from sqlalchemy import text
 from src.repository.query_utils import one,many,scalar
 from src.service.access_service import require,require_super
 from src.service.admin_activity import record
-
-DUMMY_URL='https://example.com/miih-payment-placeholder'
-
-def safe_payment_link(link:str|None,active:bool):
-    if not link:return not active
-    if link==DUMMY_URL:return not active
-    p=urlsplit(link)
-    hostname=(p.hostname or '').lower()
-    return p.scheme=='https' and bool(hostname) and (
-        hostname in ('rzp.io','rzp.link','razorpay.com') or hostname.endswith('.razorpay.com'))
+from src.service.payment_pricing import DUMMY_URL, normalize_team_size_pricing, payment_rules_from_config, safe_payment_link
 
 async def list_editions(db,admin):
     await require(db,admin,'EVENT_VIEW')
@@ -62,39 +52,29 @@ async def publish_edition(db,admin,eid,open_registration:bool):
 
 async def payment_settings(db,admin,eid):
     require_super(admin)
-    return await many(db,'''SELECT * FROM public.payment_settings WHERE edition_id=:id
+    rows=await many(db,'''SELECT * FROM public.payment_settings WHERE edition_id=:id
        ORDER BY config_version DESC''',{'id':eid})
+    for row in rows:
+        try:
+            row['team_size_pricing']=payment_rules_from_config(
+                row.get('team_size_pricing'),row.get('fee_amount'),row.get('razorpay_payment_url'))
+        except ValueError as error:
+            raise HTTPException(500,'Stored payment pricing is invalid and requires administrator repair') from error
+    return rows
 
-def validate_team_size_pricing(rules,max_team_size=None):
+def validate_team_size_pricing(rules):
     if not rules:
         return []
-    ordered=sorted(rules,key=lambda rule:rule.min_members)
-    expected=1
-    for index,rule in enumerate(ordered):
-        if rule.min_members!=expected:
-            raise HTTPException(422,'Team-size pricing ranges must start at 1 and have no gaps or overlaps')
-        if max_team_size is not None and rule.min_members>max_team_size:
-            raise HTTPException(422,'Team-size pricing cannot exceed the edition maximum')
-        if rule.max_members is None:
-            if index!=len(ordered)-1:
-                raise HTTPException(422,'Only the final team-size pricing range can be unlimited')
-            if max_team_size is not None:
-                raise HTTPException(422,'The final range must end at the edition maximum')
-            return [item.model_dump() for item in ordered]
-        if rule.max_members<rule.min_members:
-            raise HTTPException(422,'A team-size pricing range cannot end before it starts')
-        if max_team_size is not None and rule.max_members>max_team_size:
-            raise HTTPException(422,'Team-size pricing cannot exceed the edition maximum')
-        expected=rule.max_members+1
-    if max_team_size is not None and expected-1==max_team_size:
-        return [item.model_dump() for item in ordered]
-    raise HTTPException(422,'The final team-size pricing range must include all larger teams')
+    try:
+        return normalize_team_size_pricing([rule.model_dump() for rule in rules])
+    except ValueError as error:
+        raise HTTPException(422,str(error)) from error
 
 async def change_payment_settings(db,admin,eid,payload):
     require_super(admin)
     edition=await one(db,'SELECT id,edition_code,max_team_size FROM public.hackathon_editions WHERE id=:id FOR UPDATE',{'id':eid})
     if not edition:raise HTTPException(404,'Edition not found')
-    pricing=validate_team_size_pricing(payload.team_size_pricing,edition.get('max_team_size'))
+    pricing=validate_team_size_pricing(payload.team_size_pricing)
     legacy_fee=float(pricing[-1]['fee_amount']) if pricing else float(payload.fee_amount)
     legacy_url=pricing[-1]['razorpay_payment_url'] if pricing else payload.razorpay_payment_url
     test_free=(edition['edition_code']=='MIIH_TEST_48H' and payload.activate
@@ -103,8 +83,8 @@ async def change_payment_settings(db,admin,eid,payload):
     link=(None if test_free else legacy_url or DUMMY_URL)
     if not test_free and not pricing and not safe_payment_link(link,payload.activate):
         raise HTTPException(422,'Active payment link must use a valid HTTPS Razorpay host')
-    if payload.activate and pricing and any(not safe_payment_link(rule['razorpay_payment_url'],True) for rule in pricing):
-        raise HTTPException(422,'Every active team-size rule must use a valid HTTPS Razorpay host')
+    if pricing and any(not safe_payment_link(rule['razorpay_payment_url'],True) for rule in pricing):
+        raise HTTPException(422,'Every team-size rule must use a valid HTTPS Razorpay host')
     if payload.activate and not test_free and (not payload.payment_required or not payload.proof_required):
         raise HTTPException(422,'Manual payment flow requires transaction and screenshot proof')
     if payload.activate and not test_free and legacy_fee<=0:
