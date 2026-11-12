@@ -4,12 +4,60 @@ import { adminConfirm, adminPrompt, adminFormDialog } from '../AdminDialogs';
 import { Icon } from '@/components/ui/Icon';
 import { applyCmsItem } from '@/features/cms/PublishedContentBridge';
 import {useEffect,useMemo,useRef,useState,type FormEvent} from 'react';
-import {patch,post,put,qs,upload,type CmsSlot,type CmsRevision,type Domain,type Edition,type FormSection,type Question,type JsonRecord} from '@/lib/miihApi';
+import {patch,post,put,qs,upload,type CmsSlot,type CmsRevision,type Domain,type Edition,type FormSection,type Question,type JsonRecord,type PaymentPricingRule} from '@/lib/miihApi';
 import {AdminIconButton,Badge,DataTable,Empty,ErrorMessage,Loading,PageHeader,Panel,useAdmin,useResource} from '../AdminPortal';
 
 type Row=Record<string,unknown>;
 const pages=['HOME','ABOUT','GALLERY','REGISTER','GLOBAL'];
 const first=(v:unknown)=>String(v??'');
+const DEFAULT_PAYMENT_URL='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view';
+const DEFAULT_PAYMENT_PRICING:PaymentPricingRule[]=[
+ {min_members:1,max_members:1,fee_amount:1000,razorpay_payment_url:'https://rzp.io/rzp/pG1DOFl'},
+ {min_members:2,max_members:2,fee_amount:2000,razorpay_payment_url:'https://rzp.io/rzp/MVb6HKp'},
+ {min_members:3,max_members:null,fee_amount:3000,razorpay_payment_url:DEFAULT_PAYMENT_URL},
+];
+function paymentPricingError(rules:PaymentPricingRule[],maxTeamSize?:number){
+ if(!rules.length)return 'Add at least one team-size pricing range.';
+ let next=1;
+ for(let index=0;index<rules.length;index++){
+  const rule=rules[index];
+  if(!Number.isInteger(rule.min_members)||rule.min_members!==next)return 'Ranges must start at 1 and be contiguous without overlaps.';
+  if(maxTeamSize&&rule.min_members>maxTeamSize)return `Pricing ranges cannot exceed the event maximum of ${maxTeamSize} members.`;
+  if(!Number.isFinite(rule.fee_amount)||rule.fee_amount<=0)return 'Each pricing range needs a positive fee.';
+  if(!rule.razorpay_payment_url.trim())return 'Each pricing range needs a Razorpay payment URL.';
+  if(rule.max_members===null){
+   if(index!==rules.length-1)return 'Only the last pricing range can be unlimited.';
+  }else{
+   if(!Number.isInteger(rule.max_members)||rule.max_members<rule.min_members)return 'Each range must end at or after its starting member count.';
+   if(maxTeamSize&&rule.max_members>maxTeamSize)return `Pricing ranges cannot exceed the event maximum of ${maxTeamSize} members.`;
+   next=rule.max_members+1;
+  }
+ }
+ const finalRange=rules[rules.length-1];
+ if(maxTeamSize)return finalRange.max_members===maxTeamSize?null:`The final pricing range must end at ${maxTeamSize} members.`;
+ return finalRange.max_members===null?null:'The last pricing range must cover all larger teams.';
+}
+function fitPaymentPricingToTeamSize(rules:PaymentPricingRule[],maxTeamSize?:number):PaymentPricingRule[]{
+ if(!maxTeamSize)return rules.map(rule=>({...rule}));
+ return rules.flatMap(rule=>{
+  if(rule.min_members>maxTeamSize)return [];
+  if(rule.max_members===null){
+   return Array.from({length:maxTeamSize-rule.min_members+1},(_,offset)=>({
+    ...rule,min_members:rule.min_members+offset,max_members:rule.min_members+offset,
+   }));
+  }
+  return [{...rule,max_members:Math.min(rule.max_members,maxTeamSize)}];
+ });
+}
+function defaultPaymentPricing(fee:unknown,url:unknown,maxTeamSize?:number):PaymentPricingRule[]{
+ const existingUrl=first(url);
+ const safeUrl=existingUrl.startsWith('https://')&&!existingUrl.includes('example.com')?existingUrl:DEFAULT_PAYMENT_URL;
+ const existingFee=Number(fee);
+ const rules=DEFAULT_PAYMENT_PRICING.map((rule,index)=>index===2
+  ?{...rule,fee_amount:Number.isFinite(existingFee)&&existingFee>0?existingFee:rule.fee_amount,razorpay_payment_url:safeUrl}
+  :{...rule});
+ return fitPaymentPricingToTeamSize(rules,maxTeamSize);
+}
 const questionTypes=[
  {value:'TEXT',label:'Short answer'},
  {value:'TEXTAREA',label:'Long answer'},
@@ -181,7 +229,15 @@ async function publishForm(){if(!versionId||!await adminConfirm('Publish this fo
   <FormVersionPreview sections={form.data.sections}/>
   <div className="miih-admin-editor-layout miih-form-editor">
     <div className="miih-form-index">
-    <Panel title="Questions and sections">
+    <Panel title="Sections">
+      <p className="miih-muted-admin">Registration questions are organized into these sections.</p>
+      <div className="miih-form-section-picker">
+      {form.loading?<Loading/>:form.data.sections.map(section=><div className="miih-form-section-card" key={section.id}>
+        <strong>{section.title}</strong><small>{section.questions.length} {section.questions.length===1?'question':'questions'}</small>
+      </div>)}
+      </div>
+    </Panel>
+    <Panel title="Questions">
       <p className="miih-muted-admin">Select a question to edit it. Use the plus button to add a question to its section.</p>
       <ErrorMessage message={form.error}/>
       <div className="miih-form-question-index">
@@ -338,52 +394,108 @@ function RazorpayAdminConfiguration(){
  useEffect(()=>{if(!editions.length)return;if(!editions.some(e=>e.id===editionId))setEditionId((editions.find(e=>e.edition_code==='MIIH_UPCOMING')||editions[0]).id);},[editions,editionId]);
  const edition=editions.find(e=>e.id===editionId);
  const payment=useResource<Row[]>(superAdmin&&editionId?`/admin/editions/${editionId}/payments/config`:null,[]);
- const [url,setUrl]=useState('https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view');
  const [label,setLabel]=useState('Secure Your Spot - Pay Now');
- const [fee,setFee]=useState('');
+ const [teamSizePricing,setTeamSizePricing]=useState<PaymentPricingRule[]>(DEFAULT_PAYMENT_PRICING);
+ const [paymentFormDirty,setPaymentFormDirty]=useState(false);
  const [enabled,setEnabled]=useState(false);
  const [saving,setSaving]=useState(false);
  const isTest=edition?.edition_code==='MIIH_TEST_48H';
+ const maxTeamSize=Number(edition?.max_team_size)||undefined;
  useEffect(()=>{
+   if(paymentFormDirty)return;
    const p=payment.data[0];
-   if(!p){setUrl('https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view');setLabel('Secure Your Spot - Pay Now');setFee('');setEnabled(false);return;}
+   if(!p){setTeamSizePricing(defaultPaymentPricing(undefined,undefined,maxTeamSize));setLabel('Secure Your Spot - Pay Now');setEnabled(false);return;}
    const stored=first(p.razorpay_payment_url);
-   setUrl(stored.includes('example.com')||!stored?'https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view':stored);
+   const storedRules=p.team_size_pricing;
+   if(Array.isArray(storedRules)&&storedRules.length){
+     const parsed=storedRules.flatMap(value=>{
+       if(!value||typeof value!=='object'||Array.isArray(value))return [];
+       const rule=value as Record<string,unknown>;
+       const min=Number(rule.min_members),max=rule.max_members==null?null:Number(rule.max_members);
+       const amount=Number(rule.fee_amount),paymentUrl=first(rule.razorpay_payment_url);
+       return Number.isInteger(min)&&min>=1&&(max===null||Number.isInteger(max)&&max>=min)
+         &&Number.isFinite(amount)&&amount>0&&paymentUrl
+         ?[{min_members:min,max_members:max,fee_amount:amount,razorpay_payment_url:paymentUrl}]
+         :[];
+     });
+     setTeamSizePricing(fitPaymentPricingToTeamSize(
+       parsed.length===storedRules.length?parsed:defaultPaymentPricing(p.fee_amount,stored),
+       maxTeamSize,
+     ));
+   }else setTeamSizePricing(defaultPaymentPricing(p.fee_amount,stored,maxTeamSize));
    setLabel(first(p.button_label)||'Secure Your Spot - Pay Now');
-   setFee(first(p.fee_amount??''));
    setEnabled(p.is_active===true);
- },[editionId,payment.data]);
+ },[editionId,payment.data,paymentFormDirty,maxTeamSize]);
+ function updatePricingRule(index:number,key:keyof PaymentPricingRule,value:string){
+   setPaymentFormDirty(true);
+   setTeamSizePricing(current=>current.map((rule,i)=>i!==index?rule:{
+     ...rule,
+     [key]:key==='razorpay_payment_url'?value:key==='max_members'?value===''?null:Number(value):Number(value),
+   }));
+ }
+ function addPricingRule(){
+   setPaymentFormDirty(true);
+   setTeamSizePricing(current=>{
+     const previous=current[current.length-1];
+     const template=previous||DEFAULT_PAYMENT_PRICING[0];
+     const min=previous?(previous.max_members??previous.min_members)+1:1;
+     return [...current.map((rule,index)=>index===current.length-1&&rule.max_members===null?{...rule,max_members:min-1}:rule),
+       {min_members:min,max_members:maxTeamSize?min:null,fee_amount:template.fee_amount,razorpay_payment_url:template.razorpay_payment_url}];
+   });
+ }
  async function save(event:FormEvent){
    event.preventDefault();if(!superAdmin||!editionId||saving)return;
-   if(!isTest && enabled && Number(fee)<=0){notify('Set the confirmed registration fee before activating real payments.');return;}
-   if(!isTest && !/^https:\/\/(?:[a-z0-9-]+\.)*(?:razorpay\.com|rzp\.io|rzp\.link)\//i.test(url)){notify('Enter a genuine HTTPS Razorpay payment URL.');return;}
+   const pricingError=!isTest?paymentPricingError(teamSizePricing,maxTeamSize):null;
+   if(pricingError){notify(pricingError);return;}
+   if(!isTest&&teamSizePricing.some(rule=>!/^https:\/\/(?:[a-z0-9-]+\.)*(?:razorpay\.com|rzp\.io|rzp\.link)\//i.test(rule.razorpay_payment_url.trim()))){notify('Every range must use a genuine HTTPS Razorpay payment URL.');return;}
    if(!await adminConfirm(isTest?'Save the private payment-free test configuration?':enabled?'Activate real Razorpay payments for this edition?':'Save the Razorpay URL without activating payments?', 'Confirm payment configuration'))return;
    setSaving(true);
    try{
-     await post(`/admin/editions/${editionId}/payments/config`,{
+     const lastRule=teamSizePricing[teamSizePricing.length-1];
+     const saved=await post<Row>(`/admin/editions/${editionId}/payments/config`,{
        button_label:isTest?'Complete test registration':label.trim(),
-       razorpay_payment_url:isTest?null:url.trim(),
-       fee_amount:isTest?0:Number(fee||0),
+       razorpay_payment_url:isTest?null:lastRule?.razorpay_payment_url.trim()||null,
+       fee_amount:isTest?0:lastRule?.fee_amount||0,
+       team_size_pricing:isTest?[]:teamSizePricing,
        payment_required:!isTest,proof_required:!isTest,
        activate:isTest?true:enabled,
        instructions:isTest?'Test Hackathon: registration testing only, with no payment.':'Use the official hosted Razorpay page, then submit transaction ID and screenshot to complete registration.'
      },true);
+     payment.setData([saved]);
+     setPaymentFormDirty(false);
      payment.reload();notify(isTest?'Test payment-free configuration saved.':'Razorpay configuration saved.');
    }catch(error){notify(error instanceof Error?error.message:'Unable to save Razorpay configuration');}
    finally{setSaving(false);}
  }
  if(!superAdmin)return null;
+ const pricingError=!isTest?paymentPricingError(teamSizePricing,maxTeamSize):null;
+ const lastRule=teamSizePricing[teamSizePricing.length-1];
+ const nextMember=lastRule?(lastRule.max_members??lastRule.min_members)+1:1;
+ const canAddPricingRange=!maxTeamSize||nextMember<=maxTeamSize;
  return <div id="payment"><Panel title="Razorpay & payment configuration">
-  <p className="miih-muted-admin">The official payment link is saved in Supabase for each event. Choose the real event, edit the URL or fee, and save. Payment activation is a separate choice; a private test event never needs Razorpay.</p>
+  <p className="miih-muted-admin">Set a fee and Razorpay URL for each allowed team size. Ranges must cover every member count through the event maximum; when no maximum is set, the last range covers larger teams. A private test event never needs Razorpay.</p>
   <form className="miih-editor-form" onSubmit={save}>
    <div className="miih-admin-form-grid">
-    <EditionSelect editions={editions} editionId={editionId} onChange={setEditionId}/>
-    <label>Payment button text<input value={isTest?'Complete test registration':label} disabled={isTest} onChange={e=>setLabel(e.target.value)} required /></label>
-    <label>Team registration fee (₹)<input type="number" min="0" step="0.01" disabled={isTest} value={isTest?'0':fee} onChange={e=>setFee(e.target.value)} required={enabled&&!isTest} placeholder="Enter when confirmed" /></label>
-    <label className="miih-admin-wide">Razorpay Payment Page URL<input type="url" disabled={isTest} value={isTest?'':url} onChange={e=>setUrl(e.target.value)} required={!isTest} /></label>
+    <EditionSelect editions={editions} editionId={editionId} onChange={value=>{setPaymentFormDirty(false);payment.setData([]);setEditionId(value);}}/>
+    <label>Payment button text<input value={isTest?'Complete test registration':label} disabled={isTest} onChange={e=>{setPaymentFormDirty(true);setLabel(e.target.value);}} required /></label>
    </div>
-   <label className="miih-toggle-label"><input type="checkbox" checked={isTest||enabled} disabled={isTest} onChange={e=>setEnabled(e.target.checked)} />{isTest?'Test Hackathon — ₹0, no payment':'Activate real payments for this edition'}</label>
-   <div className="miih-admin-row"><button type="submit" className="miih-admin-primary" disabled={saving||!editionId||(!isTest&&enabled&&!(Number(fee)>0))}>{saving?'Saving…':'Save payment configuration'}</button><Badge value={isTest?'TEST HACKATHON':enabled?'ACTIVE':'INACTIVE'}/>{!isTest&&<a href={url} target="_blank" rel="noopener noreferrer" className="miih-admin-outline">Review payment page ↗</a>}</div>
+   {!isTest&&<fieldset className="miih-payment-pricing-rules" disabled={saving||payment.loading}>
+    <legend>Team-size pricing rules</legend>
+    {teamSizePricing.map((rule,index)=><div className="miih-payment-pricing-rule" key={`pricing-${index}`}>
+     <div className="miih-payment-pricing-rule-heading"><strong>Range {index+1}</strong><button type="button" className="miih-admin-link" disabled={teamSizePricing.length===1} onClick={()=>{setPaymentFormDirty(true);setTeamSizePricing(current=>current.filter((_,i)=>i!==index));}}>Remove range</button></div>
+     <div className="miih-admin-form-grid">
+      <label>Members from<input type="number" min="1" step="1" value={rule.min_members} onChange={event=>updatePricingRule(index,'min_members',event.target.value)}/></label>
+      <label>Members through (blank means and above)<input type="number" min={rule.min_members} step="1" value={rule.max_members??''} onChange={event=>updatePricingRule(index,'max_members',event.target.value)}/></label>
+      <label>Team fee (₹)<input type="number" min="0.01" step="0.01" value={rule.fee_amount} onChange={event=>updatePricingRule(index,'fee_amount',event.target.value)}/></label>
+      <label className="miih-admin-wide">Razorpay Payment Page URL<input type="url" value={rule.razorpay_payment_url} onChange={event=>updatePricingRule(index,'razorpay_payment_url',event.target.value)} required /></label>
+     </div>
+    </div>)}
+    <button type="button" className="miih-admin-outline" disabled={!canAddPricingRange} onClick={addPricingRule}>Add team-size range</button>
+    <small className="miih-muted-admin">A new range copies the last range's fee and payment URL. Update them if this team size needs a different price or Razorpay page.</small>
+   </fieldset>}
+   {pricingError&&<p className="miih-admin-error" role="alert">{pricingError}</p>}
+   <label className="miih-toggle-label"><input type="checkbox" checked={isTest||enabled} disabled={isTest} onChange={e=>{setPaymentFormDirty(true);setEnabled(e.target.checked);}} />{isTest?'Test Hackathon — ₹0, no payment':'Activate real payments for this edition'}</label>
+   <div className="miih-admin-row"><button type="submit" className="miih-admin-primary" disabled={saving||!editionId||Boolean(pricingError)}>{saving?'Saving…':'Save payment configuration'}</button><Badge value={isTest?'TEST HACKATHON':enabled?'ACTIVE':'INACTIVE'}/>{!isTest&&<a href={lastRule?.razorpay_payment_url||DEFAULT_PAYMENT_URL} target="_blank" rel="noopener noreferrer" className="miih-admin-outline">Review final tier payment page ↗</a>}</div>
   </form>
  </Panel></div>;
 }

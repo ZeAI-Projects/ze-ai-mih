@@ -286,3 +286,39 @@
 @media(max-width:850px){.miih-admin-sidebar{position:fixed;z-index:900;left:0;top:0;height:100vh;height:100dvh;overflow:hidden}.miih-admin-main{width:100%;height:100vh;height:100dvh}.miih-form-index>.miih-admin-panel{position:static;max-height:48dvh}}
 @media(max-width:620px){.miih-profile-overview{min-height:clamp(320px,calc(100dvh - 230px),520px)}.miih-profile-overview-avatar{width:76px;height:76px;font-size:34px}}
 @media(max-width:950px){.miih-admin-sidebar{position:fixed;z-index:900;left:0;top:0;height:100vh;height:100dvh;overflow:hidden;transform:translateX(-110%);transition:transform .2s}.miih-admin-sidebar.is-open{transform:translateX(0)}.miih-admin-main{width:100%;height:100vh;height:100dvh}.miih-mobile-toggle{display:inline-flex}}
+
+.miih-admin-sidebar{--sidebar-muted:#cbb7df;--sidebar-divider:#ffffff30}
+.miih-side-divider{border-color:var(--sidebar-divider)}
+.miih-admin-sidebar .miih-sidebar-caption{color:var(--sidebar-muted)}
+.miih-admin-brand{width:100%;justify-content:center;padding:8px 0}
+.miih-admin-zeai-crop{display:block;width:100%;max-width:170px;height:auto;flex:none;overflow:visible}
+.miih-admin-zeai-crop img{display:block;width:100%;height:auto}
+.miih-admin-top-label{display:flex;align-items:center;gap:10px;min-width:0;color:var(--ink)}
+.miih-admin-labx,.miih-admin-made-in-india{position:relative;display:inline-block;flex:none;overflow:hidden;background:transparent}
+.miih-admin-labx{width:78px;height:37px}
+.miih-admin-labx img{display:block;width:100%;height:auto;filter:none}
+.miih-admin[data-admin-theme=light] .miih-admin-labx img{filter:url(#miih-admin-labx-light-ink)}
+.miih-admin-made-in-india{width:132px;flex:none}
+.miih-admin-made-in-india img{display:block;width:100%;height:auto}
+.miih-admin-top-label b{color:var(--ink);white-space:nowrap}
+.miih-admin-brand-filter{position:absolute;width:0;height:0;overflow:hidden}
+.miih-form-section-picker{display:grid;gap:8px}
+.miih-form-section-card{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.miih-form-section-card strong{font-size:12px}
+.miih-form-section-card small{color:var(--body);font-size:10px}
+.miih-form-section-choice{width:100%;display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);text-align:left}
+.miih-form-section-choice strong{font-size:12px}
+.miih-form-section-choice small{color:var(--body);font-size:10px}
+.miih-form-section-choice.selected{border-color:var(--purple);background:var(--lavender);box-shadow:inset 3px 0 var(--purple)}
+.miih-form-section-choice:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.miih-payment-pricing-rules{min-width:0;margin:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.miih-payment-pricing-rules legend{padding:0 7px;color:var(--purple-dark);font-size:13px;font-weight:800}
+.miih-payment-pricing-rule{padding:14px 0;border-bottom:1px solid var(--line)}
+.miih-payment-pricing-rule:last-of-type{margin-bottom:14px}
+.miih-payment-pricing-rule-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:var(--ink);font-size:12px}
+.miih-form-editor{grid-template-columns:1fr}
+.miih-form-index{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:14px;align-items:start}
+.miih-form-index>.miih-admin-panel{position:static;max-height:none;min-height:0;margin:0}
+@media(max-width:950px){.miih-admin-topbar{gap:10px;padding-inline:16px}.miih-admin-topbar>a{display:none}.miih-admin-top-label{gap:8px;flex:1 1 auto}.miih-admin-labx{width:62px;height:31px}.miih-admin-made-in-india{width:116px}.miih-admin-top-label b{font-size:13px}}
+@media(max-width:620px){.miih-form-index{grid-template-columns:1fr}.miih-admin-topbar{gap:6px;padding-inline:10px}.miih-admin-top-label{gap:6px}.miih-admin-labx{width:42px;height:22px}.miih-admin-made-in-india{width:70px}.miih-admin-top-label b{font-size:11px}}
+@media(max-width:400px){.miih-admin-topbar{gap:5px;padding-inline:8px}.miih-admin-topbar .miih-mobile-toggle{padding-inline:5px;font-size:11px}.miih-admin-top-label{gap:4px}.miih-admin-labx{width:38px;height:19px}.miih-admin-made-in-india{width:58px}.miih-admin-top-label b{font-size:10px}.miih-admin-theme-toggle{width:32px;height:32px}}

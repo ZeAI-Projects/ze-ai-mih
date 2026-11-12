@@ -28,6 +28,11 @@ def validate_unique_member_contacts(members):
     if len(set(mobiles))!=len(mobiles):
         raise HTTPException(422,'Team member mobile numbers must be unique')
 
+def payment_rule_for_team_size(rules,team_size:int):
+    return next((rule for rule in rules
+                 if int(rule['min_members'])<=team_size
+                 and (rule.get('max_members') is None or team_size<=int(rule['max_members']))),None)
+
 async def _submission_errors(db,rid,registration):
     current=await scalar(db,'SELECT public.miih_submission_errors(:id)',{'id':rid})
     if not isinstance(current,list) or not current:
@@ -283,7 +288,16 @@ async def record_payment(db,rid,token,payload):
         if count:raise HTTPException(409,'Existing payment evidence requires admin review')
         await db.execute(text('''UPDATE public.team_registrations
           SET payment_setting_id=:pid WHERE id=:rid'''),{'pid':pay['id'],'rid':rid})
-    if not pay or not pay.get('razorpay_payment_url') or 'example.com' in pay['razorpay_payment_url']:
+    if not pay:
+        raise HTTPException(409,'Payment is not configured yet')
+    team_size=await scalar(db,'''SELECT count(*) FROM public.team_members WHERE registration_id=:rid''',{'rid':rid})
+    pricing=pay.get('team_size_pricing') or []
+    rule=payment_rule_for_team_size(pricing,team_size)
+    if pricing and not rule:
+        raise HTTPException(409,'Payment is not configured for this team size')
+    payment_url=rule['razorpay_payment_url'] if rule else pay.get('razorpay_payment_url')
+    fee_amount=rule['fee_amount'] if rule else pay['fee_amount']
+    if not payment_url or 'example.com' in payment_url:
         raise HTTPException(409,'Payment is not configured yet')
     asset=await one(db,'''SELECT id FROM public.file_assets WHERE id=:id
        AND registration_id=:rid AND storage_bucket='miih-registration-private'
@@ -294,7 +308,7 @@ async def record_payment(db,rid,token,payload):
       (registration_id,payment_setting_id,transaction_id,proof_file_id,claimed_amount,currency)
       VALUES (:rid,:config,:txn,:file,:fee,:currency)'''),
       {'rid':rid,'config':pay['id'],'txn':payload.transaction_id.strip(),
-       'file':payload.proof_file_id,'fee':pay['fee_amount'],'currency':pay['currency']})
+       'file':payload.proof_file_id,'fee':fee_amount,'currency':pay['currency']})
     # Keep dynamic registration questions consistent with the payment evidence.
     for key,value,fid in (('payment_transaction_id',payload.transaction_id.strip(),None),
                           ('payment_proof',None,payload.proof_file_id)):

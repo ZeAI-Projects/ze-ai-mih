@@ -61,11 +61,14 @@ Set the health check path to `/health`. Do not use `gunicorn your_application.ws
 - The dummy URL is `https://example.com/miih-payment-placeholder`. It is **not** a working Razorpay payment page.
 - The public configuration endpoint returns `payment_enabled: false`, `payment_url: null`, and a `placeholder_url`. The registration UI must render **Pay Now as disabled / Coming Soon**, not redirect to the dummy URL.
 - Only the **approved Super Admin** can call `POST /api/v1/admin/editions/{edition_id}/payments/config` to save a new version of the Razorpay URL and payment fee, and activate it later.
+- Payment configuration can include contiguous, versioned team-size pricing ranges with a fee and Razorpay URL per range. When an edition has a maximum team size, ranges must end exactly at that maximum; otherwise the final range is unlimited. The API uses the matching range for the saved team size; legacy configurations without ranges continue using their single fee and URL.
 - Valid active payment URLs must use HTTPS and recognized Razorpay hostnames (`rzp.io`, `rzp.link`, or `razorpay.com` subdomains).
 - The original payment URL/amount referenced by submitted registrations is never edited in place; a new `payment_settings` version is created instead.
 - A screenshot/transaction ID creates a **PENDING** payment submission. Only Super Admin can manually verify it. **No live payment integration, webhook, automatic transfer, or claim of paid status** is implemented.
 
 **Optional SQL** (not automatically run): `sql/11_OPTIONAL_STORE_DUMMY_PAYMENT_URL.sql` stores the dummy link in the *existing inactive* configuration **only if the URL is currently NULL**. This does not activate payments. You can skip it: the application has the same safe placeholder fallback.
+
+**Optional team-size pricing SQL** (not automatically run): `sql/20_OPTIONAL_TEAM_SIZE_PAYMENT_PRICING.sql` adds the JSONB column needed to store payment rules on each versioned configuration. Apply it after review and before deploying code that saves or reads team-size pricing. Existing records default to an empty rule list and keep their legacy fee/link behavior.
 
 **Optional video Storage SQL**: `sql/10_OPTIONAL_ENABLE_CMS_VIDEO_UPLOADS.sql` permits MP4/WebM files up to 50 MB in the existing `miih-event-public` bucket. The original bucket only allows images/PDFs. Apply only after review and if your Supabase project supports that upload size.
 

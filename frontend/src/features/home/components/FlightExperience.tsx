@@ -13,7 +13,7 @@ const labels: Record<FlightPhase, string> = {
   flyover: 'Flying above Kuala Lumpur.',
   exit: 'Arriving in Malaysia.',
 };
-const launchCopy = 'SWIPE TO TAKE OFF →';
+const launchWords = ['SWIPE', 'TO', 'TAKE', 'OFF', '→'];
 
 export default function FlightExperience() {
   const openRegistration = useRegistrationModal();
@@ -193,11 +193,11 @@ export default function FlightExperience() {
           }}
           onPointerCancel={() => { start.current = null; amount.current = 0; setDragging(false); if (!locked.current) setProgress(0); }}>
           <span className="swipe-fill" />
-          <span className="launch-track-copy" aria-hidden="true">{Array.from(launchCopy).map((letter, index) => {
-            const letterPosition = trackWidth
-              ? (36 + ((index + 0.5) / launchCopy.length) * (trackWidth - 144)) / (trackWidth - 72)
+          <span className="launch-track-copy" aria-hidden="true">{launchWords.map((word, index) => {
+            const wordPosition = trackWidth
+              ? (32 + ((index + 0.5) / launchWords.length) * (trackWidth - 120)) / (trackWidth - 64)
               : 0.5;
-            return <span key={index} style={{ '--letter-progress': letterPosition } as CSSProperties}>{letter}</span>;
+            return <span key={`${word}-${index}`} className="launch-word" style={{ '--letter-progress': wordPosition } as CSSProperties}>{word}</span>;
           })}</span>
           <span className="launch-handle" aria-hidden="true">✈</span>
           <span className="launch-markers" aria-hidden="true">{[20, 40, 60, 80].map(value => <i key={value} className={progress >= value ? 'active' : ''} />)}</span>

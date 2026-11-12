@@ -4,10 +4,11 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from main import app
-from src.service.settings_service import safe_payment_link,DUMMY_URL
+from src.service.settings_service import safe_payment_link,DUMMY_URL,validate_team_size_pricing
 from src.service.export_service import render_excel,render_csv,DEFAULT_COLS
-from src.service.registration_service import verify_draft_token
+from src.service.registration_service import verify_draft_token,payment_rule_for_team_size
 from src.service.access_service import require_super
+from src.models.admin_ops_requests import TeamSizePaymentRule
 from openpyxl import load_workbook
 from io import BytesIO
 import hashlib
@@ -24,6 +25,41 @@ def test_dummy_url_cannot_be_activated():
                                "javascript:alert(1)","https://example.com/miih-payment-placeholder"])
 def test_invalid_active_payment_hosts_rejected(url):
     assert not safe_payment_link(url,True)
+
+def test_team_size_pricing_is_contiguous_and_resolves_expected_fee():
+    rules=validate_team_size_pricing([
+        TeamSizePaymentRule(min_members=1,max_members=1,fee_amount=1000,razorpay_payment_url='https://rzp.io/rzp/pG1DOFl'),
+        TeamSizePaymentRule(min_members=2,max_members=2,fee_amount=2000,razorpay_payment_url='https://rzp.io/rzp/MVb6HKp'),
+        TeamSizePaymentRule(min_members=3,fee_amount=3000,razorpay_payment_url='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view'),
+    ])
+    assert payment_rule_for_team_size(rules,1)['fee_amount']==1000
+    assert payment_rule_for_team_size(rules,2)['fee_amount']==2000
+    assert payment_rule_for_team_size(rules,4)['fee_amount']==3000
+
+def test_team_size_pricing_rejects_gaps_and_finite_final_range():
+    with pytest.raises(HTTPException) as gap:
+        validate_team_size_pricing([
+            TeamSizePaymentRule(min_members=1,max_members=1,fee_amount=1000,razorpay_payment_url='https://rzp.io/rzp/pG1DOFl'),
+            TeamSizePaymentRule(min_members=3,fee_amount=3000,razorpay_payment_url='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view'),
+        ])
+    assert gap.value.status_code==422
+    with pytest.raises(HTTPException) as finite:
+        validate_team_size_pricing([
+            TeamSizePaymentRule(min_members=1,max_members=3,fee_amount=3000,razorpay_payment_url='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view'),
+        ])
+    assert finite.value.status_code==422
+
+def test_team_size_pricing_can_end_at_the_edition_maximum():
+    rules=[
+        TeamSizePaymentRule(min_members=1,max_members=1,fee_amount=1000,razorpay_payment_url='https://rzp.io/rzp/pG1DOFl'),
+        TeamSizePaymentRule(min_members=2,max_members=2,fee_amount=2000,razorpay_payment_url='https://rzp.io/rzp/MVb6HKp'),
+        TeamSizePaymentRule(min_members=3,max_members=3,fee_amount=3000,razorpay_payment_url='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view'),
+        TeamSizePaymentRule(min_members=4,max_members=4,fee_amount=3000,razorpay_payment_url='https://pages.razorpay.com/pl_Tq7ND79LNPZBUt/view'),
+    ]
+    assert len(validate_team_size_pricing(rules,max_team_size=4))==4
+    with pytest.raises(HTTPException) as incomplete:
+        validate_team_size_pricing(rules[:-1],max_team_size=4)
+    assert incomplete.value.status_code==422
 
 def test_admin_cannot_become_super_admin():
     with pytest.raises(HTTPException) as e:require_super({'role':'ADMIN'})

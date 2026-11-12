@@ -15,6 +15,9 @@ test('admin form layout stays within the viewport at narrow desktop widths', asy
   });
 
   await page.goto('/admin/form');
+  await expect(page.getByRole('heading', { name: 'Sections', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Questions', exact: true })).toBeVisible();
+  await expect(page.locator('.miih-form-index')).toHaveCSS('display', 'grid');
   const sidebar = page.locator('.miih-admin-sidebar');
   const menu = page.getByRole('button', { name: /Menu/ });
   await expect(menu).toBeVisible();
