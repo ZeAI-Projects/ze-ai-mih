@@ -2,6 +2,10 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { get, getSession, post, setSession, type AdminProfile, type Session } from '@/lib/miihApi';
 import { Icon } from '@/components/ui/Icon';
+import lightIndiaMark from '@/assets/images/made-in-india-mark-light.png';
+import darkIndiaMark from '@/assets/images/made-in-india-mark-dark.png';
+import labxLogo from '@/assets/images/labx-transparent.png';
+import zeaiAdminMark from '@/assets/images/zeai-admin-mark.png';
 import './styles/admin.css';
 import { AdminDialogHost } from './AdminDialogs';
 import type { Theme } from '@/hooks/use_theme';
@@ -9,6 +13,27 @@ import type { Theme } from '@/hooks/use_theme';
 export type AdminContextValue = { profile:AdminProfile;permissions:Set<string>;superAdmin:boolean;can:(permission:string)=>boolean;logout:()=>void;notify:(message:string)=>void;updateProfile:(name:string)=>void };
 const Context=createContext<AdminContextValue|null>(null);
 export function useAdmin(){const ctx=useContext(Context);if(!ctx)throw new Error('Missing AdminContext');return ctx;}
+function AdminZeaiMark(){
+  return <span className="miih-admin-zeai-crop"><img src={zeaiAdminMark} alt="ZeAI" width="685" height="278"/></span>;
+}
+function AdminLabxMark(){
+  return <span className="miih-admin-labx"><img src={labxLogo} alt="LabX by ZeAI" width="1774" height="887"/></span>;
+}
+function AdminMadeInIndiaMark({theme}:{theme:'light'|'dark'}){
+  return <span className="miih-admin-made-in-india"><img src={theme==='dark'?darkIndiaMark:lightIndiaMark} alt="#MadeInIndia" width="1320" height="185"/></span>;
+}
+function AdminLabxLightInkFilter(){
+  return <svg className="miih-admin-brand-filter" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs><filter id="miih-admin-labx-light-ink" colorInterpolationFilters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="letterMask"/>
+      <feComposite in="letterMask" in2="SourceAlpha" operator="in" result="letters"/>
+      <feFlood floodColor="#30283e" result="ink"/>
+      <feComposite in="ink" in2="letters" operator="in" result="darkLetters"/>
+      <feComposite in="SourceGraphic" in2="letters" operator="out" result="colorMark"/>
+      <feMerge><feMergeNode in="colorMark"/><feMergeNode in="darkLetters"/></feMerge>
+    </filter></defs>
+  </svg>;
+}
 export function AdminIconButton({label,onClick,disabled=false,icon}:{label:string;onClick:()=>void;disabled?:boolean;icon:'add'|'edit'|'delete'|'refresh'|'save'}) {
   return <button type="button" className="miih-admin-icon-button" aria-label={label} title={label} disabled={disabled} onClick={onClick}><Icon name={icon}/></button>;
 }
@@ -153,7 +178,7 @@ export function AdminPortal(){
   const sections=[navigation.slice(0,6),navigation.slice(6,-1),navigation.slice(-1)];
   return <Context.Provider value={ctx}><div className="miih-admin" data-admin-theme={adminTheme}>
     <aside className={`miih-admin-sidebar ${sidebarOpen?'is-open':''}`} aria-label="Admin navigation">
-      <NavLink className="miih-admin-brand" to="/admin/dashboard"><span className="miih-admin-logo">#</span><span><b>Made in India</b><small>Hackathon administration</small></span></NavLink>
+      <NavLink className="miih-admin-brand" to="/admin/dashboard" aria-label="Admin dashboard"><AdminZeaiMark/></NavLink>
       <div className="miih-side-divider"/>
       <nav className="miih-sidebar-navigation" aria-label="Admin pages">
         {sections.map((group,i)=><div className="miih-sidebar-group" key={i}><span className="miih-sidebar-caption">{['OPERATIONS','MANAGEMENT','ACCOUNT'][i]}</span>{group.filter(item=>ctx.can(item.permission)).map(item=><NavLink key={item.slug} to={`/admin/${item.slug}`} className={({isActive})=>`miih-side-link ${isActive?'selected':''}`}><span>{item.symbol}</span>{item.name}</NavLink>)}</div>)}
@@ -166,7 +191,7 @@ export function AdminPortal(){
         </button>
       </div>
     </aside>
-    <div className="miih-admin-main"><header className="miih-admin-topbar"><button className="miih-mobile-toggle" type="button" onClick={()=>setSidebarOpen(v=>!v)}>☰ Menu</button><span className="miih-admin-top-label">ZeAI / Made in India <b>· Admin workspace</b></span><span className="miih-admin-top-status"><i/> {approvedProfile.role==='SUPER_ADMIN'?'Super Admin':'Approved Admin'}</span><a href="/register" target="_blank" rel="noopener noreferrer">View public site ↗</a><button type="button" className="miih-admin-theme-toggle" aria-label={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} title={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} onClick={()=>setAdminThemeState(current=>({theme:current.theme==='dark'?'light':'dark',hasPreference:true}))}>
+    <div className="miih-admin-main"><header className="miih-admin-topbar"><button className="miih-mobile-toggle" type="button" onClick={()=>setSidebarOpen(v=>!v)}>☰ Menu</button><span className="miih-admin-top-label"><AdminLabxMark/><AdminMadeInIndiaMark theme={adminTheme}/><b>Admin Workspace</b></span><AdminLabxLightInkFilter/><a href="/register" target="_blank" rel="noopener noreferrer">View public site ↗</a><button type="button" className="miih-admin-theme-toggle" aria-label={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} title={`Switch to ${adminTheme==='dark'?'light':'dark'} mode`} onClick={()=>setAdminThemeState(current=>({theme:current.theme==='dark'?'light':'dark',hasPreference:true}))}>
       {adminTheme==='dark'
         ? <svg data-theme-icon="sun" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
         : <svg data-theme-icon="moon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M20.2 15.3A8.5 8.5 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z" /></svg>}

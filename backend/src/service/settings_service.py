@@ -1,19 +1,10 @@
-from urllib.parse import urlsplit
+import json
 from fastapi import HTTPException
 from sqlalchemy import text
 from src.repository.query_utils import one,many,scalar
 from src.service.access_service import require,require_super
 from src.service.admin_activity import record
-
-DUMMY_URL='https://example.com/miih-payment-placeholder'
-
-def safe_payment_link(link:str|None,active:bool):
-    if not link:return not active
-    if link==DUMMY_URL:return not active
-    p=urlsplit(link)
-    hostname=(p.hostname or '').lower()
-    return p.scheme=='https' and bool(hostname) and (
-        hostname in ('rzp.io','rzp.link','razorpay.com') or hostname.endswith('.razorpay.com'))
+from src.service.payment_pricing import DUMMY_URL, normalize_team_size_pricing, payment_rules_from_config, safe_payment_link
 
 async def list_editions(db,admin):
     await require(db,admin,'EVENT_VIEW')
@@ -61,22 +52,42 @@ async def publish_edition(db,admin,eid,open_registration:bool):
 
 async def payment_settings(db,admin,eid):
     require_super(admin)
-    return await many(db,'''SELECT * FROM public.payment_settings WHERE edition_id=:id
+    rows=await many(db,'''SELECT * FROM public.payment_settings WHERE edition_id=:id
        ORDER BY config_version DESC''',{'id':eid})
+    for row in rows:
+        try:
+            row['team_size_pricing']=payment_rules_from_config(
+                row.get('team_size_pricing'),row.get('fee_amount'),row.get('razorpay_payment_url'))
+        except ValueError as error:
+            raise HTTPException(500,'Stored payment pricing is invalid and requires administrator repair') from error
+    return rows
+
+def validate_team_size_pricing(rules):
+    if not rules:
+        return []
+    try:
+        return normalize_team_size_pricing([rule.model_dump() for rule in rules])
+    except ValueError as error:
+        raise HTTPException(422,str(error)) from error
 
 async def change_payment_settings(db,admin,eid,payload):
     require_super(admin)
-    edition=await one(db,'SELECT id,edition_code FROM public.hackathon_editions WHERE id=:id FOR UPDATE',{'id':eid})
+    edition=await one(db,'SELECT id,edition_code,max_team_size FROM public.hackathon_editions WHERE id=:id FOR UPDATE',{'id':eid})
     if not edition:raise HTTPException(404,'Edition not found')
+    pricing=validate_team_size_pricing(payload.team_size_pricing)
+    legacy_fee=float(pricing[-1]['fee_amount']) if pricing else float(payload.fee_amount)
+    legacy_url=pricing[-1]['razorpay_payment_url'] if pricing else payload.razorpay_payment_url
     test_free=(edition['edition_code']=='MIIH_TEST_48H' and payload.activate
                and not payload.payment_required and not payload.proof_required
-               and payload.fee_amount==0 and not payload.razorpay_payment_url)
-    link=(None if test_free else payload.razorpay_payment_url or DUMMY_URL)
-    if not test_free and not safe_payment_link(link,payload.activate):
+               and legacy_fee==0 and not legacy_url and not pricing)
+    link=(None if test_free else legacy_url or DUMMY_URL)
+    if not test_free and not pricing and not safe_payment_link(link,payload.activate):
         raise HTTPException(422,'Active payment link must use a valid HTTPS Razorpay host')
+    if pricing and any(not safe_payment_link(rule['razorpay_payment_url'],True) for rule in pricing):
+        raise HTTPException(422,'Every team-size rule must use a valid HTTPS Razorpay host')
     if payload.activate and not test_free and (not payload.payment_required or not payload.proof_required):
         raise HTTPException(422,'Manual payment flow requires transaction and screenshot proof')
-    if payload.activate and not test_free and payload.fee_amount<=0:
+    if payload.activate and not test_free and legacy_fee<=0:
         raise HTTPException(422,'Set a positive registration fee before enabling real payments')
     if not edition:raise HTTPException(404,'Edition not found')
     # New version avoids modifying payment evidence from previous registrations.
@@ -86,14 +97,15 @@ async def change_payment_settings(db,admin,eid,payload):
       WHERE edition_id=:id AND is_active'''),{'id':eid})
     row=await one(db,'''INSERT INTO public.payment_settings
       (edition_id,config_version,razorpay_payment_url,button_label,instructions,
-       fee_amount,currency,payment_required,proof_required,is_active,created_by)
+       fee_amount,currency,payment_required,proof_required,is_active,team_size_pricing,created_by)
       VALUES (:eid,(SELECT COALESCE(MAX(config_version),0)+1 FROM public.payment_settings
-       WHERE edition_id=:eid),:link,:label,:instructions,:fee,'INR',:required,:proof,:active,:actor)
+       WHERE edition_id=:eid),:link,:label,:instructions,:fee,'INR',:required,:proof,:active,
+       CAST(:pricing AS jsonb),:actor)
       RETURNING id,config_version,button_label,razorpay_payment_url,fee_amount,currency,
-       payment_required,proof_required,is_active''',
+       payment_required,proof_required,is_active,team_size_pricing''',
       {'eid':eid,'link':link,'label':payload.button_label,'instructions':payload.instructions,
-       'fee':str(payload.fee_amount),'required':payload.payment_required,
-       'proof':payload.proof_required,'active':payload.activate,'actor':admin['id']})
+       'fee':str(legacy_fee),'required':payload.payment_required,
+       'proof':payload.proof_required,'active':payload.activate,'pricing':json.dumps(pricing),'actor':admin['id']})
     await record(db,admin,'PAYMENT_CONFIGURATION_SAVED','payment_settings',row['id'],after={**row,'razorpay_payment_url':'[configured]' if row.get('razorpay_payment_url') else None})
     await db.commit()
     return row

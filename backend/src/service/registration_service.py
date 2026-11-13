@@ -1,4 +1,5 @@
 import hashlib
+import math
 import re
 import secrets
 from uuid import UUID
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from src.repository.query_utils import one, many, scalar
 from src.repository.registration_repository import RegistrationRepository
 from src.service.pitch_conditions import is_pitch_dependent
+from src.service.payment_pricing import payment_rule_for_team_size, payment_rules_from_config, safe_payment_link
 
 def verify_draft_token(reg:dict|None,token:str|None):
     if not reg: raise HTTPException(404,'Registration not found')
@@ -283,8 +285,22 @@ async def record_payment(db,rid,token,payload):
         if count:raise HTTPException(409,'Existing payment evidence requires admin review')
         await db.execute(text('''UPDATE public.team_registrations
           SET payment_setting_id=:pid WHERE id=:rid'''),{'pid':pay['id'],'rid':rid})
-    if not pay or not pay.get('razorpay_payment_url') or 'example.com' in pay['razorpay_payment_url']:
+    if not pay:
         raise HTTPException(409,'Payment is not configured yet')
+    team_size=await scalar(db,'''SELECT count(*) FROM public.team_members WHERE registration_id=:rid''',{'rid':rid})
+    try:
+        pricing=payment_rules_from_config(pay.get('team_size_pricing'),pay.get('fee_amount'),pay.get('razorpay_payment_url'))
+    except ValueError as error:
+        raise HTTPException(409,'Payment pricing configuration is invalid. Please contact the organizer.') from error
+    rule=payment_rule_for_team_size(pricing,team_size)
+    if not rule:
+        raise HTTPException(409,f'Payment is not configured for a team of {team_size} members')
+    payment_url=rule['razorpay_payment_url']
+    fee_amount=rule['fee_amount']
+    if not isinstance(fee_amount,(int,float)) or not math.isfinite(float(fee_amount)) or fee_amount<=0:
+        raise HTTPException(409,'Payment fee is not configured for this team size')
+    if not safe_payment_link(payment_url,True):
+        raise HTTPException(409,'Payment link is not configured for this team size')
     asset=await one(db,'''SELECT id FROM public.file_assets WHERE id=:id
        AND registration_id=:rid AND storage_bucket='miih-registration-private'
        AND mime_type LIKE 'image/%' ''',{'id':payload.proof_file_id,'rid':rid})
@@ -294,7 +310,7 @@ async def record_payment(db,rid,token,payload):
       (registration_id,payment_setting_id,transaction_id,proof_file_id,claimed_amount,currency)
       VALUES (:rid,:config,:txn,:file,:fee,:currency)'''),
       {'rid':rid,'config':pay['id'],'txn':payload.transaction_id.strip(),
-       'file':payload.proof_file_id,'fee':pay['fee_amount'],'currency':pay['currency']})
+       'file':payload.proof_file_id,'fee':fee_amount,'currency':pay['currency']})
     # Keep dynamic registration questions consistent with the payment evidence.
     for key,value,fid in (('payment_transaction_id',payload.transaction_id.strip(),None),
                           ('payment_proof',None,payload.proof_file_id)):

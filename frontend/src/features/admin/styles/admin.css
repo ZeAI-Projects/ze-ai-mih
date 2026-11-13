@@ -286,3 +286,78 @@
 @media(max-width:850px){.miih-admin-sidebar{position:fixed;z-index:900;left:0;top:0;height:100vh;height:100dvh;overflow:hidden}.miih-admin-main{width:100%;height:100vh;height:100dvh}.miih-form-index>.miih-admin-panel{position:static;max-height:48dvh}}
 @media(max-width:620px){.miih-profile-overview{min-height:clamp(320px,calc(100dvh - 230px),520px)}.miih-profile-overview-avatar{width:76px;height:76px;font-size:34px}}
 @media(max-width:950px){.miih-admin-sidebar{position:fixed;z-index:900;left:0;top:0;height:100vh;height:100dvh;overflow:hidden;transform:translateX(-110%);transition:transform .2s}.miih-admin-sidebar.is-open{transform:translateX(0)}.miih-admin-main{width:100%;height:100vh;height:100dvh}.miih-mobile-toggle{display:inline-flex}}
+
+.miih-admin-sidebar{--sidebar-muted:#cbb7df;--sidebar-divider:#ffffff30}
+.miih-side-divider{border-color:var(--sidebar-divider)}
+.miih-admin-sidebar .miih-sidebar-caption{color:var(--sidebar-muted)}
+.miih-admin-brand{width:100%;justify-content:center;padding:8px 0}
+.miih-admin-zeai-crop{display:block;width:100%;max-width:170px;height:auto;flex:none;overflow:visible}
+.miih-admin-zeai-crop img{display:block;width:100%;height:auto}
+.miih-admin-top-label{display:flex;align-items:center;gap:10px;min-width:0;color:var(--ink)}
+.miih-admin-labx,.miih-admin-made-in-india{position:relative;display:inline-block;flex:none;overflow:hidden;background:transparent}
+.miih-admin-labx{width:78px;height:37px}
+.miih-admin-labx img{display:block;width:100%;height:auto;filter:none}
+.miih-admin[data-admin-theme=light] .miih-admin-labx img{filter:url(#miih-admin-labx-light-ink)}
+.miih-admin-made-in-india{width:132px;flex:none}
+.miih-admin-made-in-india img{display:block;width:100%;height:auto}
+.miih-admin-top-label b{color:var(--ink);white-space:nowrap}
+.miih-admin-brand-filter{position:absolute;width:0;height:0;overflow:hidden}
+.miih-form-section-picker{display:grid;gap:8px}
+.miih-form-section-card{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.miih-form-section-card strong{font-size:12px}
+.miih-form-section-card small{color:var(--body);font-size:10px}
+.miih-form-section-choice{width:100%;display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);text-align:left}
+.miih-form-section-choice strong{font-size:12px}
+.miih-form-section-choice small{color:var(--body);font-size:10px}
+.miih-form-section-choice.selected{border-color:var(--purple);background:var(--lavender);box-shadow:inset 3px 0 var(--purple)}
+.miih-form-section-choice:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.miih-payment-pricing-rules{min-width:0;margin:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.miih-payment-pricing-rules legend{padding:0 7px;color:var(--purple-dark);font-size:13px;font-weight:800}
+.miih-payment-pricing-rule{padding:14px 0;border-bottom:1px solid var(--line)}
+.miih-payment-pricing-rule:last-of-type{margin-bottom:14px}
+.miih-payment-pricing-rule-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:var(--ink);font-size:12px}
+.miih-payment-pricing-range{align-self:center;color:var(--body);font-size:11px}
+.miih-form-editor{grid-template-columns:1fr}
+.miih-form-index{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:14px;align-items:start}
+.miih-form-index>.miih-admin-panel{position:static;max-height:none;min-height:0;margin:0}
+@media(max-width:950px){.miih-admin-topbar{gap:10px;padding-inline:16px}.miih-admin-topbar>a{display:none}.miih-admin-top-label{gap:8px;flex:1 1 auto}.miih-admin-labx{width:62px;height:31px}.miih-admin-made-in-india{width:116px}.miih-admin-top-label b{font-size:13px}}
+@media(max-width:620px){.miih-form-index{grid-template-columns:1fr}.miih-admin-topbar{gap:6px;padding-inline:10px}.miih-admin-top-label{gap:6px}.miih-admin-labx{width:42px;height:22px}.miih-admin-made-in-india{width:70px}.miih-admin-top-label b{font-size:11px}}
+@media(max-width:400px){.miih-admin-topbar{gap:5px;padding-inline:8px}.miih-admin-topbar .miih-mobile-toggle{padding-inline:5px;font-size:11px}.miih-admin-top-label{gap:4px}.miih-admin-labx{width:38px;height:19px}.miih-admin-made-in-india{width:58px}.miih-admin-top-label b{font-size:10px}.miih-admin-theme-toggle{width:32px;height:32px}}
+.miih-payment-config-toggle{white-space:nowrap}
+.miih-form-unified-index{max-height:min(64dvh,680px);overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.miih-form-unified-index .miih-form-section-list{padding:14px 0;margin:0}
+.miih-form-unified-index .miih-slot-row{padding:13px 15px;border:1px solid var(--line);border-radius:11px;margin:8px 0;background:var(--surface);transition:background .16s,border-color .16s,transform .16s}
+.miih-form-unified-index .miih-slot-row:hover{background:var(--lavender);border-color:var(--purple);transform:translateY(-1px)}
+.miih-form-unified-index .miih-slot-row.selected{border-left:3px solid var(--purple);background:var(--lavender)}
+.miih-form-question-overlay{position:fixed;inset:0;z-index:1300;display:grid;place-items:center;padding:clamp(12px,3vw,30px);background:#100b1db8;animation:miih-question-fade-in .18s ease-out}
+.miih-form-question-modal{display:flex;flex-direction:column;width:min(900px,100%);max-height:min(90dvh,850px);min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);box-shadow:0 28px 90px #0005;animation:miih-question-scale-in .2s ease-out}
+.miih-form-question-modal-header{display:flex;flex:none;align-items:center;justify-content:space-between;gap:14px;padding:17px 22px;border-bottom:1px solid var(--line)}
+.miih-form-question-modal-header h2{margin:4px 0 0;color:var(--ink);font-size:19px;letter-spacing:-.025em}
+.miih-form-question-modal-header .miih-kicker{margin:0}
+.miih-form-modal-close{width:38px;height:38px;justify-content:center;padding:0;font-size:23px;line-height:1}
+.miih-form-question-modal>.miih-editor-form{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 22px 17px;gap:11px}
+.miih-form-question-modal .miih-form-editor-heading{padding:0 0 8px;border-bottom:1px solid var(--line)}
+.miih-form-question-modal .miih-form-editor-heading .miih-muted-admin{margin:0;line-height:1.5}
+.miih-form-question-modal .miih-form-question-grid{gap:10px 14px}
+.miih-form-question-modal .miih-form-question-grid textarea{min-height:58px;max-height:100px;resize:vertical}
+.miih-form-question-modal .miih-form-question-grid>.miih-admin-wide:first-child textarea{min-height:56px}
+.miih-form-question-modal .miih-form-options{gap:7px;padding-top:9px}
+.miih-form-question-modal .miih-form-options>.miih-form-section-heading{padding-bottom:7px}
+.miih-form-question-modal .miih-admin-option{margin:3px 0;padding:7px 10px}
+.miih-form-question-modal .miih-form-add-option{align-items:end}
+.miih-form-question-modal-footer{display:flex;flex:none;justify-content:flex-end;gap:10px;padding:13px 22px;border-top:1px solid var(--line);background:var(--surface)}
+.miih-form-question-modal-footer .miih-admin-primary svg{width:16px;height:16px}
+@keyframes miih-question-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes miih-question-scale-in{from{opacity:0;transform:scale(.975)}to{opacity:1;transform:scale(1)}}
+@media(max-width:620px){
+ .miih-form-unified-index{max-height:58dvh}
+ .miih-form-question-overlay{padding:8px}
+ .miih-form-question-modal{max-height:94dvh;border-radius:14px}
+ .miih-form-question-modal-header{padding:13px 15px}
+ .miih-form-question-modal>.miih-editor-form{padding:10px 15px 13px}
+ .miih-form-question-modal-footer{padding:10px 15px}
+ .miih-form-question-modal .miih-form-question-grid{grid-template-columns:1fr}
+ .miih-form-question-modal .miih-form-question-grid>.miih-admin-wide{grid-column:auto}
+ .miih-form-question-modal .miih-form-question-grid textarea{min-height:50px}
+}
+@media(prefers-reduced-motion:reduce){.miih-form-question-overlay,.miih-form-question-modal{animation:none}.miih-form-unified-index .miih-slot-row{transition:none}}

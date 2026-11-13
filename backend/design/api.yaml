@@ -2419,6 +2419,28 @@ components:
       required:
       - status
       title: PaymentReview
+    TeamSizePaymentRule:
+      properties:
+        min_members:
+          type: integer
+          exclusiveMinimum: 0
+          title: Min Members
+        fee_amount:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Fee Amount
+        razorpay_payment_url:
+          type: string
+          maxLength: 2048
+          minLength: 1
+          title: Razorpay Payment Url
+      additionalProperties: false
+      type: object
+      required:
+      - min_members
+      - fee_amount
+      - razorpay_payment_url
+      title: TeamSizePaymentRule
     PaymentSettingsUpdate:
       properties:
         button_label:
@@ -2436,6 +2458,11 @@ components:
           minimum: 0.0
           title: Fee Amount
           default: 0
+        team_size_pricing:
+          items:
+            $ref: '#/components/schemas/TeamSizePaymentRule'
+          type: array
+          title: Team Size Pricing
         payment_required:
           type: boolean
           title: Payment Required

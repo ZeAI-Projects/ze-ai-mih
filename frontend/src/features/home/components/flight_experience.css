@@ -41,8 +41,8 @@
 .cinematic-flight .flight-swipe .swipe-fill { position: absolute; inset: 0; background: linear-gradient(90deg, var(--lavender), var(--lavender)); transform: scaleX(var(--launch-progress)); transform-origin: left; transition: transform .2s ease; }
 .cinematic-flight .flight-swipe .launch-handle { position: absolute; left: calc(8px + (100% - 72px) * var(--launch-progress)); top: 8px; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: white; font-size: 28px; background: linear-gradient(140deg, #b28aef, #6532bb); transition: left .2s ease; transform: rotate(-14deg); }
 .cinematic-flight .is-dragging .launch-handle, .cinematic-flight .is-dragging .swipe-fill { transition: none; }
-.cinematic-flight .flight-swipe > .launch-track-copy { position: absolute; inset: 0 72px; display: flex; justify-content: space-between; align-items: center; margin: 0; font-size: clamp(14px, 2.6vw, 30px); font-weight: 800; letter-spacing: .07em; line-height: 1; pointer-events: none; white-space: nowrap; }
-.cinematic-flight .launch-track-copy > span { flex: 0 0 auto; text-align: center; opacity: clamp(0, calc(1 - (var(--launch-progress) - var(--letter-progress)) * 20), 1); }
+.cinematic-flight .flight-swipe > .launch-track-copy { position: absolute; inset: 0 72px; display: flex; justify-content: space-between; align-items: center; gap: clamp(8px, 1.4vw, 18px); margin: 0; font-size: clamp(14px, 2.6vw, 30px); font-weight: 800; letter-spacing: .04em; line-height: 1; pointer-events: none; white-space: nowrap; }
+.cinematic-flight .launch-track-copy > .launch-word { flex: 0 0 auto; text-align: center; opacity: clamp(0, calc(1 - (var(--launch-progress) - var(--letter-progress)) * 20), 1); }
 .cinematic-flight .launch-markers { position: absolute; display: flex; justify-content: space-between; width: 50%; left: 30%; bottom: 10px; }
 .cinematic-flight .launch-markers i { width: 4px; height: 4px; border-radius: 50%; background: var(--lavender); }
 .cinematic-flight .launch-markers i.active { background: #7535c7; box-shadow: none; }

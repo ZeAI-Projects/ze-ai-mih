@@ -29,6 +29,25 @@ test('admin routes render in both themes with isolated empty API responses', asy
       await expect(page.getByRole('button', { name: `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode` }))
         .toHaveAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
       await expect(page.locator(`.miih-admin-theme-toggle [data-theme-icon="${theme === 'dark' ? 'sun' : 'moon'}"]`)).toBeAttached();
+      const sidebarLogo = page.locator('.miih-admin-sidebar .miih-admin-zeai-crop img');
+      const labxLogo = page.locator('.miih-admin-topbar .miih-admin-labx img');
+      const indiaLogo = page.locator('.miih-admin-topbar .miih-admin-made-in-india img');
+      await expect(sidebarLogo).toHaveAttribute('alt', 'ZeAI');
+      await expect(sidebarLogo).toHaveAttribute('src', /zeai-admin-mark/);
+      const sidebarWidth = await page.locator('.miih-admin-sidebar').evaluate(node => node.getBoundingClientRect().width);
+      const logoWidth = await page.locator('.miih-admin-zeai-crop').evaluate(node => node.getBoundingClientRect().width);
+      expect(logoWidth).toBeGreaterThan(sidebarWidth * .6);
+      expect(logoWidth).toBeLessThan(sidebarWidth * .75);
+      await expect(labxLogo).toHaveAttribute('alt', 'LabX by ZeAI');
+      await expect(indiaLogo).toHaveAttribute('alt', '#MadeInIndia');
+      await expect(indiaLogo).toHaveAttribute('src', new RegExp(theme === 'dark' ? 'made-in-india-mark-dark' : 'made-in-india-mark-light'));
+      await expect(page.locator('.miih-admin-top-label')).toContainText('Admin Workspace');
+      await expect(page.locator('.miih-admin-top-status')).toHaveCount(0);
+      await expect(page.locator('.miih-sidebar-caption').first()).toHaveCSS('color', 'rgb(203, 183, 223)');
+      if (route === 'form') {
+        await expect(page.getByRole('heading', { name: 'Sections', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Questions', exact: true })).toBeVisible();
+      }
       if (route === 'dashboard') {
         await expect(page.locator('.miih-stat-grid')).toContainText('Registered Teams');
         await expect(page.locator('.miih-stat-grid')).toContainText('Total Participants');
@@ -86,4 +105,48 @@ test('admin routes render in both themes with isolated empty API responses', asy
   await expect(statisticsPdf.locator('#miih-statistics-export')).toContainText('Teams by Domain');
   await statisticsPdf.close();
   expect(errors).toEqual([]);
+});
+
+test('admin branding stays fully visible at tablet width in both themes', async ({ page }) => {
+  await page.setViewportSize({ width: 850, height: 900 });
+  await page.addInitScript(() => {
+    sessionStorage.setItem('miih.admin.session', JSON.stringify({ access_token: 'ui-test-only' }));
+    localStorage.setItem('miih.admin.theme', 'light');
+  });
+  await page.route('**/api/v1/**', route => {
+    const path = new URL(route.request().url()).pathname;
+    const payload = path.endsWith('/admin/me')
+      ? { id: 'ui-test', full_name: 'UI Test', email: 'test@example.invalid', role: 'SUPER_ADMIN', approval_status: 'APPROVED' }
+      : path.endsWith('/admin/permissions') ? { role: 'SUPER_ADMIN', permissions: [] }
+      : path.endsWith('/admin/dashboard') ? {}
+      : path.endsWith('/admin/statistics') ? { by_domain: [], by_status: [], by_day: [] }
+      : [];
+    return route.fulfill({ json: payload });
+  });
+  await page.goto('/admin/dashboard');
+
+  for (const theme of ['light', 'dark'] as const) {
+    await expect(page.locator('.miih-admin')).toHaveAttribute('data-admin-theme', theme);
+    const bounds = await page.locator('.miih-admin-topbar').evaluate(header => {
+      const rect = (selector: string) => {
+        const element = header.querySelector<HTMLElement>(selector);
+        if (!element) throw new Error(`Missing admin branding element: ${selector}`);
+        const { left, right } = element.getBoundingClientRect();
+        return { left, right };
+      };
+      return {
+        headerWidth: header.clientWidth,
+        headerScrollWidth: header.scrollWidth,
+        labx: rect('.miih-admin-labx'),
+        india: rect('.miih-admin-made-in-india'),
+        workspace: rect('.miih-admin-top-label b'),
+        themeButton: rect('.miih-admin-theme-toggle'),
+      };
+    });
+    expect(bounds.headerScrollWidth).toBeLessThanOrEqual(bounds.headerWidth);
+    expect(bounds.labx.right).toBeLessThanOrEqual(bounds.india.left);
+    expect(bounds.india.right).toBeLessThanOrEqual(bounds.workspace.left);
+    expect(bounds.workspace.right).toBeLessThanOrEqual(bounds.themeButton.left);
+    if (theme === 'light') await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+  }
 });

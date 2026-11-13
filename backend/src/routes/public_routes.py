@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db_session
 from src.service.access_service import current_admin,require_super
 from src.repository.query_utils import one,many
+from src.service.payment_pricing import payment_rules_from_config
 
 router=APIRouter(prefix='/public',tags=['Public Content'])
 PLACEHOLDER='https://example.com/miih-payment-placeholder'
@@ -61,10 +62,18 @@ async def _load_config(code:str,db:AsyncSession):
                 q['options']=await many(db,'''SELECT option_value,option_label FROM public.form_question_options
                    WHERE question_id=:id AND is_active ORDER BY display_order''',{'id':q['id']})
             s['questions']=qs
-    payment=await one(db,'''SELECT button_label,razorpay_payment_url,fee_amount,currency,
+    payment=await one(db,'''SELECT button_label,razorpay_payment_url,fee_amount,currency,team_size_pricing,
         payment_required,proof_required,is_active,instructions
         FROM public.payment_settings WHERE edition_id=:id
         ORDER BY is_active DESC,config_version DESC LIMIT 1''',{'id':edition['id']})
+    try:
+        team_size_pricing=payment_rules_from_config(
+            payment.get('team_size_pricing') if payment else None,
+            payment.get('fee_amount') if payment else None,
+            payment.get('razorpay_payment_url') if payment else None,
+        )
+    except ValueError as error:
+        raise HTTPException(503,'Payment pricing configuration is invalid. Please contact the organizer.') from error
     # Backend never exposes a clickable dummy payment URL as if it were payable.
     ready=bool(payment and payment['is_active'] and payment.get('razorpay_payment_url') and
                payment['razorpay_payment_url'].startswith('https://') and
@@ -79,7 +88,8 @@ async def _load_config(code:str,db:AsyncSession):
          'placeholder_url':(payment.get('razorpay_payment_url') if payment and payment.get('razorpay_payment_url')==PLACEHOLDER else PLACEHOLDER),'payment_enabled':ready,
          'fee_amount':payment['fee_amount'] if payment else None,
          'currency':payment['currency'] if payment else 'INR',
-         'payment_required':payment['payment_required'] if payment else True}
+         'payment_required':payment['payment_required'] if payment else True,
+         'team_size_pricing':team_size_pricing}
     now=datetime.now(timezone.utc)
     within_window=((edition['registration_opens_at'] is None or now>=edition['registration_opens_at'])
                    and (edition['registration_closes_at'] is None or now<=edition['registration_closes_at']))

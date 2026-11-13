@@ -9,6 +9,7 @@ test('header Register scrolls to the section, other register actions open the mo
     min_team_size: 1,
     max_team_size: 2,
   };
+  const savedTeams: Record<string, unknown>[] = [];
   await page.route('**/api/v1/**', async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -66,12 +67,27 @@ test('header Register scrolls to the section, other register actions open the mo
             },
           ],
         }],
-        payment: { button_label: 'Pay', payment_url: 'https://pay.example/checkout', payment_enabled: true, payment_required: true },
+        payment: {
+          button_label: 'Pay',
+          payment_url: 'https://rzp.io/rzp/five',
+          payment_enabled: true,
+          payment_required: true,
+          fee_amount: 5000,
+          team_size_pricing: [
+            { min_members: 1, fee_amount: 1000, razorpay_payment_url: 'https://rzp.io/rzp/one' },
+            { min_members: 3, fee_amount: 3000, razorpay_payment_url: 'https://rzp.io/rzp/three' },
+            { min_members: 5, fee_amount: 5000, razorpay_payment_url: 'https://rzp.io/rzp/five' },
+          ],
+        },
         registration_enabled: true,
       } });
     }
     if (path.endsWith('/registrations/MIIH_UPCOMING/start')) {
       return route.fulfill({ json: { id: 'draft-1', edit_token: 'token-1' } });
+    }
+    if (path.endsWith('/registrations/draft-1/team')) {
+      savedTeams.push(request.postDataJSON() as Record<string, unknown>);
+      return route.fulfill({ json: {} });
     }
     if (path.endsWith('/registrations/draft-1/upload')) {
       return route.fulfill({ json: { id: '2d6a11b9-370b-4b1f-9234-680a568f3197' } });
@@ -120,12 +136,18 @@ test('header Register scrolls to the section, other register actions open the mo
   await dialog.locator('[data-validation-key="member-1-mobile"] input').fill('9123456780');
   await dialog.getByRole('button', { name: 'Save & continue →' }).click();
   await expect(dialog.getByRole('heading', { name: 'Registration questions' })).toBeVisible();
+  expect(savedTeams.at(-1)?.members).toEqual([
+    { full_name: 'Test Leader', email: 'leader@example.com', mobile: '9876543210' },
+    { full_name: 'Test Member', email: 'member@example.com', mobile: '9123456780' },
+  ]);
   await dialog.getByRole('button', { name: 'Save & continue →' }).click();
   await expect(dialog.locator('[data-validation-key^="question-question-required"]').getByRole('alert')).toBeVisible();
   await expect(dialog.locator('[data-validation-key^="question-question-required"] textarea')).toHaveAttribute('aria-invalid', 'true');
 
   await dialog.locator('[data-validation-key^="question-question-required"] textarea').fill('A team collaboration platform.');
   await dialog.getByRole('button', { name: 'Save & continue →' }).click();
+  await expect(dialog.locator('.miih-payment-card strong')).toHaveText('₹1,000');
+  await expect(dialog.locator('.miih-payment-card').getByRole('link')).toHaveAttribute('href', 'https://rzp.io/rzp/one');
   await dialog.getByRole('button', { name: 'I have paid — enter payment details →' }).click();
   await dialog.locator('#miih-transaction-id').fill('txn-12345');
   await dialog.getByLabel('Choose payment screenshot').setInputFiles({

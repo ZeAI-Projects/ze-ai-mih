@@ -244,6 +244,14 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
   }
   const answersValid=answerRows.every(a=>fieldValid(a.question,a.value));
   const paymentFree=CODE==='MIIH_TEST_48H' && config?.payment?.payment_required===false && config?.payment?.payment_enabled===false;
+  const paymentRules=config?.payment.team_size_pricing||[];
+  const paymentRule=paymentRules.reduce<(typeof paymentRules)[number]|undefined>(
+    (selected,rule)=>rule.min_members<=members.length&&(!selected||rule.min_members>selected.min_members)?rule:selected,
+    undefined,
+  );
+  const paymentFee=paymentRules.length?paymentRule?.fee_amount:config?.payment.fee_amount;
+  const paymentUrl=paymentRules.length?paymentRule?.razorpay_payment_url:config?.payment.payment_url;
+  const paymentReady=Boolean(config?.payment.payment_enabled&&paymentUrl);
   const validationKeyForAnswer=(row:AnswerRow)=>`question-${fieldKey(row.question,row.member_order)}`;
   function reportValidation(issue:ValidationIssue){
     setValidationIssue(issue);
@@ -443,12 +451,12 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
           {!paymentFree&&<>
             <div className="miih-payment-card">
               <span>Registration fee</span>
-              <strong>{config.payment.fee_amount!=null?'₹'+Number(config.payment.fee_amount).toLocaleString('en-IN'):'Not configured'}</strong>
-              {config.payment.payment_enabled&&config.payment.payment_url
-                ? <a href={config.payment.payment_url} className="button button-primary" target="_blank" rel="noopener noreferrer" onClick={()=>{setPaymentLinkOpened(true);setPaymentEvidenceVisible(true);setMessage('');}}>{paymentLinkOpened?'Reopen Razorpay payment ↗':(config.payment.button_label||'Pay now with Razorpay')+' ↗'}</a>
-                : <p role="alert">Online payment is not enabled for this edition. Please contact the organizer.</p>}
+              <strong>{paymentFee!=null?'₹'+Number(paymentFee).toLocaleString('en-IN'):'Not configured for this team size'}</strong>
+              {paymentReady&&paymentUrl
+                ? <a href={paymentUrl} className="button button-primary" target="_blank" rel="noopener noreferrer" onClick={()=>{setPaymentLinkOpened(true);setPaymentEvidenceVisible(true);setMessage('');}}>{paymentLinkOpened?'Reopen Razorpay payment ↗':(config.payment.button_label||'Pay now with Razorpay')+' ↗'}</a>
+                : <p role="alert">{paymentRules.length?'Payment is not configured for this team size. Please contact the organizer.':'Online payment is not enabled for this edition. Please contact the organizer.'}</p>}
             </div>
-            {config.payment.payment_enabled&&config.payment.payment_url&&<>
+            {paymentReady&&paymentUrl&&<>
               {!paymentEvidenceVisible&&<div className="miih-payment-guidance">
                 <p>Already completed your payment in another tab or on your phone?</p>
                 <button type="button" className="miih-secondary-btn" onClick={()=>{setPaymentEvidenceVisible(true);setMessage('');}}>I have paid — enter payment details →</button>
@@ -473,7 +481,7 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
               </section>}
             </>}
           </>}
-          <div className="miih-modal-actions"><button type="button" className="miih-secondary-btn" onClick={()=>{setMessage('');setStep(1);}}>← Back to questions</button><button type="submit" className="button button-primary" disabled={busy||!config.registration_enabled}>{busy?'Submitting…':'Submit team registration →'}</button></div>
+          <div className="miih-modal-actions"><button type="button" className="miih-secondary-btn" onClick={()=>{setMessage('');setStep(1);}}>← Back to questions</button><button type="submit" className="button button-primary" disabled={busy||!config.registration_enabled||(!paymentFree&&!paymentReady)}>{busy?'Submitting…':'Submit team registration →'}</button></div>
         </form>}
         {step===3&&submitted&&<section className="miih-success" aria-label="Registration confirmation">
           <div className="miih-success-heading">
@@ -497,7 +505,7 @@ export function TeamRegistrationDialog({open,onClose}:{open:boolean;onClose:()=>
             <div><dt>Members registered</dt><dd>{members.length} (including team leader)</dd></div>
             <div><dt>Payment status</dt><dd><span className="miih-success-payment-badge">{paymentFree?'Not required':'Pending verification'}</span></dd></div>
             {!paymentFree&&<>
-              <div><dt>Registration fee</dt><dd>{config.payment.currency||'INR'} {Number(config.payment.fee_amount||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</dd></div>
+              <div><dt>Registration fee</dt><dd>{config.payment.currency||'INR'} {Number(paymentFee||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}</dd></div>
               <div><dt>Transaction ID</dt><dd className="miih-success-transaction">{transactionId||'—'}</dd></div>
             </>}
           </dl>
